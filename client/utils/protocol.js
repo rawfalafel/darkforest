@@ -39,9 +39,9 @@ function pseudoRandomBits(t) {
 }
 
 function dLogProof(x, g, p) {
-    // x: int
-    // g: int
-    // p: int
+    // x: int, in [p-1]
+    // g: int, generator mod p
+    // p: int, prime
     // return: [array[int], array[int]], each of length PARALLELS
     // ZK proof of knowledge of x such that g^x = y mod p
     var r = [];
@@ -59,13 +59,14 @@ function dLogProof(x, g, p) {
     return [t,s];
 }
 
-function verify(y, g, p, t, s) {
-    // y: int
-    // g: int
-    // p: int
-    // t: array[int] of length PARALLELS
-    // s: array[int] of length PARALLELS
+function verifyDlogProof(y, g, p, proof) {
+    // y: int, in [p]*
+    // g: int, generator mod p
+    // p: int, prime
+    // proof: [array[int],array[int]] of length PARALLELS
     // Verify ZK proof (t,s) of knowledge x such that g^x = y mod p
+    const t = proof[0];
+    const s = proof[1];
     const b = pseudoRandomBits(t);
     const gBig = BigInt(g);
     const yBig = BigInt(y);
@@ -81,18 +82,55 @@ function verify(y, g, p, t, s) {
     return true;
 }
 
-function test() {
+function testOneDimension() {
     const p=31;
     const g=3;
     const x=17;
     const y=22;
     // Let's prove we know x such that g^x = y mod p
-
     proof = dLogProof(x, g, p);
-    t = proof[0];
-    s = proof[1];
-    goodResult = verify(y, g, p, t, s);
+    goodResult = verifyDlogProof(y, g, p, proof);
     console.log('This should be true: ' + goodResult);
-    badResult = verify(23, g, p, t, s);
+    badResult = verifyDlogProof(23, g, p, proof);
+    console.log('This should be false: ' + badResult);
+}
+
+function twoDimDLogProof(x, y, g, h, p, q) {
+    // x: int, in [p-1]
+    // y: int, in [q-1]
+    // g: int, generator mod p and 1 mod q
+    // h: int, generator mod q and 1 mod p
+    // p: int, prime
+    // q: int, prime
+    // return: [array[int], array[int], array[int], array[int]], each of length PARALLELS
+    // ZK proofs of knowledge of x, y such that g^xh^y = z mod pq
+    proof1 = dLogProof(x, g%p, p);
+    proof2 = dLogProof(y, h%q, q);
+    return [proof1, proof2]
+}
+
+function verifyTwoDimLogProof(z, g, h, p, q, proofs) {
+    // z: int, in [pq]*
+    // g: int, generator mod p and 1 mod q
+    // h: int, generator mod q and 1 mod p
+    // p: int, prime
+    // q: int, prime
+    // Verify ZK proofs of knowledge of x, y such that g^xh^y = z
+    return verifyDlogProof(z%p, g, p, proofs[0]) && verifyDlogProof(z%q, h, q, proofs[1]);
+}
+
+function testTwoDimension() {
+    const p = 23;
+    const q = 31;
+    const g = 559; // 7 mod 23, 1 mod 31
+    const h = 323; // 1 mod 23, 13 mod 31
+    const x = 15;
+    const y = 17;
+    const z = 451;
+    // Let's prove we know x,y such that g^xh^y = z mod pq
+    proofs = twoDimDLogProof(x, y, g, h, p, q);
+    goodResult = verifyTwoDimLogProof(z, g, h, p, q, proofs);
+    console.log('This should be true: ' + goodResult);
+    badResult = verifyTwoDimLogProof(163, g, h, p, q, proofs);
     console.log('This should be false: ' + badResult);
 }
