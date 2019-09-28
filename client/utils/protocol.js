@@ -95,7 +95,7 @@ function testOneDimension() {
     console.log('This should be false: ' + badResult);
 }
 
-function twoDimDLogProof(x, y, g, h, p, q) {
+exports.twoDimDLogProof = (x, y, g, h, p, q) => {
     // x: int, in [p-1]
     // y: int, in [q-1]
     // g: int, generator mod p and 1 mod q
@@ -109,7 +109,7 @@ function twoDimDLogProof(x, y, g, h, p, q) {
     return [proof1, proof2]
 }
 
-function verifyTwoDimLogProof(z, g, h, p, q, proofs) {
+exports.verifyTwoDimDLogProof = (z, g, h, p, q, proofs) => {
     // z: int, in [pq]*
     // g: int, generator mod p and 1 mod q
     // h: int, generator mod q and 1 mod p
@@ -119,7 +119,7 @@ function verifyTwoDimLogProof(z, g, h, p, q, proofs) {
     return verifyDlogProof(z%p, g, p, proofs[0]) && verifyDlogProof(z%q, h, q, proofs[1]);
 }
 
-function testTwoDimension() {
+testTwoDimension = () => {
     const p = 23;
     const q = 31;
     const g = 559; // 7 mod 23, 1 mod 31
@@ -129,8 +129,8 @@ function testTwoDimension() {
     const z = 451;
     // Let's prove we know x,y such that g^xh^y = z mod pq
     proofs = twoDimDLogProof(x, y, g, h, p, q);
-    goodResult = verifyTwoDimLogProof(z, g, h, p, q, proofs);
+    goodResult = verifyTwoDimDLogProof(z, g, h, p, q, proofs);
     console.log('This should be true: ' + goodResult);
-    badResult = verifyTwoDimLogProof(163, g, h, p, q, proofs);
+    badResult = verifyTwoDimDLogProof(163, g, h, p, q, proofs);
     console.log('This should be false: ' + badResult);
 }
