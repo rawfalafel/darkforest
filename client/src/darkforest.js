@@ -1,6 +1,3 @@
-var cryptoZombies;
-var userAccount;
-
 function startApp() {
     var darkForestAddress = "YOUR_CONTRACT_ADDRESS";
     darkForest = new web3js.eth.Contract(darkForestABI, darkForestAddress);
