@@ -2,3 +2,5 @@ node_modules/*
 client/utils/.idea/*
 build/*
 .idea/*
+client/src/.idea/*
+
