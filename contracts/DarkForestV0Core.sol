@@ -5,8 +5,8 @@ contract DarkForest {
     uint p = 23;
     uint q = 29;
     uint m = p * q;
-    uint g = 5;
-    uint h = 2;
+    uint g = 465;
+    uint h = 553;
 
     mapping (address => uint) public playerLocations;
     address[] public players;
