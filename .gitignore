@@ -1,5 +1,5 @@
 node_modules/*
-client/utils/.idea/*
+client/src/utils/.idea/*
 build/*
 .idea/*
 client/src/.idea/*

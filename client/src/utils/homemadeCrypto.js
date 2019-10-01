@@ -1,21 +1,23 @@
-const prime = BigInt("273389558745553615023177755634264971227");
-const gen = BigInt("191981998178538467192271372964660528157");
+import bigInt from "big-integer";
+
+const prime = bigInt("273389558745553615023177755634264971227");
+const gen = bigInt("191981998178538467192271372964660528157");
 const PARALLELS = 100;
 
-function bigExponentiate(base, exp, mod) {
+function bigExponentiate(base, exp, modulus) {
     // base: BigInt
     // exp: int
-    // mod: BigInt
+    // modulus: BigInt
     if (exp == 0) {
-        return BigInt(1);
+        return bigInt(1);
     } else if (exp == 1) {
-        return base % mod;
+        return base.mod(modulus);
     } else if (exp % 2 == 0) {
-        const half = bigExponentiate(base, exp/2, mod);
-        return (half * half) % mod;
+        const half = bigExponentiate(base, exp/2, modulus);
+        return half.multiply(half).mod(modulus);
     } else {
-        const half = bigExponentiate(base, Math.floor(exp/2), mod);
-        return (half * half * base) % mod;
+        const half = bigExponentiate(base, Math.floor(exp/2), modulus);
+        return half.multiply(half).multiply(base).mod(modulus);
     }
 }
 
@@ -30,10 +32,10 @@ function pseudoRandomBits(t) {
     // return: array[int] of bits
     // pseudorandom [b1,...,bPARALLELS] from [t1,...,tPARALLELS]
     const H = jankHash(t);
-    var b = [];
-    for (var i=0; i<PARALLELS; i++) {
-        const pow2 = (BigInt(2) ** BigInt(i));
-        b.push(((H & pow2) > BigInt(0)) ? 1 : 0);
+    let b = [];
+    for (let i=0; i<PARALLELS; i++) {
+        const pow2 = bigInt(2).pow(bigInt(i));
+        b.push(H.divide(pow2).isOdd() ? 1 : 0);
     }
     return b;
 }
@@ -95,7 +97,7 @@ function testOneDimension() {
     console.log('This should be false: ' + badResult);
 }
 
-exports.twoDimDLogProof = (x, y, g, h, p, q) => {
+const twoDimDLogProof = (x, y, g, h, p, q) => {
     // x: int, in [p-1]
     // y: int, in [q-1]
     // g: int, generator mod p and 1 mod q
@@ -109,7 +111,7 @@ exports.twoDimDLogProof = (x, y, g, h, p, q) => {
     return [proof1, proof2]
 }
 
-exports.verifyTwoDimDLogProof = (z, g, h, p, q, proofs) => {
+const verifyTwoDimDLogProof = (z, g, h, p, q, proofs) => {
     // z: int, in [pq]*
     // g: int, generator mod p and 1 mod q
     // h: int, generator mod q and 1 mod p
@@ -119,7 +121,7 @@ exports.verifyTwoDimDLogProof = (z, g, h, p, q, proofs) => {
     return verifyDlogProof(z%p, g, p, proofs[0]) && verifyDlogProof(z%q, h, q, proofs[1]);
 }
 
-testTwoDimension = () => {
+const testTwoDimension = () => {
     const p = 23;
     const q = 31;
     const g = 559; // 7 mod 23, 1 mod 31
@@ -128,9 +130,11 @@ testTwoDimension = () => {
     const y = 17;
     const z = 451;
     // Let's prove we know x,y such that g^xh^y = z mod pq
-    proofs = twoDimDLogProof(x, y, g, h, p, q);
-    goodResult = verifyTwoDimDLogProof(z, g, h, p, q, proofs);
+    const proofs = twoDimDLogProof(x, y, g, h, p, q);
+    const goodResult = verifyTwoDimDLogProof(z, g, h, p, q, proofs);
     console.log('This should be true: ' + goodResult);
-    badResult = verifyTwoDimDLogProof(163, g, h, p, q, proofs);
+    const badResult = verifyTwoDimDLogProof(163, g, h, p, q, proofs);
     console.log('This should be false: ' + badResult);
 }
+
+export { bigExponentiate, twoDimDLogProof };

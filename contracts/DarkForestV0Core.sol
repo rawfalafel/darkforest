@@ -2,8 +2,8 @@ pragma solidity ^0.5.8;
 
 contract DarkForest {
 
-    uint p = 23;
-    uint q = 29;
+    uint public p = 23;
+    uint public q = 29;
     uint public m = p * q;
     uint public g = 465;
     uint public h = 553;
