@@ -1,6 +1,7 @@
 import Web3 from 'web3';
 import React, { Component } from 'react';
-import { bigExponentiate, twoDimDLogProof } from './utils/homemadeCrypto'
+import { bigExponentiate, twoDimDLogProof } from './utils/homemadeCrypto';
+import bigInt from 'big-integer';
 
 const ethereum = window.ethereum;
 
@@ -77,7 +78,7 @@ class Landing extends Component {
     const { p, q, g, h } = this.state;
     const a = Math.floor(Math.random() * (p-1));
     const b = Math.floor(Math.random() * (q-1));
-    const r = (Number(bigExponentiate(g, a, p * q)) * Number(bigExponentiate(h, b, p * q))) % (p * q);
+    const r = (Number(bigExponentiate(bigInt(g), a, bigInt(p * q))) * Number(bigExponentiate(bigInt(h), b, bigInt(p * q)))) % (p * q);
     console.log(r);
     console.log(twoDimDLogProof(a, b, g, h, p, q));
   }

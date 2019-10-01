@@ -46,16 +46,16 @@ function dLogProof(x, g, p) {
     // p: int, prime
     // return: [array[int], array[int]], each of length PARALLELS
     // ZK proof of knowledge of x such that g^x = y mod p
-    var r = [];
-    for (var i=0; i<PARALLELS; i++) {
+    let r = [];
+    for (let i=0; i<PARALLELS; i++) {
         r.push(Math.floor(Math.random()*(p-1)));
     }
-    const gBig = BigInt(g);
-    const pBig = BigInt(p);
-    var t = r.map(ri => Number(bigExponentiate(gBig, ri, pBig)));
-    var b = pseudoRandomBits(t);
-    var s = [];
-    for (var i=0; i<PARALLELS; i++) {
+    const gBig = bigInt(g);
+    const pBig = bigInt(p);
+    let t = r.map(ri => bigExponentiate(gBig, ri, pBig).toJSNumber());
+    let b = pseudoRandomBits(t);
+    let s = [];
+    for (let i=0; i<PARALLELS; i++) {
         s.push(r[i] + b[i]*x);
     }
     return [t,s];
@@ -70,13 +70,13 @@ function verifyDlogProof(y, g, p, proof) {
     const t = proof[0];
     const s = proof[1];
     const b = pseudoRandomBits(t);
-    const gBig = BigInt(g);
-    const yBig = BigInt(y);
-    const pBig = BigInt(p);
-    const oneBig = BigInt(1);
-    for (var i=0; i<PARALLELS; i++) {
+    const gBig = bigInt(g);
+    const yBig = bigInt(y);
+    const pBig = bigInt(p);
+    const oneBig = bigInt(1);
+    for (let i=0; i<PARALLELS; i++) {
         const lhs = bigExponentiate(gBig, s[i], pBig);
-        const rhs = ((b[i] == 1 ? yBig : oneBig) * BigInt(t[i])) % pBig;
+        const rhs = ((b[i] === 1 ? yBig : oneBig).multiply(bigInt(t[i]))).mod(pBig);
         if (lhs != rhs) {
             return false;
         }
@@ -90,10 +90,10 @@ function testOneDimension() {
     const x=17;
     const y=22;
     // Let's prove we know x such that g^x = y mod p
-    proof = dLogProof(x, g, p);
-    goodResult = verifyDlogProof(y, g, p, proof);
+    const proof = dLogProof(x, g, p);
+    const goodResult = verifyDlogProof(y, g, p, proof);
     console.log('This should be true: ' + goodResult);
-    badResult = verifyDlogProof(23, g, p, proof);
+    const badResult = verifyDlogProof(23, g, p, proof);
     console.log('This should be false: ' + badResult);
 }
 
@@ -106,8 +106,8 @@ const twoDimDLogProof = (x, y, g, h, p, q) => {
     // q: int, prime
     // return: [array[int], array[int], array[int], array[int]], each of length PARALLELS
     // ZK proofs of knowledge of x, y such that g^xh^y = z mod pq
-    proof1 = dLogProof(x, g%p, p);
-    proof2 = dLogProof(y, h%q, q);
+    const proof1 = dLogProof(x, g%p, p);
+    const proof2 = dLogProof(y, h%q, q);
     return [proof1, proof2]
 }
 
