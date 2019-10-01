@@ -8,11 +8,11 @@ function bigExponentiate(base, exp, modulus) {
     // base: BigInt
     // exp: int
     // modulus: BigInt
-    if (exp == 0) {
+    if (exp === 0) {
         return bigInt(1);
-    } else if (exp == 1) {
+    } else if (exp === 1) {
         return base.mod(modulus);
-    } else if (exp % 2 == 0) {
+    } else if (exp % 2 === 0) {
         const half = bigExponentiate(base, exp/2, modulus);
         return half.multiply(half).mod(modulus);
     } else {
@@ -77,7 +77,7 @@ function verifyDlogProof(y, g, p, proof) {
     for (let i=0; i<PARALLELS; i++) {
         const lhs = bigExponentiate(gBig, s[i], pBig);
         const rhs = ((b[i] === 1 ? yBig : oneBig).multiply(bigInt(t[i]))).mod(pBig);
-        if (lhs != rhs) {
+        if (lhs !== rhs) {
             return false;
         }
     }

@@ -6,10 +6,11 @@ import bigInt from 'big-integer';
 const ethereum = window.ethereum;
 
 const contractABI = require('./build/contracts/DarkForest.json').abi;
-const contractAddress = '0x5c8fdd4a7cbac9a8c49e3f5c48d14a1a8b08e926';
+const contractAddress = '0x33666a45ce88119e516044884c469814cecf0364';
 
 class Landing extends Component {
   constructor(props) {
+    console.log('constructing');
     super(props);
     this.contract = null;
     this.account = null;
@@ -79,9 +80,23 @@ class Landing extends Component {
     const a = Math.floor(Math.random() * (p-1));
     const b = Math.floor(Math.random() * (q-1));
     const r = (bigExponentiate(bigInt(g), a, bigInt(p * q)).toJSNumber() * bigExponentiate(bigInt(h), b, bigInt(p * q)).toJSNumber()) % (p * q);
+    const proof = twoDimDLogProof(a, b, g, h, p, q);
     console.log(r);
-    console.log(twoDimDLogProof(a, b, g, h, p, q));
-
+    console.log(proof);
+    this.contract.methods.initializePlayer(r, proof).send({
+      from: this.account
+    }).on('transactionHash', (hash) => {
+      console.log(`transaction hash: ${hash}`);
+    }).on('receipt', (receipt) => {
+      console.log(`receipt: ${receipt}`);
+    }).on('confirmation', (confirmationNumber, receipt) => {
+      console.log(`confirmation number ${confirmationNumber}`);
+    }).on('error', (error, receipt) => {
+      console.log(`error: ${error}`);
+      console.log(`error receipt: ${receipt}`);
+    }).then((txHash) => {
+      console.log(`txHash: ${txHash}`);
+    });
   }
 
   render () {
