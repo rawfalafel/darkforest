@@ -3,13 +3,22 @@ import React, { Component } from 'react';
 
 const ethereum = window.ethereum;
 
+const contractABI = require('./build/contracts/DarkForest.json').abi;
+const contractAddress = '0xb51d931a4700bc53e6e25b786baf8748434b5c2e';
+
 class Landing extends Component {
   constructor(props) {
     super(props);
-    console.log('constructing landing');
+    this.contract = null;
+    this.account = null;
+    this.state = {
+      loading: true,
+      hasDFAccount: false
+    };
+    this.startApp();
   }
 
-  async componentDidMount () {
+  async startApp() {
     const web3 = new Web3(ethereum);
     if (typeof web3 === 'undefined') {
       console.log('no provider :(');
@@ -23,7 +32,22 @@ class Landing extends Component {
       console.log('access not given :(')
     }
     const accounts = await web3.eth.getAccounts();
-    console.log(accounts);
+    if (accounts.length > 0) {
+      this.account = accounts[0]
+    }
+    await this.getContractData(web3);
+    await this.getDFAccountData(web3);
+  }
+
+  async getContractData(web3) {
+    this.contract = new web3.eth.Contract(contractABI, contractAddress);
+    console.log(this.contract);
+  }
+
+  async getDFAccountData(web3) {
+    console.log(this.account);
+    const players = await this.contract.methods.dummyFn().call();
+    console.log(players);
   }
 
   render () {

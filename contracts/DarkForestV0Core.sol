@@ -4,9 +4,9 @@ contract DarkForest {
 
     uint p = 23;
     uint q = 29;
-    uint m = p * q;
-    uint g = 465;
-    uint h = 553;
+    uint public m = p * q;
+    uint public g = 465;
+    uint public h = 553;
 
     mapping (address => uint) public playerLocations;
     address[] public players;
@@ -35,6 +35,10 @@ contract DarkForest {
         uint rNew = (playerLocations[msg.sender] * (g**a) * (h**b)) % m;
         require(!_isOccupied(rNew));
         playerLocations[msg.sender] = rNew;
+    }
+
+    function dummyFn() public pure returns (uint) {
+        return 3;
     }
 
 }
