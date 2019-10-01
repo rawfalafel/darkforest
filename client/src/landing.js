@@ -45,9 +45,12 @@ class Landing extends Component {
   }
 
   async getDFAccountData(web3) {
-    console.log(this.account);
-    const players = await this.contract.methods.dummyFn().call();
-    console.log(players);
+    const myLoc = await this.contract.methods.playerLocations(this.account);
+    if (myLoc === 0) {
+      console.log('need to init');
+    } else {
+      console.log('i\'m in');
+    }
   }
 
   render () {
