@@ -78,9 +78,10 @@ class Landing extends Component {
     const { p, q, g, h } = this.state;
     const a = Math.floor(Math.random() * (p-1));
     const b = Math.floor(Math.random() * (q-1));
-    const r = (Number(bigExponentiate(bigInt(g), a, bigInt(p * q))) * Number(bigExponentiate(bigInt(h), b, bigInt(p * q)))) % (p * q);
+    const r = (bigExponentiate(bigInt(g), a, bigInt(p * q)).toJSNumber() * bigExponentiate(bigInt(h), b, bigInt(p * q)).toJSNumber()) % (p * q);
     console.log(r);
     console.log(twoDimDLogProof(a, b, g, h, p, q));
+
   }
 
   render () {
