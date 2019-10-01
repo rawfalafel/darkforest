@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 const ethereum = window.ethereum;
 
 const contractABI = require('./build/contracts/DarkForest.json').abi;
-const contractAddress = '0xb51d931a4700bc53e6e25b786baf8748434b5c2e';
+const contractAddress = '0xAE1e488129A4a46f2A8aFB666D36226185BD7337';
 
 class Landing extends Component {
   constructor(props) {
