@@ -65,6 +65,7 @@ contract DarkForest {
 
     function initializePlayer(uint _r) public {
         address player = msg.sender;
+        require (!_isOccupied(_r));
         players.push(player);
         playerLocations[player] = _r;
     }
@@ -72,10 +73,10 @@ contract DarkForest {
     function _isOccupied(uint _r) private view returns (bool) {
         for (uint i = 0; i < players.length; i++) {
             if (_r == playerLocations[players[i]]) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     function move(uint _a, uint _b) public {
