@@ -6,7 +6,7 @@ import bigInt from 'big-integer';
 const ethereum = window.ethereum;
 
 const contractABI = require('./build/contracts/DarkForest.json').abi;
-const contractAddress = '0x33666a45ce88119e516044884c469814cecf0364';
+const contractAddress = '0x3edc0d4b3a74e246249500f717bc0187df5be98e';
 
 class Landing extends Component {
   constructor(props) {
@@ -35,6 +35,7 @@ class Landing extends Component {
       console.log('access not given :(')
     }
     const accounts = await web3.eth.getAccounts();
+    console.log('got account');
     if (accounts.length > 0) {
       this.account = accounts[0]
     }
@@ -44,7 +45,9 @@ class Landing extends Component {
 
   async getContractData(web3) {
     this.contract = new web3.eth.Contract(contractABI, contractAddress);
+    console.log('contract initialized');
     const p = await this.contract.methods.p().call();
+    console.log('got p');
     const q = await this.contract.methods.q().call();
     const g = await this.contract.methods.g().call();
     const h = await this.contract.methods.h().call();
