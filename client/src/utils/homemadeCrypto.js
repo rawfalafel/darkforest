@@ -1,4 +1,5 @@
-import bigInt from "big-integer";
+// import bigInt from "big-integer";
+const bigInt = require('big-integer');
 
 const prime = bigInt("273389558745553615023177755634264971227");
 const gen = bigInt("191981998178538467192271372964660528157");
@@ -77,7 +78,7 @@ function verifyDlogProof(y, g, p, proof) {
     for (let i=0; i<PARALLELS; i++) {
         const lhs = bigExponentiate(gBig, s[i], pBig);
         const rhs = ((b[i] === 1 ? yBig : oneBig).multiply(bigInt(t[i]))).mod(pBig);
-        if (lhs !== rhs) {
+        if (lhs.neq(rhs)) {
             return false;
         }
     }
@@ -137,4 +138,4 @@ const testTwoDimension = () => {
     console.log('This should be false: ' + badResult);
 }
 
-export { bigExponentiate, twoDimDLogProof };
+export { bigExponentiate, twoDimDLogProof, verifyTwoDimDLogProof };
