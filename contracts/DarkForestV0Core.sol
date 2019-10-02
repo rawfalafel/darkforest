@@ -11,6 +11,9 @@ contract DarkForest {
     uint hashGen = 191981998178538467192271372964660528157;
     uint hashPrime = 273389558745553615023177755634264971227;
 
+    mapping (address => uint) public playerLocations;
+    address[] public players;
+
     function _modExponentiation(uint base, uint exp, uint modulus) private pure returns (uint) {
         if (exp == 0) {
             return 1;
@@ -60,27 +63,23 @@ contract DarkForest {
         return (_verifyDlogProof(z%p, g, p, proofs[0]) && _verifyDlogProof(z%q, h, q, proofs[1]));
     }
 
-    function initializePlayer(uint rInit, uint[100][2][2] memory proof) public {
-        require(!_isOccupied(rInit));
-        require(_validateProof(rInit, proof));
-        players.push(msg.sender);
-        playerLocations[msg.sender] = rInit;
+    function initializePlayer(uint _r) public {
+        address player = msg.sender;
+        players.push(player);
+        playerLocations[player] = _r;
     }
 
-    mapping (address => uint) public playerLocations;
-    address[] public players;
-
-    function _isOccupied(uint r) private view returns (bool) {
+    function _isOccupied(uint _r) private view returns (bool) {
         for (uint i = 0; i < players.length; i++) {
-            if (r == playerLocations[players[i]]) {
+            if (_r == playerLocations[players[i]]) {
                 return false;
             }
         }
         return true;
     }
 
-    function move(uint a, uint b) public {
-        uint rNew = (playerLocations[msg.sender] * (g**a) * (h**b)) % m;
+    function move(uint _a, uint _b) public {
+        uint rNew = (playerLocations[msg.sender] * (g**_a) * (h**_b)) % m;
         require(!_isOccupied(rNew));
         playerLocations[msg.sender] = rNew;
     }

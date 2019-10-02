@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import React, { Component } from 'react';
-import { bigExponentiate, twoDimDLogProof } from './utils/homemadeCrypto';
+import { bigExponentiate, twoDimDLogProof, verifyTwoDimDLogProof } from './utils/homemadeCrypto';
 import { contractAddress } from './local_contract_addr'; // this is a gitignored file
 import bigInt from 'big-integer';
 
@@ -95,19 +95,22 @@ class Landing extends Component {
     console.log(b);
     console.log(r);
     console.log(proof);
-    this.contract.methods.initializePlayer(r, proof).send({
-      from: this.account
-    }).on('transactionHash', (hash) => {
-      console.log(`transaction hash: ${hash}`);
-    }).on('receipt', (receipt) => {
+    console.log('proof verifies locally: ' + verifyTwoDimDLogProof(r, g, h, p, q, proof));
+    console.log('account' + this.account);
+    this.contract.methods.initializePlayer(r)
+    .send({from: this.account})
+    .on('receipt', async (receipt) => {
       console.log(`receipt: ${receipt}`);
-    }).on('confirmation', (confirmationNumber, receipt) => {
-      console.log(`confirmation number ${confirmationNumber}`);
-    }).on('error', (error, receipt) => {
+      const player = await this.contract.methods.players(0).call();
+      console.log('this should be me');
+      console.log(player);
+      // THIS LINE DOES NOT WORK
+      const addr = await this.contract.methods.playerLocations(this.account).call();
+      console.log('this should be r');
+      console.log(addr);
+    })
+    .on('error', (error) => {
       console.log(`error: ${error}`);
-      console.log(`error receipt: ${receipt}`);
-    }).then((txHash) => {
-      console.log(`txHash: ${txHash}`);
     });
   }
 
