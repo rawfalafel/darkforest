@@ -1,12 +1,12 @@
 import Web3 from 'web3';
 import React, { Component } from 'react';
 import { bigExponentiate, twoDimDLogProof } from './utils/homemadeCrypto';
+import { contractAddress } from './local_contract_addr'; // this is a gitignored file
 import bigInt from 'big-integer';
 
 const ethereum = window.ethereum;
 
 const contractABI = require('./build/contracts/DarkForest.json').abi;
-const contractAddress = '0xf76a21b577535720bdb3e780e5bc8cc4e6f3bcdf';
 
 class Landing extends Component {
   constructor(props) {
@@ -62,7 +62,7 @@ class Landing extends Component {
     console.log(this.contract);
   }
 
-  async getDFAccountData(web3) {
+  async getDFAccountData() {
     const myLoc = await this.contract.methods.playerLocations(this.account).call();
     console.log('myLoc: ' + myLoc);
     if (myLoc === '0') {
