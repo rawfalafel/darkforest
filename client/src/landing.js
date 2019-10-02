@@ -6,7 +6,7 @@ import bigInt from 'big-integer';
 const ethereum = window.ethereum;
 
 const contractABI = require('./build/contracts/DarkForest.json').abi;
-const contractAddress = '0x3edc0d4b3a74e246249500f717bc0187df5be98e';
+const contractAddress = '0xf76a21b577535720bdb3e780e5bc8cc4e6f3bcdf';
 
 class Landing extends Component {
   constructor(props) {
@@ -54,11 +54,17 @@ class Landing extends Component {
     this.setState({
       p, q, g, h
     });
+    console.log('(p,q,g,h):');
+    console.log(p);
+    console.log(q);
+    console.log(g);
+    console.log(h);
     console.log(this.contract);
   }
 
   async getDFAccountData(web3) {
     const myLoc = await this.contract.methods.playerLocations(this.account).call();
+    console.log('myLoc: ' + myLoc);
     if (myLoc === '0') {
       console.log('need to init');
       this.setState({
@@ -84,6 +90,9 @@ class Landing extends Component {
     const b = Math.floor(Math.random() * (q-1));
     const r = (bigExponentiate(bigInt(g), a, bigInt(p * q)).toJSNumber() * bigExponentiate(bigInt(h), b, bigInt(p * q)).toJSNumber()) % (p * q);
     const proof = twoDimDLogProof(a, b, g, h, p, q);
+    console.log('(a,b,r,proof):');
+    console.log(a);
+    console.log(b);
     console.log(r);
     console.log(proof);
     this.contract.methods.initializePlayer(r, proof).send({
