@@ -66,6 +66,7 @@ contract DarkForest {
 
     function initializePlayer(uint _r, uint[10][2][2] memory _proofs) public {
         address player = msg.sender;
+        // TODO: check that player doesn't already have an account
         require(!_isOccupied(_r));
         require(_validateProof(_r, _proofs));
         players.push(player);
