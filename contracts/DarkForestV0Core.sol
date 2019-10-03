@@ -18,7 +18,7 @@ contract DarkForest {
         if (exp == 0) {
             return 1;
         } else if (exp == 1) {
-            return base;
+            return base % modulus;
         } else if (exp % 2 == 0) {
             uint half = _modExponentiation(base, exp/2, modulus);
             return (half * half) % modulus;
@@ -28,30 +28,31 @@ contract DarkForest {
         }
     }
 
-    function _jankHash(uint[100] memory arr) private view returns (uint) {
+    function _jankHash(uint[10] memory arr) private view returns (uint) {
         uint sum = 0;
-        for (uint i=0; i<100; i++) {
+        for (uint i=0; i<10; i++) {
             sum += arr[i];
         }
         return _modExponentiation(hashGen, sum, hashPrime);
     }
 
-    function _pseudoRandomBits(uint[100] memory arr) private view returns (uint[100] memory) {
+    function _pseudoRandomBits(uint[10] memory arr) private returns (uint[10] memory) {
         uint hash = _jankHash(arr);
-        uint[100] memory b;
-        for (uint i=0; i<100; i++) {
+        uint[10] memory b;
+        for (uint i=0; i<10; i++) {
             b[i] = (hash >> i) % 2;
         }
         return b;
     }
 
-    function _verifyDlogProof(uint y, uint generator, uint modulus, uint[100][2] memory proof) private view returns (bool) {
-        uint[100] memory t = proof[0];
-        uint[100] memory s = proof[1];
-        uint[100] memory b = _pseudoRandomBits(t);
-        for (uint i=0; i<100; i++) {
+    function _verifyDlogProof(uint y, uint generator, uint modulus, uint[10][2] memory proof) private returns (bool) {
+        uint[10] memory t = proof[0];
+        uint[10] memory s = proof[1];
+        uint[10] memory b = _pseudoRandomBits(t);
+        for (uint i=0; i<10; i++) {
             uint lhs = _modExponentiation(generator, s[i], modulus);
-            uint rhs = t[i] * (y ** b[i]) % modulus;
+
+            uint rhs = (t[i] * (y ** b[i])) % modulus;
             if (lhs != rhs) {
                 return false;
             }
@@ -59,13 +60,14 @@ contract DarkForest {
         return true;
     }
 
-    function _validateProof(uint z, uint[100][2][2] memory proofs) private view returns (bool) {
+    function _validateProof(uint z, uint[10][2][2] memory proofs) private returns (bool) {
         return (_verifyDlogProof(z%p, g, p, proofs[0]) && _verifyDlogProof(z%q, h, q, proofs[1]));
     }
 
-    function initializePlayer(uint _r) public {
+    function initializePlayer(uint _r, uint[10][2][2] memory _proofs) public {
         address player = msg.sender;
-        require (!_isOccupied(_r));
+        require(!_isOccupied(_r));
+        require(_validateProof(_r, _proofs));
         players.push(player);
         playerLocations[player] = _r;
     }
@@ -83,10 +85,6 @@ contract DarkForest {
         uint rNew = (playerLocations[msg.sender] * (g**_a) * (h**_b)) % m;
         require(!_isOccupied(rNew));
         playerLocations[msg.sender] = rNew;
-    }
-
-    function dummyFn() public pure returns (uint) {
-        return 3;
     }
 
 }

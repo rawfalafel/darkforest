@@ -3,7 +3,7 @@ const bigInt = require('big-integer');
 
 const prime = bigInt("273389558745553615023177755634264971227");
 const gen = bigInt("191981998178538467192271372964660528157");
-const PARALLELS = 100;
+const PARALLELS = 10;
 
 function bigExponentiate(base, exp, modulus) {
     // base: BigInt

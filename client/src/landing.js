@@ -97,21 +97,17 @@ class Landing extends Component {
     console.log(proof);
     console.log('proof verifies locally: ' + verifyTwoDimDLogProof(r, g, h, p, q, proof));
     console.log('account' + this.account);
-    this.contract.methods.initializePlayer(r)
-    .send({from: this.account})
-    .on('receipt', async (receipt) => {
-      console.log(`receipt: ${receipt}`);
-      const player = await this.contract.methods.players(0).call();
-      console.log('this should be me');
-      console.log(player);
-      // THIS LINE DOES NOT WORK
-      const addr = await this.contract.methods.playerLocations(this.account).call();
-      console.log('this should be r');
-      console.log(addr);
-    })
-    .on('error', (error) => {
-      console.log(`error: ${error}`);
-    });
+
+    this.contract.methods.initializePlayer(r, proof)
+      .send({from: this.account})
+      .on('receipt', async (receipt) => {
+        console.log(`receipt: ${receipt}`);
+        const rRet = await this.contract.methods.playerLocations(this.account).call();
+        console.log(`my location is ${rRet}`);
+      })
+      .on('error', (error) => {
+        console.log(`error: ${error}`);
+      });
   }
 
   render () {
