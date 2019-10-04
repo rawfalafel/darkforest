@@ -90,13 +90,13 @@ class Landing extends Component {
     const b = Math.floor(Math.random() * (q-1));
     const r = (bigExponentiate(bigInt(g), a, bigInt(p * q)).toJSNumber() * bigExponentiate(bigInt(h), b, bigInt(p * q)).toJSNumber()) % (p * q);
     const proof = twoDimDLogProof(a, b, g, h, p, q);
-    console.log('(a,b,r,proof):');
-    console.log(a);
-    console.log(b);
-    console.log(r);
-    console.log(proof);
-    console.log('proof verifies locally: ' + verifyTwoDimDLogProof(r, g, h, p, q, proof));
-    console.log('account' + this.account);
+    // console.log('(a,b,r,proof):');
+    // console.log(a);
+    // console.log(b);
+    // console.log(r);
+    // console.log(proof);
+    // console.log('proof verifies locally: ' + verifyTwoDimDLogProof(r, g, h, p, q, proof));
+    // console.log('account' + this.account);
 
     this.contract.methods.initializePlayer(r, proof)
       .send({from: this.account})
@@ -110,12 +110,46 @@ class Landing extends Component {
       });
   }
 
+  async move(x, y) {
+    console.log(`my current location according to me: ${this.state.location}`);
+    const oldLoc = await this.contract.methods.playerLocations(this.account).call();
+    console.log(`my current location according to server: ${oldLoc}`);
+    console.log(`moving (${x}, ${y})`);
+    this.contract.methods.move(x, y)
+    .send({from: this.account})
+    .on('receipt', async (receipt) => {
+      console.log(`receipt: ${receipt}`);
+      const newLoc = await this.contract.methods.playerLocations(this.account).call();
+      console.log(`my new location is ${newLoc}`);
+      this.setState({location: newLoc});
+    });
+  }
+
+  async moveNE() {
+    await this.move(1,1);
+  }
+  async moveSW() {
+    await this.move(-1, -1);
+  }
+
   render () {
     if (!this.state.loading) {
       return (
         <div>
           {this.state.hasDFAccount ? (
-            <p>have df account</p>
+            <div>
+              <p>have df account</p>
+              <button
+                onClick={this.moveNE.bind(this)}
+              >
+                Move (1,1)
+              </button>
+              <button
+              onClick={this.moveSW.bind(this)}
+              >
+                  Move (-1,-1)
+              </button>
+            </div>
           ) : (
             <button
               onClick={this.initialize.bind(this)}
