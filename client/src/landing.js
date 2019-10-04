@@ -5,6 +5,7 @@ import { contractAddress } from './local_contract_addr'; // this is a gitignored
 import bigInt from 'big-integer';
 import * as stringify from 'json-stable-stringify';
 import * as md5 from 'md5';
+import Board from './board/Board'
 
 const ethereum = window.ethereum;
 
@@ -48,11 +49,10 @@ class Landing extends Component {
   async getContractData(web3) {
     this.contract = new web3.eth.Contract(contractABI, contractAddress);
     console.log('contract initialized');
-    const p = await this.contract.methods.p().call();
-    console.log('got p');
-    const q = await this.contract.methods.q().call();
-    const g = await this.contract.methods.g().call();
-    const h = await this.contract.methods.h().call();
+    const p = parseInt(await this.contract.methods.p().call());
+    const q = parseInt(await this.contract.methods.q().call());
+    const g = parseInt(await this.contract.methods.g().call());
+    const h = parseInt(await this.contract.methods.h().call());
     this.setState({
       p, q, g, h
     });
@@ -65,9 +65,9 @@ class Landing extends Component {
   }
 
   async getDFAccountData() {
-    const myLoc = await this.contract.methods.playerLocations(this.account).call();
+    const myLoc = parseInt(await this.contract.methods.playerLocations(this.account).call());
     console.log('myLoc: ' + myLoc);
-    if (myLoc === '0') {
+    if (myLoc === 0) {
       console.log('need to init');
       this.setState({
         loading: false,
@@ -107,7 +107,7 @@ class Landing extends Component {
     .send({from: this.account})
     .on('receipt', async (receipt) => {
       console.log(`receipt: ${receipt}`);
-      const rRet = await this.contract.methods.playerLocations(this.account).call();
+      const rRet = parseInt(await this.contract.methods.playerLocations(this.account).call());
       console.log(`my location is ${rRet}`);
 
       this.updateFromStaging();
@@ -138,18 +138,18 @@ class Landing extends Component {
 
   async move(x, y) {
     console.log(`my current location according to me: ${this.state.location}`);
-    const oldLoc = await this.contract.methods.playerLocations(this.account).call();
+    const oldLoc = parseInt(await this.contract.methods.playerLocations(this.account).call());
     console.log(`my current location according to server: ${oldLoc}`);
     console.log(`moving (${x}, ${y})`);
-    const stagedX = (parseInt(window.localStorage.myX) + x) % (this.state.p - 1);
-    const stagedY = (parseInt(window.localStorage.myY) + y) % (this.state.q - 1);
+    const stagedX = (parseInt(window.localStorage.myX) + x + this.state.p - 1) % (this.state.p - 1);
+    const stagedY = (parseInt(window.localStorage.myY) + y + this.state.q - 1) % (this.state.q - 1);
     const stagedR = (this.state.g ** stagedX) * (this.state.h ** stagedY) % (this.state.p * this.state.q);
     this.stageMove(stagedX, stagedY, stagedR);
     this.contract.methods.move(x, y)
     .send({from: this.account})
     .on('receipt', async (receipt) => {
       console.log(`receipt: ${receipt}`);
-      const newLoc = await this.contract.methods.playerLocations(this.account).call();
+      const newLoc = parseInt(await this.contract.methods.playerLocations(this.account).call());
       console.log(`my new location is ${newLoc}`);
       this.updateFromStaging();
       this.setState({location: newLoc});
@@ -183,6 +183,10 @@ class Landing extends Component {
               <p>{`current a: ${window.localStorage.myX}`}</p>
               <p>{`current b: ${window.localStorage.myY}`}</p>
               <p>{`current r: ${window.localStorage.myR}`}</p>
+              <Board
+                p={parseInt(this.state.p)}
+                q={this.state.q}
+              />
             </div>
           ) : (
             <button
