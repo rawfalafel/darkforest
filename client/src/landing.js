@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import { bigExponentiate, twoDimDLogProof, verifyTwoDimDLogProof } from './utils/homemadeCrypto';
 import { contractAddress } from './local_contract_addr'; // this is a gitignored file
 import bigInt from 'big-integer';
+import * as stringify from 'json-stable-stringify';
+import * as md5 from 'md5';
 
 const ethereum = window.ethereum;
 
@@ -90,13 +92,9 @@ class Landing extends Component {
     const b = Math.floor(Math.random() * (q-1));
     const r = (bigExponentiate(bigInt(g), a, bigInt(p * q)).toJSNumber() * bigExponentiate(bigInt(h), b, bigInt(p * q)).toJSNumber()) % (p * q);
     const proof = twoDimDLogProof(a, b, g, h, p, q);
-    // console.log('(a,b,r,proof):');
-    // console.log(a);
-    // console.log(b);
-    // console.log(r);
-    // console.log(proof);
-    // console.log('proof verifies locally: ' + verifyTwoDimDLogProof(r, g, h, p, q, proof));
-    // console.log('account' + this.account);
+
+    window.localStorage.setItem('a', a.toString());
+    window.localStorage.setItem('b', b.toString());
 
     this.contract.methods.initializePlayer(r, proof)
       .send({from: this.account})
@@ -104,6 +102,9 @@ class Landing extends Component {
         console.log(`receipt: ${receipt}`);
         const rRet = await this.contract.methods.playerLocations(this.account).call();
         console.log(`my location is ${rRet}`);
+        this.setState({
+          hasDFAccount: true
+        });
       })
       .on('error', (error) => {
         console.log(`error: ${error}`);
@@ -149,6 +150,8 @@ class Landing extends Component {
               >
                   Move (-1,-1)
               </button>
+              <p>{`current a: ${window.localStorage.a}`}</p>
+              <p>{`current b: ${window.localStorage.b}`}</p>
             </div>
           ) : (
             <button

@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "big-integer": "^1.6.46",
+    "json-stable-stringify": "^1.0.1",
+    "md5": "^2.2.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-scripts": "3.1.2",
