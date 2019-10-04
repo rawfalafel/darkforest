@@ -75,6 +75,9 @@ class Landing extends Component {
       });
     } else {
       console.log('i\'m in');
+      if (myLoc === parseInt(window.localStorage.stagedR)) {
+        this.updateFromStaging();
+      }
       this.setState({
         loading: false,
         hasDFAccount: true,
@@ -84,6 +87,8 @@ class Landing extends Component {
   }
 
   async initialize() {
+    window.localStorage.clear();
+
     if (!(this.state.p && this.state.q && this.state.g && this.state.h)) {
       return;
     }
@@ -93,22 +98,41 @@ class Landing extends Component {
     const r = (bigExponentiate(bigInt(g), a, bigInt(p * q)).toJSNumber() * bigExponentiate(bigInt(h), b, bigInt(p * q)).toJSNumber()) % (p * q);
     const proof = twoDimDLogProof(a, b, g, h, p, q);
 
-    window.localStorage.setItem('a', a.toString());
-    window.localStorage.setItem('b', b.toString());
+    window.localStorage.setItem('originX', a.toString());
+    window.localStorage.setItem('originY', b.toString());
+    window.localStorage.setItem('originR', r.toString());
+    this.stageMove(a, b, r);
 
     this.contract.methods.initializePlayer(r, proof)
-      .send({from: this.account})
-      .on('receipt', async (receipt) => {
-        console.log(`receipt: ${receipt}`);
-        const rRet = await this.contract.methods.playerLocations(this.account).call();
-        console.log(`my location is ${rRet}`);
-        this.setState({
-          hasDFAccount: true
-        });
-      })
-      .on('error', (error) => {
-        console.log(`error: ${error}`);
+    .send({from: this.account})
+    .on('receipt', async (receipt) => {
+      console.log(`receipt: ${receipt}`);
+      const rRet = await this.contract.methods.playerLocations(this.account).call();
+      console.log(`my location is ${rRet}`);
+
+      this.updateFromStaging();
+      this.setState({
+        hasDFAccount: true
       });
+    })
+    .on('error', (error) => {
+      console.log(`error: ${error}`);
+    });
+  }
+
+  async updateFromStaging() {
+    window.localStorage.setItem('myX', window.localStorage.stagedX);
+    window.localStorage.setItem('myY', window.localStorage.stagedY);
+    window.localStorage.setItem('myR', window.localStorage.stagedR);
+    window.localStorage.removeItem('stagedX');
+    window.localStorage.removeItem('stagedY');
+    window.localStorage.removeItem('stagedR');
+  }
+
+  async stageMove(x, y, r) {
+    window.localStorage.setItem('stagedX', x.toString());
+    window.localStorage.setItem('stagedY', y.toString());
+    window.localStorage.setItem('stagedR', r.toString());
   }
 
   async move(x, y) {
@@ -116,12 +140,17 @@ class Landing extends Component {
     const oldLoc = await this.contract.methods.playerLocations(this.account).call();
     console.log(`my current location according to server: ${oldLoc}`);
     console.log(`moving (${x}, ${y})`);
+    const stagedX = (parseInt(window.localStorage.myX) + x) % (this.state.p - 1);
+    const stagedY = (parseInt(window.localStorage.myY) + y) % (this.state.q - 1);
+    const stagedR = (this.state.g ** stagedX) * (this.state.h ** stagedY) % (this.state.p * this.state.q);
+    this.stageMove(stagedX, stagedY, stagedR);
     this.contract.methods.move(x, y)
     .send({from: this.account})
     .on('receipt', async (receipt) => {
       console.log(`receipt: ${receipt}`);
       const newLoc = await this.contract.methods.playerLocations(this.account).call();
       console.log(`my new location is ${newLoc}`);
+      this.updateFromStaging();
       this.setState({location: newLoc});
     });
   }
@@ -150,8 +179,9 @@ class Landing extends Component {
               >
                   Move (-1,-1)
               </button>
-              <p>{`current a: ${window.localStorage.a}`}</p>
-              <p>{`current b: ${window.localStorage.b}`}</p>
+              <p>{`current a: ${window.localStorage.myX}`}</p>
+              <p>{`current b: ${window.localStorage.myY}`}</p>
+              <p>{`current r: ${window.localStorage.myR}`}</p>
             </div>
           ) : (
             <button
