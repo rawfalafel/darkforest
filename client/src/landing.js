@@ -112,7 +112,8 @@ class Landing extends Component {
 
       this.updateFromStaging();
       this.setState({
-        hasDFAccount: true
+        hasDFAccount: true,
+        location: rRet
       });
     })
     .on('error', (error) => {

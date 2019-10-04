@@ -1,8 +1,8 @@
 // import bigInt from "big-integer";
+import { keccak256 } from "js-sha3";
+import { Buffer } from "buffer";
 const bigInt = require('big-integer');
 
-const prime = bigInt("273389558745553615023177755634264971227");
-const gen = bigInt("191981998178538467192271372964660528157");
 const PARALLELS = 10;
 
 function bigExponentiate(base, exp, modulus) {
@@ -22,23 +22,26 @@ function bigExponentiate(base, exp, modulus) {
     }
 }
 
-function jankHash(arr) {
-    // arr: array[int]
-    const s = arr.reduce((a,b) => (a+b), 0);
-    return bigExponentiate(gen, s, prime);
+function positiveIntArrToString (arr){
+    let repr = "[";
+    for (let i=0; i<arr.length; i++) {
+        repr += ` ${arr[i]},`
+    }
+    repr += "]";
+    return repr;
 }
 
-function pseudoRandomBits(t) {
-    // t: array[int]
-    // return: array[int] of bits
-    // pseudorandom [b1,...,bPARALLELS] from [t1,...,tPARALLELS]
-    const H = jankHash(t);
-    let b = [];
-    for (let i=0; i<PARALLELS; i++) {
-        const pow2 = bigInt(2).pow(bigInt(i));
-        b.push(H.divide(pow2).isOdd() ? 1 : 0);
+function randomBitsFromPositiveIntArr (arr) {
+    const repr = positiveIntArrToString(arr);
+    const hashBuf = Buffer.from(keccak256(repr), 'hex');
+    let bits = []
+    for (let i=0; i<hashBuf.length; i++) {
+        let elt = hashBuf.readUInt8(i);
+        for (let bit=0; bit<8; bit++) {
+            bits.push(!! ((elt >> bit) & 0x01));
+        }
     }
-    return b;
+    return bits;
 }
 
 function dLogProof(x, g, p) {
@@ -54,10 +57,10 @@ function dLogProof(x, g, p) {
     const gBig = bigInt(g);
     const pBig = bigInt(p);
     let t = r.map(ri => bigExponentiate(gBig, ri, pBig).toJSNumber());
-    let b = pseudoRandomBits(t);
+    let b = randomBitsFromPositiveIntArr(t);
     let s = [];
     for (let i=0; i<PARALLELS; i++) {
-        s.push(r[i] + b[i]*x);
+        s.push(b[i] ? r[i]+x : r[i]);
     }
     return [t,s];
 }
@@ -70,14 +73,14 @@ function verifyDlogProof(y, g, p, proof) {
     // Verify ZK proof (t,s) of knowledge x such that g^x = y mod p
     const t = proof[0];
     const s = proof[1];
-    const b = pseudoRandomBits(t);
+    const b = randomBitsFromPositiveIntArr(t);
     const gBig = bigInt(g);
     const yBig = bigInt(y);
     const pBig = bigInt(p);
     const oneBig = bigInt(1);
     for (let i=0; i<PARALLELS; i++) {
         const lhs = bigExponentiate(gBig, s[i], pBig);
-        const rhs = ((b[i] === 1 ? yBig : oneBig).multiply(bigInt(t[i]))).mod(pBig);
+        const rhs = ((b[i] ? yBig : oneBig).multiply(bigInt(t[i]))).mod(pBig);
         if (lhs.neq(rhs)) {
             return false;
         }
