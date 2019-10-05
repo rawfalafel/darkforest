@@ -30,7 +30,8 @@ class Board extends Component {
                   border: '1px solid black',
                   display: 'flex',
                   justifyContent: 'center',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  backgroundColor: !this.props.knownBoard[i][j] ? 'grey' : 'white'
                 }}
               >
                 {(parseInt(window.localStorage.myX) === i) && (parseInt(window.localStorage.myY) === j) ? (

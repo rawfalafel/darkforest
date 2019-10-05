@@ -19,7 +19,9 @@ class Landing extends Component {
     this.account = null;
     this.state = {
       loading: true,
-      hasDFAccount: false
+      hasDFAccount: false,
+      knownBoard: [],
+      playerLocMap: {}
     };
     this.startApp();
   }
@@ -44,6 +46,7 @@ class Landing extends Component {
     }
     await this.getContractData(web3);
     await this.getDFAccountData(web3);
+    this.explore();
   }
 
   async getContractData(web3) {
@@ -54,14 +57,9 @@ class Landing extends Component {
     const g = parseInt(await this.contract.methods.g().call());
     const h = parseInt(await this.contract.methods.h().call());
     this.setState({
-      p, q, g, h
+      p, q, g, h,
+      knownBoard: [...Array(p-1)].map(arr => [...Array(q-1)])
     });
-    console.log('(p,q,g,h):');
-    console.log(p);
-    console.log(q);
-    console.log(g);
-    console.log(h);
-    console.log(this.contract);
   }
 
   async getDFAccountData() {
@@ -81,7 +79,8 @@ class Landing extends Component {
       this.setState({
         loading: false,
         hasDFAccount: true,
-        location: myLoc
+        location: myLoc,
+        knownBoard: JSON.parse(window.localStorage.knownBoard)
       });
     }
   }
@@ -109,6 +108,7 @@ class Landing extends Component {
       console.log(`receipt: ${receipt}`);
       const rRet = parseInt(await this.contract.methods.playerLocations(this.account).call());
       console.log(`my location is ${rRet}`);
+      this.telescopeUpdate(a, b, r);
 
       this.updateFromStaging();
       this.setState({
@@ -143,7 +143,9 @@ class Landing extends Component {
     console.log(`moving (${x}, ${y})`);
     const stagedX = (parseInt(window.localStorage.myX) + x + this.state.p - 1) % (this.state.p - 1);
     const stagedY = (parseInt(window.localStorage.myY) + y + this.state.q - 1) % (this.state.q - 1);
-    const stagedR = (this.state.g ** stagedX) * (this.state.h ** stagedY) % (this.state.p * this.state.q);
+    const m = this.state.p * this.state.q;
+    const stagedR = bigInt(this.state.g).modPow(bigInt(stagedX), bigInt(m)).toJSNumber() *
+      bigInt(this.state.h).modPow(bigInt(stagedY), bigInt(m)).toJSNumber() % m;
     this.stageMove(stagedX, stagedY, stagedR);
     this.contract.methods.move(x, y)
     .send({from: this.account})
@@ -151,6 +153,7 @@ class Landing extends Component {
       console.log(`receipt: ${receipt}`);
       const newLoc = parseInt(await this.contract.methods.playerLocations(this.account).call());
       console.log(`my new location is ${newLoc}`);
+      this.telescopeUpdate(stagedX, stagedY, stagedR);
       this.updateFromStaging();
       this.setState({location: newLoc});
     });
@@ -161,6 +164,27 @@ class Landing extends Component {
   }
   async moveSW() {
     await this.move(-1, -1);
+  }
+
+  explore() {
+    setInterval(() => {
+      const x = Math.floor(Math.random() * (this.state.p - 1));
+      const y = Math.floor(Math.random() * (this.state.q - 1));
+      const m = this.state.p * this.state.q;
+      const r = bigInt(this.state.g).modPow(bigInt(x), bigInt(m)).toJSNumber() *
+        bigInt(this.state.h).modPow(bigInt(y), bigInt(m)).toJSNumber() % m;
+      this.telescopeUpdate(x, y, r);
+      console.log(this.state.knownBoard);
+    }, 5000)
+  }
+
+  telescopeUpdate(x, y, r) {
+    this.state.knownBoard[x][y] = r;
+    this.setState({
+      knownBoard: this.state.knownBoard
+    }, () => {
+      window.localStorage.setItem('knownBoard', stringify(this.state.knownBoard));
+    });
   }
 
   render () {
@@ -186,6 +210,7 @@ class Landing extends Component {
               <Board
                 p={parseInt(this.state.p)}
                 q={this.state.q}
+                knownBoard={this.state.knownBoard}
               />
             </div>
           ) : (
