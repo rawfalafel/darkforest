@@ -46,4 +46,8 @@ contract DarkForest is Crypto {
         playerLocations[player] = rNew;
     }
 
+    function getNPlayers() public view returns (uint) {
+        return players.length;
+    }
+
 }

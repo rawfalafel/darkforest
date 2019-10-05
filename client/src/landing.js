@@ -21,7 +21,7 @@ class Landing extends Component {
       loading: true,
       hasDFAccount: false,
       knownBoard: [],
-      playerLocMap: {}
+      locPlayerMap: {}
     };
     this.startApp();
   }
@@ -56,9 +56,31 @@ class Landing extends Component {
     const q = parseInt(await this.contract.methods.q().call());
     const g = parseInt(await this.contract.methods.g().call());
     const h = parseInt(await this.contract.methods.h().call());
+    console.log(p);
     this.setState({
       p, q, g, h,
-      knownBoard: [...Array(p-1)].map(arr => [...Array(q-1)])
+      knownBoard: Array(p-1).fill(0).map(() => Array(q-1).fill(0))
+    });
+    // the following code is really bad; doesn't handle any errors etc.
+    // probably the correct way to do this is to refactor the data structures
+    // that we use to even store playerLocations in the smart contract
+    const nPlayers = parseInt(await this.contract.methods.getNPlayers().call());
+    let playerPromises = [];
+    for (let i = 0; i < nPlayers; i += 1) {
+      playerPromises.push(this.contract.methods.players(i).call());
+    }
+    let playerAddrs = await Promise.all(playerPromises);
+    let playerLocationPromises = [];
+    for (let i = 0; i < nPlayers; i += 1) {
+      playerLocationPromises.push(this.contract.methods.playerLocations(playerAddrs[i]).call());
+    }
+    let playerLocations = await Promise.all(playerLocationPromises);
+    let locationPlayerMap = {};
+    for (let i = 0; i < nPlayers; i += 1) {
+      locationPlayerMap[playerLocations[i]] = playerAddrs[i];
+    }
+    this.setState({
+      locPlayerMap: locationPlayerMap
     });
   }
 
@@ -73,33 +95,33 @@ class Landing extends Component {
       });
     } else {
       console.log('i\'m in');
-      if (myLoc === parseInt(window.localStorage.stagedR)) {
+      if (myLoc === parseInt(window.localStorage[this.account + 'stagedR'])) {
         this.updateFromStaging();
       }
       this.setState({
         loading: false,
         hasDFAccount: true,
         location: myLoc,
-        knownBoard: JSON.parse(window.localStorage.knownBoard)
+        knownBoard: JSON.parse(window.localStorage[this.account + 'knownBoard'])
       });
     }
   }
 
   async initialize() {
-    window.localStorage.clear();
 
     if (!(this.state.p && this.state.q && this.state.g && this.state.h)) {
       return;
     }
+    window.localStorage.setItem(this.account + 'knownBoard', stringify(Array(this.state.p-1).fill(0).map(() => Array(this.state.q-1))));
     const { p, q, g, h } = this.state;
     const a = Math.floor(Math.random() * (p-1));
     const b = Math.floor(Math.random() * (q-1));
     const r = (bigExponentiate(bigInt(g), a, bigInt(p * q)).toJSNumber() * bigExponentiate(bigInt(h), b, bigInt(p * q)).toJSNumber()) % (p * q);
     const proof = twoDimDLogProof(a, b, g, h, p, q);
 
-    window.localStorage.setItem('originX', a.toString());
-    window.localStorage.setItem('originY', b.toString());
-    window.localStorage.setItem('originR', r.toString());
+    window.localStorage.setItem(this.account + 'originX', a.toString());
+    window.localStorage.setItem(this.account + 'originY', b.toString());
+    window.localStorage.setItem(this.account + 'originR', r.toString());
     this.stageMove(a, b, r);
 
     this.contract.methods.initializePlayer(r, proof)
@@ -122,18 +144,18 @@ class Landing extends Component {
   }
 
   async updateFromStaging() {
-    window.localStorage.setItem('myX', window.localStorage.stagedX);
-    window.localStorage.setItem('myY', window.localStorage.stagedY);
-    window.localStorage.setItem('myR', window.localStorage.stagedR);
-    window.localStorage.removeItem('stagedX');
-    window.localStorage.removeItem('stagedY');
-    window.localStorage.removeItem('stagedR');
+    window.localStorage.setItem(this.account + 'myX', window.localStorage[this.account + 'stagedX']);
+    window.localStorage.setItem(this.account + 'myY', window.localStorage[this.account + 'stagedY']);
+    window.localStorage.setItem(this.account + 'myR', window.localStorage[this.account + 'stagedR']);
+    window.localStorage.removeItem(this.account + 'stagedX');
+    window.localStorage.removeItem(this.account + 'stagedY');
+    window.localStorage.removeItem(this.account + 'stagedR');
   }
 
   async stageMove(x, y, r) {
-    window.localStorage.setItem('stagedX', x.toString());
-    window.localStorage.setItem('stagedY', y.toString());
-    window.localStorage.setItem('stagedR', r.toString());
+    window.localStorage.setItem(this.account + 'stagedX', x.toString());
+    window.localStorage.setItem(this.account + 'stagedY', y.toString());
+    window.localStorage.setItem(this.account + 'stagedR', r.toString());
   }
 
   async move(x, y) {
@@ -141,8 +163,8 @@ class Landing extends Component {
     const oldLoc = parseInt(await this.contract.methods.playerLocations(this.account).call());
     console.log(`my current location according to server: ${oldLoc}`);
     console.log(`moving (${x}, ${y})`);
-    const stagedX = (parseInt(window.localStorage.myX) + x + this.state.p - 1) % (this.state.p - 1);
-    const stagedY = (parseInt(window.localStorage.myY) + y + this.state.q - 1) % (this.state.q - 1);
+    const stagedX = (parseInt(window.localStorage[this.account + 'myX']) + x + this.state.p - 1) % (this.state.p - 1);
+    const stagedY = (parseInt(window.localStorage[this.account + 'myY']) + y + this.state.q - 1) % (this.state.q - 1);
     const m = this.state.p * this.state.q;
     const stagedR = bigInt(this.state.g).modPow(bigInt(stagedX), bigInt(m)).toJSNumber() *
       bigInt(this.state.h).modPow(bigInt(stagedY), bigInt(m)).toJSNumber() % m;
@@ -159,22 +181,34 @@ class Landing extends Component {
     });
   }
 
-  async moveNE() {
-    await this.move(1,1);
+  moveUp() {
+    this.move(0, -1);
   }
-  async moveSW() {
-    await this.move(-1, -1);
+
+  moveDown() {
+    this.move(0, 1);
+  }
+
+  moveLeft() {
+    this.move(-1, 0);
+  }
+
+  moveRight() {
+    this.move(1, 0);
   }
 
   explore() {
     setInterval(() => {
-      const x = Math.floor(Math.random() * (this.state.p - 1));
-      const y = Math.floor(Math.random() * (this.state.q - 1));
-      const m = this.state.p * this.state.q;
-      const r = bigInt(this.state.g).modPow(bigInt(x), bigInt(m)).toJSNumber() *
-        bigInt(this.state.h).modPow(bigInt(y), bigInt(m)).toJSNumber() % m;
-      this.telescopeUpdate(x, y, r);
-      console.log(this.state.knownBoard);
+      if (this.state.hasDFAccount) {
+        const x = Math.floor(Math.random() * (this.state.p - 1));
+        const y = Math.floor(Math.random() * (this.state.q - 1));
+        const m = this.state.p * this.state.q;
+        const r = bigInt(this.state.g).
+            modPow(bigInt(x), bigInt(m)).
+            toJSNumber() *
+          bigInt(this.state.h).modPow(bigInt(y), bigInt(m)).toJSNumber() % m;
+        this.telescopeUpdate(x, y, r);
+      }
     }, 5000)
   }
 
@@ -183,7 +217,7 @@ class Landing extends Component {
     this.setState({
       knownBoard: this.state.knownBoard
     }, () => {
-      window.localStorage.setItem('knownBoard', stringify(this.state.knownBoard));
+      window.localStorage.setItem(this.account + 'knownBoard', stringify(this.state.knownBoard));
     });
   }
 
@@ -195,22 +229,34 @@ class Landing extends Component {
             <div>
               <p>have df account</p>
               <button
-                onClick={this.moveNE.bind(this)}
+                onClick={this.moveUp.bind(this)}
               >
-                Move (1,1)
+                Move up
               </button>
               <button
-              onClick={this.moveSW.bind(this)}
+                onClick={this.moveDown.bind(this)}
               >
-                  Move (-1,-1)
+                Move down
               </button>
-              <p>{`current a: ${window.localStorage.myX}`}</p>
-              <p>{`current b: ${window.localStorage.myY}`}</p>
-              <p>{`current r: ${window.localStorage.myR}`}</p>
+              <button
+                onClick={this.moveLeft.bind(this)}
+              >
+                Move left
+              </button>
+              <button
+                onClick={this.moveRight.bind(this)}
+              >
+                Move right
+              </button>
+              <p>{`current a: ${window.localStorage[this.account + 'myX']}`}</p>
+              <p>{`current b: ${window.localStorage[this.account + 'myY']}`}</p>
+              <p>{`current r: ${window.localStorage[this.account + 'myR']}`}</p>
               <Board
                 p={parseInt(this.state.p)}
                 q={this.state.q}
                 knownBoard={this.state.knownBoard}
+                locPlayerMap={this.state.locPlayerMap}
+                myAddress={this.account}
               />
             </div>
           ) : (
