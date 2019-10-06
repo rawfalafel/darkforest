@@ -13,7 +13,6 @@ const contractABI = require('./build/contracts/DarkForest.json').abi;
 
 class Landing extends Component {
   constructor(props) {
-    console.log('constructing');
     super(props);
     this.contract = null;
     this.account = null;
