@@ -10,6 +10,7 @@ import bigInt from "big-integer";
 import * as stringify from "json-stable-stringify";
 import * as md5 from "md5";
 import Board from "./board/Board";
+import ContractAPI from "./ContractAPI";
 
 const ethereum = window.ethereum;
 
@@ -30,6 +31,12 @@ class Landing extends Component {
   }
 
   async startApp() {
+    this.contractAPI = ContractAPI.getInstance();
+    this.contractAPI.on('web3manager', () => {
+      console.log('event emitter: initialized web3 object!');
+    }).on('contractData', () => {
+      console.log('event emitter: got contract data!');
+    });
     const web3 = new Web3(ethereum);
     if (typeof web3 === "undefined") {
       console.log("no provider :(");

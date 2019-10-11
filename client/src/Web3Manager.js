@@ -35,7 +35,7 @@ class Web3Manager {
       }
       // Request account access if needed
       // Then make sure there is a default account and you can get the contract
-      Web3Manager.instancePromise = ethereum
+      Web3Manager.instancePromise = await ethereum
         .enable()
         .then(accounts => {
           if (accounts.length === 0) {
@@ -53,3 +53,5 @@ class Web3Manager {
     return Web3Manager.instancePromise;
   }
 }
+
+export default Web3Manager;
