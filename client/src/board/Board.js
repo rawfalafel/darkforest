@@ -3,21 +3,20 @@ import React, { Component } from "react";
 class Board extends Component {
   getActorForCoords(i, j, locPlayerMap) {
     if (
-      parseInt(window.localStorage[this.props.myAddress + "myX"]) === j &&
-      parseInt(window.localStorage[this.props.myAddress + "myY"]) === i
+      parseInt(this.props.myLocation.x) === j &&
+      parseInt(this.props.myLocation.y) === i
     ) {
       return <p>💩</p>;
     }
-    const playerAtAddress =
-      locPlayerMap[this.props.knownBoard[j][i].toString()];
-    if (playerAtAddress && playerAtAddress !== this.props.myAddress) {
+    const locAddress = this.props.knownBoard[j][i] ? this.props.knownBoard[j][i].toString() : null;
+    const playerAtAddress = locPlayerMap[locAddress];
+    if (playerAtAddress && playerAtAddress.toLowerCase() !== this.props.myAddress.toLowerCase()) {
       return <p>👻</p>;
     }
     return null;
   }
 
   render() {
-    console.log(this.props.myAddress);
     return (
       <div
         style={{

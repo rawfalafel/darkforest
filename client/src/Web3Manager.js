@@ -1,11 +1,12 @@
+import * as EventEmitter from 'events';
 import Web3 from "web3";
-import { contractAddress } from "./local_contract_addr"; // this is a gitignored file
+import {contractAddress} from "./local_contract_addr"; // this is a gitignored file
 
 const ethereum = window.ethereum;
 
 const contractABI = require("./build/contracts/DarkForest.json").abi;
 
-class Web3Manager {
+class Web3Manager extends EventEmitter {
   static instancePromise;
 
   web3;
@@ -14,6 +15,7 @@ class Web3Manager {
   loadingError;
 
   constructor(web3, account, contract, loadingError) {
+    super();
     this.web3 = web3;
     this.account = account;
     this.contract = contract;
@@ -25,32 +27,61 @@ class Web3Manager {
       const web3 = new Web3(ethereum);
       if (typeof web3 === "undefined") {
         Web3Manager.instancePromise = Promise.resolve(
-          new Web3Manager(
-            web3,
-            null,
-            null,
-            new Error("could not initialize web3 object")
-          )
+            new Web3Manager(
+                web3,
+                null,
+                null,
+                new Error("could not initialize web3 object")
+            )
         );
       }
       // Request account access if needed
       // Then make sure there is a default account and you can get the contract
       Web3Manager.instancePromise = await ethereum
-        .enable()
-        .then(accounts => {
-          if (accounts.length === 0) {
-            throw new Error("found no accounts");
-          }
-          const account = accounts[0];
-          const contract = new web3.eth.Contract(contractABI, contractAddress);
-          return new Web3Manager(web3, account, contract);
-        })
-        .catch(error => {
-          return new Web3Manager(web3, null, null, error);
-        });
+          .enable()
+          .then(async accounts => {
+            if (accounts.length === 0) {
+              throw new Error("found no accounts");
+            }
+            const account = accounts[0];
+            const contract = new web3.eth.Contract(contractABI, contractAddress);
+            return new Web3Manager(web3, account, contract);
+          })
+          .catch(error => {
+            return new Web3Manager(web3, null, null, error);
+          });
+      ethereum.on('accountsChanged', (accounts) => {
+        window.location.reload(true);
+      });
     }
 
     return Web3Manager.instancePromise;
+  }
+
+  initializePlayer(r, proof) {
+    this.contract.methods
+        .initializePlayer(r, proof)
+        .send({from: this.account})
+        .on("receipt", async receipt => {
+          this.emit('initializedPlayer', receipt);
+        })
+        .on("error", error => {
+          console.log(`error: ${error}`);
+        });
+    return this;
+  }
+
+  move(x, y) {
+    this.contract.methods
+        .move(x, y)
+        .send({ from: this.account })
+        .on("receipt", async receipt => {
+          this.emit('moveComplete', receipt);
+        })
+        .on("error", error => {
+          console.log(`error: ${error}`);
+        });
+    return this;
   }
 }
 
