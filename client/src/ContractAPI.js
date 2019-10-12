@@ -3,7 +3,6 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import {bigExponentiate, twoDimDLogProof} from "./utils/homemadeCrypto";
 import bigInt from "big-integer";
-import * as stringify from "json-stable-stringify";
 
 class ContractAPI extends EventEmitter {
   static instance;
