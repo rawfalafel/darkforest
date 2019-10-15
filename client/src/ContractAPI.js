@@ -4,7 +4,9 @@ import LocalStorageManager from "./LocalStorageManager";
 import {bigExponentiate, twoDimDLogProof} from "./utils/homemadeCrypto";
 import bigInt from "big-integer";
 const initCircuit = require("./circuits/init/circuit.json");
+const moveCircuit = require("./circuits/move/circuit");
 const initPk = require("./circuits/init/proving_key.json");
+const movePk = require("./circuits/move/proving_key");
 
 const zkSnark = require("snarkjs");
 const {stringifyBigInts, unstringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
@@ -250,6 +252,35 @@ class ContractAPI extends EventEmitter {
       [proof.pi_kp[0], proof.pi_kp[1]], // k
       publicSignals // input
     ]
+  }
+
+  async moveCircuitTest(dx, dy) {
+    if (!!this.myLocStaged.r) {
+      throw new Error('another move is already queued');
+    }
+    console.log(this.myLocCurrent);
+    if (!this.myLocCurrent.x || !this.myLocCurrent.y || !this.myLocCurrent.r) {
+      throw new Error('don\'t have current location');
+    }
+    const {p, q, g, h} = this.getConstantInts();
+    console.log('creating circuit object');
+    const newX = (parseInt(this.myLocCurrent.x) + dx + p) % p;
+    const newY = (parseInt(this.myLocCurrent.y) + dy + q) % q;
+    const input = {
+      x1: this.myLocCurrent.x,
+      y1: this.myLocCurrent.y,
+      x2: newX.toString(),
+      y2: newY.toString(),
+      distMax: Math.abs(parseInt(dx)) + Math.abs(parseInt(dy))
+    };
+    const circuit = new zkSnark.Circuit(moveCircuit);
+    console.log('created circuit object, calculating witness');
+    const witness = circuit.calculateWitness(input);
+    console.log('calculated witness, generating proof');
+    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(movePk), witness);
+    console.log('generated proof, sending call');
+    const contractCall = stringifyBigInts(ContractAPI.genCall(snarkProof));
+    await this.web3Manager.contract.methods.newMove(...contractCall).call().then(console.log);
   }
 
   static getInstance() {

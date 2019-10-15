@@ -61,6 +61,10 @@ class Landing extends Component {
     this.contractAPI.initCircuitTest(14,9);
   }
 
+  moveCircuitTest() {
+    this.contractAPI.moveCircuitTest(1, 1);
+  }
+
   render() {
     if (!this.state.loading) {
       return (
@@ -69,6 +73,7 @@ class Landing extends Component {
             <div>
               <p>have df account</p>
               <button onClick={this.initCircuitTest.bind(this)}>Init Circuit Test</button>
+              <button onClick={this.moveCircuitTest.bind(this)}>Move Circuit Test</button>
               <button onClick={this.moveUp.bind(this)}>Move up</button>
               <button onClick={this.moveDown.bind(this)}>Move down</button>
               <button onClick={this.moveLeft.bind(this)}>Move left</button>
