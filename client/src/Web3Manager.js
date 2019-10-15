@@ -58,9 +58,9 @@ class Web3Manager extends EventEmitter {
     return Web3Manager.instancePromise;
   }
 
-  initializePlayer(r, proof) {
+  initializePlayer(...args) {
     this.contract.methods
-        .initializePlayer(r, proof)
+        .initializePlayer(...args)
         .send({from: this.account})
         .on("receipt", async receipt => {
           this.emit('initializedPlayer', receipt);

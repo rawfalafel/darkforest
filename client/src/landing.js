@@ -77,10 +77,10 @@ class Landing extends Component {
               <button onClick={this.stopExplore.bind(this)}>Pause telescope</button>
               <p>{`current x: ${this.contractAPI.myLocCurrent.x}`}</p>
               <p>{`current y: ${this.contractAPI.myLocCurrent.y}`}</p>
-              <p>{`current r: ${this.contractAPI.myLocCurrent.r}`}</p>
+              <p>{`current hash: ${this.contractAPI.myLocCurrent.hash}`}</p>
               <Board
-                p={parseInt(this.contractAPI.constants.p)}
-                q={parseInt(this.contractAPI.constants.q)}
+                maxX={parseInt(this.contractAPI.constants.maxX)}
+                maxY={parseInt(this.contractAPI.constants.maxY)}
                 knownBoard={this.contractAPI.inMemoryBoard}
                 locPlayerMap={this.contractAPI.locPlayerMap}
                 myAddress={this.contractAPI.account}

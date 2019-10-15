@@ -1,13 +1,13 @@
 /*
     Prove: I know (x1,y1,x2,y2) such that:
-    - 0 < x1, x2, y1, y2 < 31
+    - 0 <= x1, x2, y1, y2 < 30
     - |x1-x2|+|y1-y2| <= distMax
     - MiMCSponge(x1,y1) = pub1
     - MiMCSponge(x2,y2) = pub2
 */
 
-include "../../circomlib/circuits/mimcsponge.circom"
-include "../../circomlib/circuits/comparators.circom"
+include "../../../circom/circomlib/circuits/mimcsponge.circom"
+include "../../../circom/circomlib/circuits/comparators.circom"
 
 template AbsoluteDifference() {
     signal input in[2];
@@ -32,24 +32,24 @@ template Main() {
     signal output pub1;
     signal output pub2;
 
-    /* check 0 < x1, x2, y1, y2 < 31 */
+    /* check 0 <= x1, x2, y1, y2 < 30 */
     component ltx1lower = LessThan(32);
     component lty1lower = LessThan(32);
     component ltx2lower = LessThan(32);
     component lty2lower = LessThan(32);
 
-    ltx1lower.in[0] <== 0;
-    ltx1lower.in[1] <== x1;
-    ltx1lower.out === 1;
-    lty1lower.in[0] <== 0;
-    lty1lower.in[1] <== y1;
-    lty1lower.out === 1;
-    ltx2lower.in[0] <== 0;
-    ltx2lower.in[1] <== x2;
-    ltx2lower.out === 1;
-    lty2lower.in[0] <== 0;
-    lty2lower.in[1] <== y2;
-    lty2lower.out === 1;
+    ltx1lower.in[0] <== x1;
+    ltx1lower.in[1] <== 0;
+    ltx1lower.out === 0;
+    lty1lower.in[0] <== y1;
+    lty1lower.in[1] <== 0;
+    lty1lower.out === 0;
+    ltx2lower.in[0] <== x2;
+    ltx2lower.in[1] <== 0;
+    ltx2lower.out === 0;
+    lty2lower.in[0] <== y2;
+    lty2lower.in[1] <== 0;
+    lty2lower.out === 0;
 
     component ltx1upper = LessThan(32);
     component lty1upper = LessThan(32);

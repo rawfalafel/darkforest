@@ -64,14 +64,14 @@ class ContractAPI extends EventEmitter {
   }
 
   async getContractConstants() {
-    const [p, q, g, h] = await Promise.all([this.web3Manager.contract.methods.p().call(),
-      this.web3Manager.contract.methods.q().call(),
-      this.web3Manager.contract.methods.g().call(),
-      this.web3Manager.contract.methods.h().call()]).catch((err) => {
+    const [maxX, maxY] = await Promise.all([
+      this.web3Manager.contract.methods.maxX().call(),
+      this.web3Manager.contract.methods.maxY().call()
+    ]).catch((err) => {
       this.emit('error', err);
-      return [null, null, null, null];
+      return [null, null];
     });
-    this.constants = {p, q, g, h};
+    this.constants = {maxX, maxY};
   }
 
   async getPlayerData() {
@@ -111,9 +111,9 @@ class ContractAPI extends EventEmitter {
     if (this.myLocAddr) {
       const localStorageLocationCurrent = this.localStorageManager.getLocationCurrent();
       const localStorageLocationStaged = this.localStorageManager.getLocationStaged();
-      if (localStorageLocationCurrent.r === this.myLocAddr) {
+      if (localStorageLocationCurrent.hash === this.myLocAddr) {
         myLocCurrent = localStorageLocationCurrent;
-      } else if (localStorageLocationStaged.r === this.myLocAddr) {
+      } else if (localStorageLocationStaged.hash === this.myLocAddr) {
         myLocCurrent = localStorageLocationStaged;
       } else {
         throw new Error('Can\'t find my coordinates');
@@ -137,24 +137,24 @@ class ContractAPI extends EventEmitter {
   }
 
   joinGame() {
-    const {p, q, g, h} = this.getConstantInts();
-    const x = Math.floor(Math.random() * (p - 1));
-    const y = Math.floor(Math.random() * (q - 1));
-    const r =
-        ((bigExponentiate(bigInt(g), x, bigInt(p * q)).toJSNumber() *
-            bigExponentiate(bigInt(h), y, bigInt(p * q)).toJSNumber()) %
-        (p * q));
-    const proof = twoDimDLogProof(x, y, g, h, p, q);
+    const {maxX, maxY} = this.getConstantInts();
+    const x = Math.floor(Math.random() * maxX);
+    const y = Math.floor(Math.random() * maxY);
+
+    const hash = ContractAPI.mimcHash(x, y);
+    const contractCall = ContractAPI.initContractCall(x, y);
+
     const loc = {
       x: x.toString(),
       y: y.toString(),
-      r: r.toString()
+      hash: hash.toString()
     };
     this.setLocationStaged(loc);
     this.emit('initializingPlayer');
-    this.web3Manager.initializePlayer(r, proof).once('initializedPlayer', receipt => {
+
+    this.web3Manager.initializePlayer(...contractCall).once('initializedPlayer', receipt => {
       this.hasJoinedGame = true;
-      this.myLocAddr = r;
+      this.myLocAddr = hash;
       this.setLocationCurrent(loc);
       this.emit('initializedPlayer');
     });
@@ -162,41 +162,39 @@ class ContractAPI extends EventEmitter {
   }
 
   move(dx, dy) {
-    if (!!this.myLocStaged.r) {
-      throw new Error('another move is already queued');
-    }
-    const {p, q, g, h} = this.getConstantInts();
-    const x = parseInt(this.myLocCurrent.x);
-    const y = parseInt(this.myLocCurrent.y);
-    const stagedX = (x + dx + p - 1) % (p - 1);
-    const stagedY = (y + dy + q - 1) % (q - 1);
-    const m = p * q;
-    const stagedR = (bigInt(g).modPow(bigInt(stagedX), bigInt(m)).toJSNumber() *
-        bigInt(h).modPow(bigInt(stagedY), bigInt(m)).toJSNumber()) % m;
-    const loc = {
-      x: stagedX.toString(),
-      y: stagedY.toString(),
-      r: stagedR.toString()
-    };
-    this.setLocationStaged(loc);
-    this.emit('moveSend');
-    this.web3Manager.move(dx, dy).once('moveComplete', receipt => {
-      this.setLocationCurrent(loc);
-      this.emit('moveComplete');
-    });
-    return this;
+    // if (!!this.myLocStaged.r) {
+    //   throw new Error('another move is already queued');
+    // }
+    // const {p, q, g, h} = this.getConstantInts();
+    // const x = parseInt(this.myLocCurrent.x);
+    // const y = parseInt(this.myLocCurrent.y);
+    // const stagedX = (x + dx + p - 1) % (p - 1);
+    // const stagedY = (y + dy + q - 1) % (q - 1);
+    // const m = p * q;
+    // const stagedR = (bigInt(g).modPow(bigInt(stagedX), bigInt(m)).toJSNumber() *
+    //     bigInt(h).modPow(bigInt(stagedY), bigInt(m)).toJSNumber()) % m;
+    // const loc = {
+    //   x: stagedX.toString(),
+    //   y: stagedY.toString(),
+    //   r: stagedR.toString()
+    // };
+    // this.setLocationStaged(loc);
+    // this.emit('moveSend');
+    // this.web3Manager.move(dx, dy).once('moveComplete', receipt => {
+    //   this.setLocationCurrent(loc);
+    //   this.emit('moveComplete');
+    // });
+    // return this;
   }
 
   startExplore() {
     if (!this.exploreInterval) {
       this.exploreInterval = setInterval(() => {
-        const {p, q, g, h} = this.getConstantInts();
-        const x = Math.floor(Math.random() * (p - 1));
-        const y = Math.floor(Math.random() * (q - 1));
-        const m = p * q;
-        const r = (bigInt(g).modPow(bigInt(x), bigInt(m)).toJSNumber() *
-            bigInt(h).modPow(bigInt(y), bigInt(m)).toJSNumber()) % m;
-        this.discover({x, y, r});
+        const {maxX, maxY} = this.getConstantInts();
+        const x = Math.floor(Math.random() * maxX);
+        const y = Math.floor(Math.random() * maxY);
+        const hash = ContractAPI.mimcHash(x, y);
+        this.discover({x, y, hash});
       }, 5000);
     }
   }
@@ -209,8 +207,8 @@ class ContractAPI extends EventEmitter {
   }
 
   discover(loc) {
-    if (loc.x && loc.y && loc.r) {
-      this.inMemoryBoard[loc.x][loc.y] = loc.r;
+    if (loc.x && loc.y && loc.hash) {
+      this.inMemoryBoard[loc.x][loc.y] = loc.hash;
       this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
       this.emit('discover', this.inMemoryBoard);
     }
@@ -218,11 +216,24 @@ class ContractAPI extends EventEmitter {
 
   getConstantInts() {
     return {
-      p: parseInt(this.constants.p),
-      q: parseInt(this.constants.q),
-      g: parseInt(this.constants.g),
-      h: parseInt(this.constants.h)
+      maxX: parseInt(this.constants.maxX),
+      maxY: parseInt(this.constants.maxY)
     };
+  }
+
+  static mimcHash(x, y) {
+    const circuit = new zkSnark.Circuit(initCircuit);
+    const input = {"x": JSON.stringify(x), "y": JSON.stringify(y)}
+    const witness = circuit.calculateWitness(input);
+    return bigInt(witness[1]);
+  }
+
+  static initContractCall(x, y) {
+    const circuit = new zkSnark.Circuit(initCircuit);
+    const input = {"x": JSON.stringify(x), "y": JSON.stringify(y)}
+    const witness = circuit.calculateWitness(input);
+    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(initPk), witness);
+    return stringifyBigInts(ContractAPI.genCall(snarkProof));
   }
 
   static genCall(snarkProof) {
@@ -239,15 +250,6 @@ class ContractAPI extends EventEmitter {
       [proof.pi_kp[0], proof.pi_kp[1]], // k
       publicSignals // input
     ]
-  }
-
-  async initCircuitTest(x, y) {
-    const circuit = new zkSnark.Circuit(initCircuit);
-    const input = {"x": JSON.stringify(x), "y": JSON.stringify(y)}
-    const witness = circuit.calculateWitness(input);
-    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(initPk), witness);
-    const contractCall = stringifyBigInts(ContractAPI.genCall(snarkProof));
-    await this.web3Manager.contract.methods.newInitialize(...contractCall).call().then(console.log);
   }
 
   static getInstance() {

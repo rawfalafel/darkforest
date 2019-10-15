@@ -1,11 +1,11 @@
 /*
     Prove: I know (x,y) such that:
-    - 0 < x,y < 31
+    - 0 <= x,y < 30
     - MiMCSponge(x,y) = pub
 */
 
-include "../../circomlib/circuits/mimcsponge.circom"
-include "../../circomlib/circuits/comparators.circom"
+include "../../../circom/circomlib/circuits/mimcsponge.circom"
+include "../../../circom/circomlib/circuits/comparators.circom"
 
 template Main() {
     signal private input x;
@@ -13,25 +13,25 @@ template Main() {
 
     signal output pub;
 
-    /* check 0 < x,y < 31 */
+    /* check 0 <= x,y < 30 */
     component ltxlower = LessThan(32);
     component ltylower = LessThan(32);
 
-    ltxlower.in[0] <== 0;
-    ltxlower.in[1] <== x;
-    ltxlower.out === 1;
-    ltylower.in[0] <== 0;
-    ltylower.in[1] <== y;
-    ltylower.out === 1;
+    ltxlower.in[0] <== x;
+    ltxlower.in[1] <== 0;
+    ltxlower.out === 0;
+    ltylower.in[0] <== y;
+    ltylower.in[1] <== 0;
+    ltylower.out === 0;
 
     component ltxupper = LessThan(32);
     component ltyupper = LessThan(32);
 
     ltxupper.in[0] <== x;
-    ltxupper.in[1] <== 31;
+    ltxupper.in[1] <== 30;
     ltxupper.out === 1;
     ltyupper.in[0] <== y;
-    ltyupper.in[1] <== 31;
+    ltyupper.in[1] <== 30;
     ltyupper.out === 1;
 
     /* check MiMCSponge(x,y) = pub */

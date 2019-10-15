@@ -9,8 +9,8 @@
   "main.distMax": 3,
   "main.pub1": 1,
   "main.pub2": 2,
-  "main.ltx1lower.in[0]": 4219,
-  "main.ltx1lower.in[1]": 4,
+  "main.ltx1lower.in[0]": 4,
+  "main.ltx1lower.in[1]": 4219,
   "main.ltx1lower.out": 4220,
   "main.ltx1lower.n2b.in": 4221,
   "main.ltx1lower.n2b.out[0]": 4222,
@@ -78,8 +78,8 @@
   "main.ltx1lower.n2b.out[62]": 68,
   "main.ltx1lower.n2b.out[63]": 69,
   "main.ltx1lower.n2b.out[64]": 70,
-  "main.lty1lower.in[0]": 4224,
-  "main.lty1lower.in[1]": 5,
+  "main.lty1lower.in[0]": 5,
+  "main.lty1lower.in[1]": 4224,
   "main.lty1lower.out": 4225,
   "main.lty1lower.n2b.in": 4226,
   "main.lty1lower.n2b.out[0]": 4227,
@@ -147,8 +147,8 @@
   "main.lty1lower.n2b.out[62]": 131,
   "main.lty1lower.n2b.out[63]": 132,
   "main.lty1lower.n2b.out[64]": 133,
-  "main.ltx2lower.in[0]": 4229,
-  "main.ltx2lower.in[1]": 6,
+  "main.ltx2lower.in[0]": 6,
+  "main.ltx2lower.in[1]": 4229,
   "main.ltx2lower.out": 4230,
   "main.ltx2lower.n2b.in": 4231,
   "main.ltx2lower.n2b.out[0]": 4232,
@@ -216,8 +216,8 @@
   "main.ltx2lower.n2b.out[62]": 194,
   "main.ltx2lower.n2b.out[63]": 195,
   "main.ltx2lower.n2b.out[64]": 196,
-  "main.lty2lower.in[0]": 4234,
-  "main.lty2lower.in[1]": 7,
+  "main.lty2lower.in[0]": 7,
+  "main.lty2lower.in[1]": 4234,
   "main.lty2lower.out": 4235,
   "main.lty2lower.n2b.in": 4236,
   "main.lty2lower.n2b.out[0]": 4237,
@@ -4632,7 +4632,7 @@
   {
    "names": [
     "main.x1",
-    "main.ltx1lower.in[1]",
+    "main.ltx1lower.in[0]",
     "main.ltx1upper.in[0]",
     "main.abs1.in[0]",
     "main.abs1.lt.in[0]",
@@ -4652,7 +4652,7 @@
   {
    "names": [
     "main.y1",
-    "main.lty1lower.in[1]",
+    "main.lty1lower.in[0]",
     "main.lty1upper.in[0]",
     "main.abs2.in[0]",
     "main.abs2.lt.in[0]",
@@ -4670,7 +4670,7 @@
   {
    "names": [
     "main.x2",
-    "main.ltx2lower.in[1]",
+    "main.ltx2lower.in[0]",
     "main.ltx2upper.in[0]",
     "main.abs1.in[1]",
     "main.abs1.lt.in[1]",
@@ -4690,7 +4690,7 @@
   {
    "names": [
     "main.y2",
-    "main.lty2lower.in[1]",
+    "main.lty2lower.in[0]",
     "main.lty2upper.in[0]",
     "main.abs2.in[1]",
     "main.abs2.lt.in[1]",
@@ -29981,7 +29981,7 @@
   },
   {
    "names": [
-    "main.ltx1lower.in[0]"
+    "main.ltx1lower.in[1]"
    ],
    "triggerComponents": [
     1
@@ -30015,7 +30015,7 @@
   },
   {
    "names": [
-    "main.lty1lower.in[0]"
+    "main.lty1lower.in[1]"
    ],
    "triggerComponents": [
     3
@@ -30049,7 +30049,7 @@
   },
   {
    "names": [
-    "main.ltx2lower.in[0]"
+    "main.ltx2lower.in[1]"
    ],
    "triggerComponents": [
     5
@@ -30083,7 +30083,7 @@
   },
   {
    "names": [
-    "main.lty2lower.in[0]"
+    "main.lty2lower.in[1]"
    ],
    "triggerComponents": [
     7
@@ -30393,8 +30393,7 @@
  "constraints": [
   [
    {
-    "0": "4294967296",
-    "4": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "4": "1",
     "8": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "9": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "10": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -30460,8 +30459,8 @@
     "70": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294967295",
-    "4": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "0": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "4": "1",
     "8": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "9": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "10": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -31160,8 +31159,7 @@
   ],
   [
    {
-    "0": "4294967296",
-    "5": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "5": "1",
     "71": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "72": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "73": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -31227,8 +31225,8 @@
     "133": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294967295",
-    "5": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "0": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "5": "1",
     "71": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "72": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "73": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -31927,8 +31925,7 @@
   ],
   [
    {
-    "0": "4294967296",
-    "6": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "6": "1",
     "134": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "135": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "136": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -31994,8 +31991,8 @@
     "196": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294967295",
-    "6": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "0": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "6": "1",
     "134": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "135": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "136": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -32694,8 +32691,7 @@
   ],
   [
    {
-    "0": "4294967296",
-    "7": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "7": "1",
     "197": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "198": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "199": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -32761,8 +32757,8 @@
     "259": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294967295",
-    "7": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "0": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+    "7": "1",
     "197": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "198": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
     "199": "21888242871839275222246405745257275088548364400416034343698204186575808495609",
@@ -71446,7 +71442,7 @@
   "GreaterThan": "function(ctx) {\n    ctx.setPin(\"lt\", [], \"in\", [\"0\"], ctx.getSignal(\"in\", [\"1\"]));\n    ctx.setPin(\"lt\", [], \"in\", [\"1\"], ctx.getSignal(\"in\", [\"0\"]));\n    ctx.setSignal(\"out\", [], ctx.getPin(\"lt\", [], \"out\", []));\n}\n",
   "GreaterEqThan": "function(ctx) {\n    ctx.setPin(\"lt\", [], \"in\", [\"0\"], ctx.getSignal(\"in\", [\"1\"]));\n    ctx.setPin(\"lt\", [], \"in\", [\"1\"], bigInt(ctx.getSignal(\"in\", [\"0\"])).add(bigInt(\"1\")).mod(__P__));\n    ctx.setSignal(\"out\", [], ctx.getPin(\"lt\", [], \"out\", []));\n}\n",
   "AbsoluteDifference": "function(ctx) {\n    ctx.setPin(\"lt\", [], \"in\", [\"0\"], ctx.getSignal(\"in\", [\"0\"]));\n    ctx.setPin(\"lt\", [], \"in\", [\"1\"], ctx.getSignal(\"in\", [\"1\"]));\n    ctx.setVar(\"bit\", [], bigInt(bigInt(\"2\").mul(bigInt(ctx.getPin(\"lt\", [], \"out\", []))).mod(__P__)).add(__P__).sub(bigInt(\"1\")).mod(__P__));\n    ctx.setVar(\"diff\", [], bigInt(ctx.getSignal(\"in\", [\"1\"])).add(__P__).sub(bigInt(ctx.getSignal(\"in\", [\"0\"]))).mod(__P__));\n    ctx.setSignal(\"out\", [], bigInt(ctx.getVar(\"bit\",[])).mul(bigInt(ctx.getVar(\"diff\",[]))).mod(__P__));\n}\n",
-  "Main": "function(ctx) {\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"0\"], \"0\");\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"1\"], ctx.getSignal(\"x1\", []));\n    ctx.assert(ctx.getPin(\"ltx1lower\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:43:4\");\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"0\"], \"0\");\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"1\"], ctx.getSignal(\"y1\", []));\n    ctx.assert(ctx.getPin(\"lty1lower\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:46:4\");\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"0\"], \"0\");\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"1\"], ctx.getSignal(\"x2\", []));\n    ctx.assert(ctx.getPin(\"ltx2lower\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:49:4\");\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"0\"], \"0\");\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.assert(ctx.getPin(\"lty2lower\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:52:4\");\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"ltx1upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:61:4\");\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"lty1upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:64:4\");\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"ltx2upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:67:4\");\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"lty2upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:70:4\");\n    ctx.setPin(\"abs1\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"abs1\", [], \"in\", [\"1\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"0\"], bigInt(ctx.getPin(\"abs1\", [], \"out\", [])).add(bigInt(ctx.getPin(\"abs2\", [], \"out\", []))).mod(__P__));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"1\"], bigInt(ctx.getSignal(\"distMax\", [])).add(bigInt(\"1\")).mod(__P__));\n    ctx.assert(ctx.getPin(\"ltDist\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/circom/dfhash/move/circuit.circom:84:4\");\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"1\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"mimc1\", [], \"k\", [], \"0\");\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"mimc2\", [], \"k\", [], \"0\");\n    ctx.setSignal(\"pub1\", [], ctx.getPin(\"mimc1\", [], \"outs\", [\"0\"]));\n    ctx.setSignal(\"pub2\", [], ctx.getPin(\"mimc2\", [], \"outs\", [\"0\"]));\n}\n"
+  "Main": "function(ctx) {\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"ltx1lower\", [], \"out\", []), \"0\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:43:4\");\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"lty1lower\", [], \"out\", []), \"0\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:46:4\");\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"ltx2lower\", [], \"out\", []), \"0\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:49:4\");\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"0\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"lty2lower\", [], \"out\", []), \"0\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:52:4\");\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"ltx1upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:61:4\");\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"lty1upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:64:4\");\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"ltx2upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:67:4\");\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"1\"], \"31\");\n    ctx.assert(ctx.getPin(\"lty2upper\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:70:4\");\n    ctx.setPin(\"abs1\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"abs1\", [], \"in\", [\"1\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"0\"], bigInt(ctx.getPin(\"abs1\", [], \"out\", [])).add(bigInt(ctx.getPin(\"abs2\", [], \"out\", []))).mod(__P__));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"1\"], bigInt(ctx.getSignal(\"distMax\", [])).add(bigInt(\"1\")).mod(__P__));\n    ctx.assert(ctx.getPin(\"ltDist\", [], \"out\", []), \"1\", \"/Users/bricehuang/Dropbox/Projects/darkforest/circuits/move/circuit.circom:84:4\");\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"1\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"mimc1\", [], \"k\", [], \"0\");\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"mimc2\", [], \"k\", [], \"0\");\n    ctx.setSignal(\"pub1\", [], ctx.getPin(\"mimc1\", [], \"outs\", [\"0\"]));\n    ctx.setSignal(\"pub2\", [], ctx.getPin(\"mimc2\", [], \"outs\", [\"0\"]));\n}\n"
  },
  "functions": {
   "nbits": {
