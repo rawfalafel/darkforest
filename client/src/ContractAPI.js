@@ -3,6 +3,11 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import {bigExponentiate, twoDimDLogProof} from "./utils/homemadeCrypto";
 import bigInt from "big-integer";
+const initCircuit = require("./circuits/init/circuit.json");
+const initPk = require("./circuits/init/proving_key.json");
+
+const zkSnark = require("snarkjs");
+const {stringifyBigInts, unstringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
 
 class ContractAPI extends EventEmitter {
   static instance;
@@ -218,6 +223,31 @@ class ContractAPI extends EventEmitter {
       g: parseInt(this.constants.g),
       h: parseInt(this.constants.h)
     };
+  }
+
+  static genCall(snarkProof) {
+    const {proof, publicSignals} = snarkProof;
+    return [
+      [proof.pi_a[0], proof.pi_a[1]], // a
+      [proof.pi_ap[0], proof.pi_ap[1]], // a_p
+      // genProof formats b in the reverse order that the contract expects. utterly baffling.
+      [[proof.pi_b[0][1], proof.pi_b[0][0]], [proof.pi_b[1][1], proof.pi_b[1][0]]], // b
+      [proof.pi_bp[0], proof.pi_bp[1]], // b_p
+      [proof.pi_c[0], proof.pi_c[1]], // c
+      [proof.pi_cp[0], proof.pi_cp[1]], // c_p
+      [proof.pi_h[0], proof.pi_h[1]], // h
+      [proof.pi_kp[0], proof.pi_kp[1]], // k
+      publicSignals // input
+    ]
+  }
+
+  async initCircuitTest(x, y) {
+    const circuit = new zkSnark.Circuit(initCircuit);
+    const input = {"x": JSON.stringify(x), "y": JSON.stringify(y)}
+    const witness = circuit.calculateWitness(input);
+    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(initPk), witness);
+    const contractCall = stringifyBigInts(ContractAPI.genCall(snarkProof));
+    await this.web3Manager.contract.methods.newInitialize(...contractCall).call().then(console.log);
   }
 
   static getInstance() {
