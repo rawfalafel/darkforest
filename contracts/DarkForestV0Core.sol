@@ -1,7 +1,8 @@
 pragma solidity ^0.5.8;
 import "./Crypto.sol";
+import "./Verifier.sol";
 
-contract DarkForest is Crypto {
+contract DarkForest is Crypto, Verifier {
 
     uint public p = 23;
     uint public q = 29;
@@ -48,6 +49,48 @@ contract DarkForest is Crypto {
 
     function getNPlayers() public view returns (uint) {
         return players.length;
+    }
+
+    function newInitialize(
+        uint[2] memory _a,
+        uint[2] memory _a_p,
+        uint[2][2] memory _b,
+        uint[2] memory _b_p,
+        uint[2] memory _c,
+        uint[2] memory _c_p,
+        uint[2] memory _h,
+        uint[2] memory _k,
+        uint[1] memory _input
+    ) public {
+        require(verifyInitProof(_a, _a_p, _b, _b_p, _c, _c_p, _h, _k, _input));
+        address player = msg.sender;
+        uint loc = _input[0];
+        // require player doesn't have account
+        // require loc not occupied
+        // players.push(player)
+        // playerLocations[player] = loc
+    }
+
+    function newMove(
+        uint[2] memory _a,
+        uint[2] memory _a_p,
+        uint[2][2] memory _b,
+        uint[2] memory _b_p,
+        uint[2] memory _c,
+        uint[2] memory _c_p,
+        uint[2] memory _h,
+        uint[2] memory _k,
+        uint[3] memory _input
+    ) public {
+        require(verifyMoveProof(_a, _a_p, _b, _b_p, _c, _c_p, _h, _k, _input));
+        address player = msg.sender;
+        uint oldLoc = _input[0];
+        uint newLoc = _input[1];
+        uint maxDist = _input[2];
+        // require player has account
+        // require player at oldLoc
+        // require newLoc empty
+        // playerLocations[player] = newLoc
     }
 
 }
