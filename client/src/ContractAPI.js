@@ -1,7 +1,6 @@
 import * as EventEmitter from 'events';
 import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
-import {bigExponentiate, twoDimDLogProof} from "./utils/homemadeCrypto";
 import bigInt from "big-integer";
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
@@ -167,27 +166,26 @@ class ContractAPI extends EventEmitter {
     if (!!this.myLocStaged.hash) {
       throw new Error('another move is already queued');
     }
-    console.log(this.myLocCurrent);
     if (!this.myLocCurrent.x || !this.myLocCurrent.y || !this.myLocCurrent.hash) {
       throw new Error('don\'t have current location');
     }
-    const {maxX, maxY} = this.getConstantInts();
-    console.log('creating circuit object');
     const oldX = parseInt(this.myLocCurrent.x);
     const oldY = parseInt(this.myLocCurrent.y);
     const newX = oldX + dx;
     const newY = oldY + dy;
     const distMax = Math.abs(dx) + Math.abs(dy);
 
+    const hash = ContractAPI.mimcHash(newX, newY);
     const contractCall = ContractAPI.moveContractCall(oldX, oldY, newX, newY, distMax);
-    const stagedHash = ContractAPI.mimcHash(newX, newY);
+
     const loc = {
       x: newX.toString(),
       y: newY.toString(),
-      hash: stagedHash.toString()
+      hash: hash.toString()
     };
     this.setLocationStaged(loc);
     this.emit('moveSend');
+
     this.web3Manager.move(...contractCall).once('moveComplete', receipt => {
       this.setLocationCurrent(loc);
       this.emit('moveComplete');

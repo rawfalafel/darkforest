@@ -72,8 +72,6 @@ class Landing extends Component {
           {this.state.hasJoinedGame ? (
             <div>
               <p>have df account</p>
-              <button onClick={this.initCircuitTest.bind(this)}>Init Circuit Test</button>
-              <button onClick={this.moveCircuitTest.bind(this)}>Move Circuit Test</button>
               <button onClick={this.moveUp.bind(this)}>Move up</button>
               <button onClick={this.moveDown.bind(this)}>Move down</button>
               <button onClick={this.moveLeft.bind(this)}>Move left</button>
