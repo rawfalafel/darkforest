@@ -212,7 +212,7 @@ class ContractAPI extends EventEmitter {
   }
 
   discover(loc) {
-    if (loc.x && loc.y && loc.hash) {
+    if ((loc.x != null) && (loc.y != null) && (loc.hash != null)) {
       this.inMemoryBoard[loc.x][loc.y] = loc.hash;
       this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
       this.emit('discover', this.inMemoryBoard);
