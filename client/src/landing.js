@@ -22,6 +22,8 @@ class Landing extends Component {
       });
     }).on('discover', board => {
       this.setState({});
+    }).on('locationsUpdate', () => {
+      this.setState({});
     }).on('error', console.error);
   }
 

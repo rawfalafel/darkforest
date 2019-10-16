@@ -45,9 +45,54 @@ class ContractAPI extends EventEmitter {
     await this.getWeb3Manager();
     await this.getContractConstants();
     await this.getPlayerData();
+    this.setupEventListeners();
     this.web3Loaded = true;
     this.emit('contractData', this);
     return this;
+  }
+
+  setupEventListeners() {
+    this.web3Manager.contract.events.allEvents()
+    .on("data", (event) => {
+      if (event.event === "PlayerInitialized") { this.handlePlayerInitialized(event) }
+      else if (event.event === "PlayerMoved") { this.handlePlayerMoved(event) }
+      else { throw new Error('Invalid event.')}
+    }).on("error", console.error);
+
+    // TODO: this logic should work but somehow executes twice
+    // this.web3Manager.contract.events.PlayerInitialized()
+    // .on("data", this.handlePlayerInitialized).on("error", console.error);
+    // this.web3Manager.contract.events.PlayerMoved()
+    // .on("data", this.handlePlayerMoved).on("error", console.error);
+  }
+
+  handlePlayerInitialized(event) {
+    const {player, loc} = event.returnValues;
+    if (player.toLowerCase() !== this.account.toLowerCase()) {
+      console.log("Enemy player spawned!");
+      console.log("Player:");
+      console.log(player);
+      console.log("Location:");
+      console.log(loc);
+      this.locPlayerMap[loc] = player;
+      this.emit('locationsUpdate');
+    }
+  }
+
+  handlePlayerMoved(event) {
+    const {player, oldLoc, newLoc} = event.returnValues;
+    if (player.toLowerCase() !== this.account.toLowerCase()) {
+      console.log("Enemy player moved!");
+      console.log("Player:");
+      console.log(player);
+      console.log("Old Location:");
+      console.log(oldLoc);
+      console.log("New location:");
+      console.log(newLoc);
+      delete this.locPlayerMap[oldLoc];
+      this.locPlayerMap[newLoc] = player;
+      this.emit('locationsUpdate');
+    }
   }
 
   async getWeb3Manager() {
@@ -93,10 +138,11 @@ class ContractAPI extends EventEmitter {
     let locationPlayerMap = {};
     for (let i = 0; i < nPlayers; i += 1) {
       if (playerAddrs[i] && playerLocations[i]) {
-        locationPlayerMap[playerLocations[i]] = playerAddrs[i];
         if (playerAddrs[i].toLowerCase() === this.web3Manager.account.toLowerCase()) {
           this.myLocAddr = playerLocations[i];
           this.hasJoinedGame = true;
+        } else {
+          locationPlayerMap[playerLocations[i]] = playerAddrs[i];
         }
       }
     }
@@ -228,7 +274,7 @@ class ContractAPI extends EventEmitter {
 
   static mimcHash(x, y) {
     const circuit = new zkSnark.Circuit(initCircuit);
-    const input = {"x": JSON.stringify(x), "y": JSON.stringify(y)}
+    const input = {"x": x.toString(), "y": y.toString()}
     const witness = circuit.calculateWitness(input);
     return bigInt(witness[1]);
   }

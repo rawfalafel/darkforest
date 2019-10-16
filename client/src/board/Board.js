@@ -9,8 +9,7 @@ class Board extends Component {
       return <p>💩</p>;
     }
     const locAddress = this.props.knownBoard[j][i] ? this.props.knownBoard[j][i].toString() : null;
-    const playerAtAddress = locPlayerMap[locAddress];
-    if (playerAtAddress && playerAtAddress.toLowerCase() !== this.props.myAddress.toLowerCase()) {
+    if (locPlayerMap[locAddress]) {
       return <p>👻</p>;
     }
     return null;

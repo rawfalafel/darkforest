@@ -6,6 +6,9 @@ contract DarkForest is Verifier {
     uint public maxX = 30;
     uint public maxY = 30;
 
+    event PlayerInitialized(address player, uint loc);
+    event PlayerMoved(address player, uint oldLoc, uint newLoc, uint maxDist);
+
     mapping (address => uint) public playerLocations;
     address[] public players;
 
@@ -40,6 +43,8 @@ contract DarkForest is Verifier {
         require (!_isOccupied(loc)); // loc not occupied
         players.push(player);
         playerLocations[player] = loc;
+
+        emit PlayerInitialized(player, loc);
     }
 
     function move(
@@ -62,6 +67,8 @@ contract DarkForest is Verifier {
         require(playerLocations[player] == oldLoc); // player at oldLoc
         require(!_isOccupied(newLoc)); // newLoc empty
         playerLocations[player] = newLoc;
+
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist);
     }
 
 }
