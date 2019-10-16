@@ -258,15 +258,15 @@ class ContractAPI extends EventEmitter {
   static genCall(snarkProof) {
     const {proof, publicSignals} = snarkProof;
     return [
-      [proof.pi_a[0], proof.pi_a[1]], // a
-      [proof.pi_ap[0], proof.pi_ap[1]], // a_p
+      proof.pi_a.slice(0,2), // a
+      proof.pi_ap.slice(0,2), // a_p
       // genProof formats b in the reverse order that the contract expects. utterly baffling.
-      [[proof.pi_b[0][1], proof.pi_b[0][0]], [proof.pi_b[1][1], proof.pi_b[1][0]]], // b
-      [proof.pi_bp[0], proof.pi_bp[1]], // b_p
-      [proof.pi_c[0], proof.pi_c[1]], // c
-      [proof.pi_cp[0], proof.pi_cp[1]], // c_p
-      [proof.pi_h[0], proof.pi_h[1]], // h
-      [proof.pi_kp[0], proof.pi_kp[1]], // k
+      [proof.pi_b[0].reverse(), proof.pi_b[1].reverse()], // b
+      proof.pi_bp.slice(0,2), // b_p
+      proof.pi_c.slice(0,2), // c
+      proof.pi_cp.slice(0,2), // c_p
+      proof.pi_h.slice(0,2), // h
+      proof.pi_kp.slice(0,2), // k
       publicSignals // input
     ]
   }
