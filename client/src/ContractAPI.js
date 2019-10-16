@@ -38,6 +38,19 @@ class ContractAPI extends EventEmitter {
   async initialize() {
     await this.getContractData();
     await this.initLocalStorageManager();
+    /*
+    const provingKeyRes = await fetch('http://localhost:3000/proving_key.bin');
+    const provingKey = await provingKeyRes.arrayBuffer();
+    const witnessRes = await fetch('http://localhost:3000/witness.bin');
+    const witness = await witnessRes.arrayBuffer();
+    const start = new Date().getTime();
+    console.log(witness);
+    const p = await window.genZKSnarkProof(witness, provingKey);
+    // const p = [provingKey, witness];
+    const end = new Date().getTime();
+    console.log(`proof: ${p}`);
+    console.log(`time: ${end - start}`);
+    */
     this.emit('initialized', this);
   }
 
@@ -109,6 +122,7 @@ class ContractAPI extends EventEmitter {
     return this;
   }
 
+  // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
   async getContractConstants() {
     const [maxX, maxY] = await Promise.all([
       this.web3Manager.contract.methods.maxX().call(),
@@ -120,6 +134,7 @@ class ContractAPI extends EventEmitter {
     this.constants = {maxX, maxY};
   }
 
+  // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
   async getPlayerData() {
     const nPlayers = parseInt(await this.web3Manager.contract.methods.getNPlayers().call());
     this.nPlayers = nPlayers;
@@ -221,6 +236,11 @@ class ContractAPI extends EventEmitter {
     const newY = oldY + dy;
     const distMax = Math.abs(dx) + Math.abs(dy);
 
+    const { maxX, maxY } = this.getConstantInts();
+    if (0 > newX || 0 > newY || maxX < newX || maxY < newY) {
+      throw new Error('attempted to move out of bounds');
+    }
+
     const hash = ContractAPI.mimcHash(newX, newY);
     const contractCall = ContractAPI.moveContractCall(oldX, oldY, newX, newY, distMax);
 
@@ -274,14 +294,14 @@ class ContractAPI extends EventEmitter {
 
   static mimcHash(x, y) {
     const circuit = new zkSnark.Circuit(initCircuit);
-    const input = {"x": x.toString(), "y": y.toString()}
+    const input = {x: x.toString(), y: y.toString()};
     const witness = circuit.calculateWitness(input);
     return bigInt(witness[1]);
   }
 
   static initContractCall(x, y) {
     const circuit = new zkSnark.Circuit(initCircuit);
-    const input = {"x": x.toString(), "y": y.toString()};
+    const input = {x: x.toString(), y: y.toString()};
     const witness = circuit.calculateWitness(input);
     const snarkProof = zkSnark.original.genProof(unstringifyBigInts(initPk), witness);
     return stringifyBigInts(ContractAPI.genCall(snarkProof));

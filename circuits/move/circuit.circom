@@ -6,8 +6,8 @@
     - MiMCSponge(x2,y2) = pub2
 */
 
-include "../../../circom/circomlib/circuits/mimcsponge.circom"
-include "../../../circom/circomlib/circuits/comparators.circom"
+include "../../client/node_modules/circomlib/circuits/mimcsponge.circom"
+include "../../client/node_modules/circomlib/circuits/comparators.circom"
 
 template AbsoluteDifference() {
     signal input in[2];

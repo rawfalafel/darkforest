@@ -5,6 +5,7 @@
   "dependencies": {
     "big-integer": "^1.6.46",
     "buffer": "^5.4.3",
+    "circomlib": "0.0.19",
     "events": "^3.0.0",
     "js-sha3": "^0.8.0",
     "json-stable-stringify": "^1.0.1",
@@ -13,7 +14,8 @@
     "react-dom": "^16.9.0",
     "react-scripts": "3.1.2",
     "snarkjs": "^0.1.20",
-    "web3": "^1.2.1"
+    "web3": "^1.2.1",
+    "websnark": "0.0.5"
   },
   "scripts": {
     "start": "react-scripts start",
