@@ -164,29 +164,34 @@ class ContractAPI extends EventEmitter {
   }
 
   move(dx, dy) {
-    // if (!!this.myLocStaged.r) {
-    //   throw new Error('another move is already queued');
-    // }
-    // const {p, q, g, h} = this.getConstantInts();
-    // const x = parseInt(this.myLocCurrent.x);
-    // const y = parseInt(this.myLocCurrent.y);
-    // const stagedX = (x + dx + p - 1) % (p - 1);
-    // const stagedY = (y + dy + q - 1) % (q - 1);
-    // const m = p * q;
-    // const stagedR = (bigInt(g).modPow(bigInt(stagedX), bigInt(m)).toJSNumber() *
-    //     bigInt(h).modPow(bigInt(stagedY), bigInt(m)).toJSNumber()) % m;
-    // const loc = {
-    //   x: stagedX.toString(),
-    //   y: stagedY.toString(),
-    //   r: stagedR.toString()
-    // };
-    // this.setLocationStaged(loc);
-    // this.emit('moveSend');
-    // this.web3Manager.move(dx, dy).once('moveComplete', receipt => {
-    //   this.setLocationCurrent(loc);
-    //   this.emit('moveComplete');
-    // });
-    // return this;
+    if (!!this.myLocStaged.hash) {
+      throw new Error('another move is already queued');
+    }
+    console.log(this.myLocCurrent);
+    if (!this.myLocCurrent.x || !this.myLocCurrent.y || !this.myLocCurrent.hash) {
+      throw new Error('don\'t have current location');
+    }
+    const {maxX, maxY} = this.getConstantInts();
+    console.log('creating circuit object');
+    const oldX = parseInt(this.myLocCurrent.x);
+    const oldY = parseInt(this.myLocCurrent.y);
+    const newX = oldX + dx;
+    const newY = oldY + dy;
+    const distMax = Math.abs(dx) + Math.abs(dy);
+
+    const contractCall = ContractAPI.moveContractCall(oldX, oldY, newX, newY, distMax);
+    const stagedHash = ContractAPI.mimcHash(newX, newY);
+    const loc = {
+      x: newX.toString(),
+      y: newY.toString(),
+      hash: stagedHash.toString()
+    };
+    this.setLocationStaged(loc);
+    this.emit('moveSend');
+    this.web3Manager.move(...contractCall).once('moveComplete', receipt => {
+      this.setLocationCurrent(loc);
+      this.emit('moveComplete');
+    });
   }
 
   startExplore() {
@@ -232,9 +237,23 @@ class ContractAPI extends EventEmitter {
 
   static initContractCall(x, y) {
     const circuit = new zkSnark.Circuit(initCircuit);
-    const input = {"x": JSON.stringify(x), "y": JSON.stringify(y)}
+    const input = {"x": x.toString(), "y": y.toString()};
     const witness = circuit.calculateWitness(input);
     const snarkProof = zkSnark.original.genProof(unstringifyBigInts(initPk), witness);
+    return stringifyBigInts(ContractAPI.genCall(snarkProof));
+  }
+
+  static moveContractCall(x1, y1, x2, y2, distMax) {
+    const circuit = new zkSnark.Circuit(moveCircuit);
+    const input = {
+      x1: x1.toString(),
+      y1: y1.toString(),
+      x2: x2.toString(),
+      y2: y2.toString(),
+      distMax: distMax.toString()
+    };
+    const witness = circuit.calculateWitness(input);
+    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(movePk), witness);
     return stringifyBigInts(ContractAPI.genCall(snarkProof));
   }
 
@@ -252,35 +271,6 @@ class ContractAPI extends EventEmitter {
       [proof.pi_kp[0], proof.pi_kp[1]], // k
       publicSignals // input
     ]
-  }
-
-  async moveCircuitTest(dx, dy) {
-    if (!!this.myLocStaged.r) {
-      throw new Error('another move is already queued');
-    }
-    console.log(this.myLocCurrent);
-    if (!this.myLocCurrent.x || !this.myLocCurrent.y || !this.myLocCurrent.r) {
-      throw new Error('don\'t have current location');
-    }
-    const {p, q, g, h} = this.getConstantInts();
-    console.log('creating circuit object');
-    const newX = (parseInt(this.myLocCurrent.x) + dx + p) % p;
-    const newY = (parseInt(this.myLocCurrent.y) + dy + q) % q;
-    const input = {
-      x1: this.myLocCurrent.x,
-      y1: this.myLocCurrent.y,
-      x2: newX.toString(),
-      y2: newY.toString(),
-      distMax: Math.abs(parseInt(dx)) + Math.abs(parseInt(dy))
-    };
-    const circuit = new zkSnark.Circuit(moveCircuit);
-    console.log('created circuit object, calculating witness');
-    const witness = circuit.calculateWitness(input);
-    console.log('calculated witness, generating proof');
-    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(movePk), witness);
-    console.log('generated proof, sending call');
-    const contractCall = stringifyBigInts(ContractAPI.genCall(snarkProof));
-    await this.web3Manager.contract.methods.newMove(...contractCall).call().then(console.log);
   }
 
   static getInstance() {

@@ -71,9 +71,9 @@ class Web3Manager extends EventEmitter {
     return this;
   }
 
-  move(x, y) {
+  move(...args) {
     this.contract.methods
-        .move(x, y)
+        .move(...args)
         .send({ from: this.account })
         .on("receipt", async receipt => {
           this.emit('moveComplete', receipt);
