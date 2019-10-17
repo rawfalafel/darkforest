@@ -1,10 +1,13 @@
 # darkforest
 Dark Forest Game on Blockchain
 
-# testing and deploy (smart contracts)
+# compile and deploy smart contracts to local blockchain
 you need `truffle` and `ganache-cli` installed with `npm install -g`. if you are having troubles try `sudo npm install -g`.
 
 then run `./local-deploy`. this compiles the solidity contracts with truffle, starts running a local blockchain with ganache-cli, and then deploy the contracts to the blockchain.
+
+# generate zkSNARK keys
+before the webapp works, you'll need to run `./compile.sh` in both `circuits/init` and `circuits/move`. This generates proving keys and puts them in the appropriate places.
 
 # client
 remember to `npm install` in `./client`
