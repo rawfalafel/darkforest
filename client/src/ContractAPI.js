@@ -307,7 +307,9 @@ class ContractAPI extends EventEmitter {
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
     const publicSignals = [this.mimcHash(x, y)];
-    return stringifyBigInts(this.genCall(snarkProof, publicSignals));
+    const callArgs = this.genCall(snarkProof, publicSignals);
+    console.log(callArgs);
+    return stringifyBigInts(callArgs);
   }
 
   async moveContractCall(x1, y1, x2, y2, distMax) {
@@ -326,11 +328,13 @@ class ContractAPI extends EventEmitter {
   }
 
   genCall(snarkProof, publicSignals) {
+    // the object returned by genZKSnarkProof needs to be massaged into a set of parameters the verifying contract
+    // will accept
     return [
-      snarkProof.pi_a, // pi_a
+      snarkProof.pi_a.slice(0, 2), // pi_a
       // genZKSnarkProof reverses values in the inner arrays of pi_b
       [snarkProof.pi_b[0].reverse(), snarkProof.pi_b[1].reverse()], // pi_b
-      snarkProof.pi_c, // pi_c
+      snarkProof.pi_c.slice(0, 2), // pi_c
       publicSignals // input
     ]
   }
