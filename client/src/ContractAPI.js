@@ -2,10 +2,9 @@ import * as EventEmitter from 'events';
 import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import bigInt from "big-integer";
+import {witnessObjToBuffer} from "./utils/Utils";
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
-const initPk = require("./circuits/init/proving_key.json");
-const movePk = require("./circuits/move/proving_key");
 
 const zkSnark = require("snarkjs");
 const {stringifyBigInts, unstringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
@@ -13,6 +12,8 @@ const {stringifyBigInts, unstringifyBigInts} = require("../node_modules/snarkjs/
 class ContractAPI extends EventEmitter {
   static instance;
 
+  provingKeyMove;
+  provingKeyInit;
   web3Manager; // keep a reference so we don't have to do an async call after the first time
   web3Loaded; // a flag
   account;
@@ -36,22 +37,19 @@ class ContractAPI extends EventEmitter {
   }
 
   async initialize() {
+    await this.getKeys();
     await this.getContractData();
     await this.initLocalStorageManager();
-    /*
-    const provingKeyRes = await fetch('http://localhost:3000/proving_key.bin');
-    const provingKey = await provingKeyRes.arrayBuffer();
-    const witnessRes = await fetch('http://localhost:3000/witness.bin');
-    const witness = await witnessRes.arrayBuffer();
-    const start = new Date().getTime();
-    console.log(witness);
-    const p = await window.genZKSnarkProof(witness, provingKey);
-    // const p = [provingKey, witness];
-    const end = new Date().getTime();
-    console.log(`proof: ${p}`);
-    console.log(`time: ${end - start}`);
-    */
     this.emit('initialized', this);
+  }
+
+  async getKeys() {
+    const provingKeyMoveRes = await fetch('./proving_key_move.bin'); // proving_keys needs to be in `public`
+    this.provingKeyMove = await provingKeyMoveRes.arrayBuffer();
+    const provingKeyInitRes = await fetch('./proving_key_init.bin');
+    this.provingKeyInit = await provingKeyInitRes.arrayBuffer();
+    this.emit('proverKeys');
+    return this;
   }
 
   async getContractData() {
@@ -203,8 +201,8 @@ class ContractAPI extends EventEmitter {
     const x = Math.floor(Math.random() * maxX);
     const y = Math.floor(Math.random() * maxY);
 
-    const hash = ContractAPI.mimcHash(x, y);
-    const contractCall = ContractAPI.initContractCall(x, y);
+    const hash = this.mimcHash(x, y);
+    const contractCall = this.initContractCall(x, y);
 
     const loc = {
       x: x.toString(),
@@ -241,8 +239,8 @@ class ContractAPI extends EventEmitter {
       throw new Error('attempted to move out of bounds');
     }
 
-    const hash = ContractAPI.mimcHash(newX, newY);
-    const contractCall = ContractAPI.moveContractCall(oldX, oldY, newX, newY, distMax);
+    const hash = this.mimcHash(newX, newY);
+    const contractCall = this.moveContractCall(oldX, oldY, newX, newY, distMax);
 
     const loc = {
       x: newX.toString(),
@@ -264,7 +262,7 @@ class ContractAPI extends EventEmitter {
         const {maxX, maxY} = this.getConstantInts();
         const x = Math.floor(Math.random() * maxX);
         const y = Math.floor(Math.random() * maxY);
-        const hash = ContractAPI.mimcHash(x, y);
+        const hash = this.mimcHash(x, y);
         this.discover({x, y, hash});
       }, 5000);
     }
@@ -292,22 +290,22 @@ class ContractAPI extends EventEmitter {
     };
   }
 
-  static mimcHash(x, y) {
+  mimcHash(x, y) {
     const circuit = new zkSnark.Circuit(initCircuit);
     const input = {x: x.toString(), y: y.toString()};
     const witness = circuit.calculateWitness(input);
     return bigInt(witness[1]);
   }
 
-  static initContractCall(x, y) {
-    const circuit = new zkSnark.Circuit(initCircuit);
+  async initContractCall(x, y) {
+    const circuit = new zkSnark.Circuit(moveCircuit);
     const input = {x: x.toString(), y: y.toString()};
-    const witness = circuit.calculateWitness(input);
-    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(initPk), witness);
-    return stringifyBigInts(ContractAPI.genCall(snarkProof));
+    const witness = witnessObjToBuffer(circuit.calculateWitness(input));
+    const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
+    return stringifyBigInts(this.genCall(snarkProof));
   }
 
-  static moveContractCall(x1, y1, x2, y2, distMax) {
+  async moveContractCall(x1, y1, x2, y2, distMax) {
     const circuit = new zkSnark.Circuit(moveCircuit);
     const input = {
       x1: x1.toString(),
@@ -316,12 +314,12 @@ class ContractAPI extends EventEmitter {
       y2: y2.toString(),
       distMax: distMax.toString()
     };
-    const witness = circuit.calculateWitness(input);
-    const snarkProof = zkSnark.original.genProof(unstringifyBigInts(movePk), witness);
-    return stringifyBigInts(ContractAPI.genCall(snarkProof));
+    const witness = witnessObjToBuffer(circuit.calculateWitness(input));
+    const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
+    return stringifyBigInts(this.genCall(snarkProof));
   }
 
-  static genCall(snarkProof) {
+  genCall(snarkProof) {
     const {proof, publicSignals} = snarkProof;
     return [
       proof.pi_a.slice(0,2), // a

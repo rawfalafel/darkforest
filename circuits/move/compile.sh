@@ -1,5 +1,6 @@
 #!/bin/bash
 echo "clearing files to rebuild"
+rm circuit.json
 rm proving_key.json
 rm proving_key.bin
 rm verification_key.json
@@ -29,6 +30,8 @@ snarkjs generateverifier &&
 echo "creating witness binary..." &&
 node ../../client/node_modules/websnark/tools/buildwitness.js &&
 echo "creating proving key binary..." &&
+rm ../../client/public/proving_key_move.bin
 node ../../client/node_modules/websnark/tools/buildpkey.js &&
+cp ./proving_key.bin ../../client/public/proving_key_move.bin &&
 echo "done!" &&
 date

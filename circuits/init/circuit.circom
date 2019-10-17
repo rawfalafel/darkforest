@@ -4,8 +4,8 @@
     - MiMCSponge(x,y) = pub
 */
 
-include "../../../circom/circomlib/circuits/mimcsponge.circom"
-include "../../../circom/circomlib/circuits/comparators.circom"
+include "../../client/node_modules/circomlib/circuits/mimcsponge.circom"
+include "../../client/node_modules/circomlib/circuits/comparators.circom"
 
 template Main() {
     signal private input x;
