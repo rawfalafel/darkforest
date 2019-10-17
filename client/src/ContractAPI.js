@@ -198,10 +198,8 @@ class ContractAPI extends EventEmitter {
 
   joinGame() {
     const {maxX, maxY} = this.getConstantInts();
-    // const x = Math.floor(Math.random() * maxX);
-    // const y = Math.floor(Math.random() * maxY);
-    const x = 23;
-    const y = 15;
+    const x = Math.floor(Math.random() * maxX);
+    const y = Math.floor(Math.random() * maxY);
 
     const hash = this.mimcHash(x, y);
     this.initContractCall(x, y).then(contractCall => {
@@ -268,7 +266,7 @@ class ContractAPI extends EventEmitter {
         const y = Math.floor(Math.random() * maxY);
         const hash = this.mimcHash(x, y);
         this.discover({x, y, hash});
-      }, 5000);
+      }, 500);
     }
   }
 
