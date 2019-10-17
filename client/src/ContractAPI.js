@@ -198,25 +198,27 @@ class ContractAPI extends EventEmitter {
 
   joinGame() {
     const {maxX, maxY} = this.getConstantInts();
-    const x = Math.floor(Math.random() * maxX);
-    const y = Math.floor(Math.random() * maxY);
+    // const x = Math.floor(Math.random() * maxX);
+    // const y = Math.floor(Math.random() * maxY);
+    const x = 23;
+    const y = 15;
 
     const hash = this.mimcHash(x, y);
-    const contractCall = this.initContractCall(x, y);
+    this.initContractCall(x, y).then(contractCall => {
+      const loc = {
+        x: x.toString(),
+        y: y.toString(),
+        hash: hash.toString()
+      };
+      this.setLocationStaged(loc);
+      this.emit('initializingPlayer');
 
-    const loc = {
-      x: x.toString(),
-      y: y.toString(),
-      hash: hash.toString()
-    };
-    this.setLocationStaged(loc);
-    this.emit('initializingPlayer');
-
-    this.web3Manager.initializePlayer(...contractCall).once('initializedPlayer', receipt => {
-      this.hasJoinedGame = true;
-      this.myLocAddr = hash;
-      this.setLocationCurrent(loc);
-      this.emit('initializedPlayer');
+      this.web3Manager.initializePlayer(...contractCall).once('initializedPlayer', receipt => {
+        this.hasJoinedGame = true;
+        this.myLocAddr = hash;
+        this.setLocationCurrent(loc);
+        this.emit('initializedPlayer');
+      });
     });
     return this;
   }
@@ -240,20 +242,22 @@ class ContractAPI extends EventEmitter {
     }
 
     const hash = this.mimcHash(newX, newY);
-    const contractCall = this.moveContractCall(oldX, oldY, newX, newY, distMax);
+    this.moveContractCall(oldX, oldY, newX, newY, distMax).then(contractCall => {
+      const loc = {
+        x: newX.toString(),
+        y: newY.toString(),
+        hash: hash.toString()
+      };
+      this.setLocationStaged(loc);
+      this.emit('moveSend');
 
-    const loc = {
-      x: newX.toString(),
-      y: newY.toString(),
-      hash: hash.toString()
-    };
-    this.setLocationStaged(loc);
-    this.emit('moveSend');
-
-    this.web3Manager.move(...contractCall).once('moveComplete', receipt => {
-      this.setLocationCurrent(loc);
-      this.emit('moveComplete');
+      this.web3Manager.move(...contractCall).once('moveComplete', receipt => {
+        this.setLocationCurrent(loc);
+        this.emit('moveComplete');
+      });
     });
+
+    return this;
   }
 
   startExplore() {
@@ -298,11 +302,12 @@ class ContractAPI extends EventEmitter {
   }
 
   async initContractCall(x, y) {
-    const circuit = new zkSnark.Circuit(moveCircuit);
+    const circuit = new zkSnark.Circuit(initCircuit);
     const input = {x: x.toString(), y: y.toString()};
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
-    return stringifyBigInts(this.genCall(snarkProof));
+    const publicSignals = [this.mimcHash(x, y)];
+    return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
   async moveContractCall(x1, y1, x2, y2, distMax) {
@@ -316,21 +321,16 @@ class ContractAPI extends EventEmitter {
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
-    return stringifyBigInts(this.genCall(snarkProof));
+    const publicSignals = [this.mimcHash(x1, y1), this.mimcHash(x2, y2), distMax];
+    return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
-  genCall(snarkProof) {
-    const {proof, publicSignals} = snarkProof;
+  genCall(snarkProof, publicSignals) {
     return [
-      proof.pi_a.slice(0,2), // a
-      proof.pi_ap.slice(0,2), // a_p
-      // genProof formats b in the reverse order that the contract expects. utterly baffling.
-      [proof.pi_b[0].reverse(), proof.pi_b[1].reverse()], // b
-      proof.pi_bp.slice(0,2), // b_p
-      proof.pi_c.slice(0,2), // c
-      proof.pi_cp.slice(0,2), // c_p
-      proof.pi_h.slice(0,2), // h
-      proof.pi_kp.slice(0,2), // k
+      snarkProof.pi_a, // pi_a
+      // genZKSnarkProof reverses values in the inner arrays of pi_b
+      [snarkProof.pi_b[0].reverse(), snarkProof.pi_b[1].reverse()], // pi_b
+      snarkProof.pi_c, // pi_c
       publicSignals // input
     ]
   }
