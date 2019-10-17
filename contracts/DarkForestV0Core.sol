@@ -27,16 +27,11 @@ contract DarkForest is Verifier {
 
     function initializePlayer(
         uint[2] memory _a,
-        uint[2] memory _a_p,
         uint[2][2] memory _b,
-        uint[2] memory _b_p,
         uint[2] memory _c,
-        uint[2] memory _c_p,
-        uint[2] memory _h,
-        uint[2] memory _k,
         uint[1] memory _input
     ) public {
-        require(verifyInitProof(_a, _a_p, _b, _b_p, _c, _c_p, _h, _k, _input));
+        require(verifyInitProof(_a, _b, _c, _input));
         address player = msg.sender;
         uint loc = _input[0];
         require(playerLocations[player] == 0); // player doesn't have account
@@ -49,16 +44,11 @@ contract DarkForest is Verifier {
 
     function move(
         uint[2] memory _a,
-        uint[2] memory _a_p,
         uint[2][2] memory _b,
-        uint[2] memory _b_p,
         uint[2] memory _c,
-        uint[2] memory _c_p,
-        uint[2] memory _h,
-        uint[2] memory _k,
         uint[3] memory _input
     ) public {
-        require(verifyMoveProof(_a, _a_p, _b, _b_p, _c, _c_p, _h, _k, _input));
+        require(verifyMoveProof(_a, _b, _c, _input));
         address player = msg.sender;
         uint oldLoc = _input[0];
         uint newLoc = _input[1];
