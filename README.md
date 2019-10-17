@@ -1,16 +1,21 @@
 # darkforest
-Dark Forest Game on Blockchain
+Dark Forest Game on Blockchain. Follow these steps in order to make things work:
 
 # compile and deploy smart contracts to local blockchain
 you need `truffle` and `ganache-cli` installed with `npm install -g`. if you are having troubles try `sudo npm install -g`.
 
 then run `./local-deploy`. this compiles the solidity contracts with truffle, starts running a local blockchain with ganache-cli, and then deploy the contracts to the blockchain.
 
+# get necessary packages
+we depend on a few packages which handle snark-related computation. `npm install -g snarkjs` and `npm install -g circom` to install `snarkjs` and `circom` programs.
+
+several of our compile scripts also use tools from the `websnark` and `circomlib` libraries. `npm install` in `./client` to make these available.
+
 # generate zkSNARK keys
-before the webapp works, you'll need to run `./compile.sh` in both `circuits/init` and `circuits/move`. This generates proving keys and puts them in the appropriate places.
+before the webapp works, you'll need to run `./compile.sh` in both `circuits/init` and `circuits/move`. This generates proving keys and puts them in the appropriate places in the project.
 
 # client
-remember to `npm install` in `./client`
+remember to `npm install` in `./client`.
 
 you should run `touch ./client/src/local_contract_addr.js` to create this gitignored file. this is a file that keeps the contract address of the DarkForestCore contract on your local blockchain. `./local-deploy` will automatically write to this file.
 
