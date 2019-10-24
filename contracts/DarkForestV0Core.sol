@@ -1,7 +1,7 @@
 pragma solidity ^0.5.8;
 import "./Verifier.sol";
 
-contract DarkForest is Verifier {
+contract DarkForestV0 is Verifier {
 
     uint public maxX = 30;
     uint public maxY = 30;
