@@ -14,6 +14,8 @@ contract DarkForestV1 is Verifier {
     uint capacity = 100000; // in milliPopulation
     uint growth = 1000; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second
 
+    uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
     struct Planet {
         uint locationId;
         address owner;
@@ -59,7 +61,12 @@ contract DarkForestV1 is Verifier {
         return playerIds.length;
     }
 
+    function locationIdValid(uint _loc) private view returns (bool) {
+        return (_loc < (LOCATION_ID_UB / difficulty));
+    }
+
     function initializePlanet(uint _loc, address _player, uint _population) private {
+        require (locationIdValid(_loc));
         planets[_loc] = Planet(_loc, _player, capacity, growth, _population, now, false, 0, 0, 1);
         planetIds.push(_loc);
     }
