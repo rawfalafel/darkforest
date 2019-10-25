@@ -118,18 +118,27 @@ contract DarkForestV1 is Verifier {
         emit PlayerInitialized(player, loc);
     }
 
-    function move_common(
+    function moveShipsDecay(uint shipsMoved) private pure returns (uint) {
+        // TODO: implement decay. Will need to take distance as param.
+        return shipsMoved;
+    }
+
+    function moveCheckproof(
         uint[2] memory _a,
         uint[2][2] memory _b,
         uint[2] memory _c,
         uint[4] memory _input
-    ) private {
+    ) private view {
         uint[3] memory input012;
         for (uint i=0; i<input012.length; i++) {
             input012[i] = _input[i];
         }
         require(verifyMoveProof(_a, _b, _c, input012));
+    }
 
+    function moveCommon(
+        uint[4] memory _input
+    ) private {
         address player = msg.sender;
         uint oldLoc = _input[0];
         uint newLoc = _input[1];
@@ -143,13 +152,14 @@ contract DarkForestV1 is Verifier {
         require(planets[oldLoc].population >= shipsMoved); // player can move at most as many ships as exist on oldLoc
     }
 
-    function move_uninhabited(
+    function moveUninhabited(
         uint[2] memory _a,
         uint[2][2] memory _b,
         uint[2] memory _c,
         uint[4] memory _input
     ) public {
-        move_common(_a, _b, _c, _input);
+        moveCheckproof(_a, _b, _c, _input);
+        moveCommon(_input);
 
         address player = msg.sender;
         uint oldLoc = _input[0];
@@ -157,11 +167,71 @@ contract DarkForestV1 is Verifier {
         uint maxDist = _input[2];
         uint shipsMoved = _input[3];
 
-        require(!planetIsOccupied(newLoc)); // newLoc empty
+        // planet at newLoc not occupied
+        require(!planetIsOccupied(newLoc));
         if (!planetIsInitialized(newLoc)) {
             initializePlanet(newLoc, player, 0);
         }
         planets[oldLoc].population -= shipsMoved;
+        uint shipsLanded = moveShipsDecay(shipsMoved);
+        planets[newLoc].population += shipsLanded;
+
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
+    }
+
+    function moveFriendly(
+        uint[4] memory _input
+    ) public {
+        moveCommon(_input);
+
+        address player = msg.sender;
+        uint oldLoc = _input[0];
+        uint newLoc = _input[1];
+        uint maxDist = _input[2];
+        uint shipsMoved = _input[3];
+
+        // planet at newLoc is occupied by player
+        require(ownerIfOccupiedElseZero(newLoc) == player);
+
+        planets[oldLoc].population -= shipsMoved;
+        uint shipsLanded = moveShipsDecay(shipsMoved);
+        planets[newLoc].population += shipsLanded;
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
+    }
+
+    function moveEnemy(
+        uint[2] memory _a,
+        uint[2][2] memory _b,
+        uint[2] memory _c,
+        uint[4] memory _input
+    ) public {
+        moveCheckproof(_a, _b, _c, _input);
+        moveCommon(_input);
+
+        address player = msg.sender;
+        uint oldLoc = _input[0];
+        uint newLoc = _input[1];
+        uint maxDist = _input[2];
+        uint shipsMoved = _input[3];
+
+        // planet at newLoc is owned by a player other than this one
+        address enemyOwner = ownerIfOccupiedElseZero(newLoc);
+        require (enemyOwner != address(0) && enemyOwner != player);
+
+        planets[oldLoc].population -= shipsMoved;
+        uint shipsLanded = moveShipsDecay(shipsMoved);
+
+        // TODO: maybe want to implement additional defender's advantage.
+        // Currently ships annihilate 1 to 1
+        // (though attacking ships have alreadyundergone exponential decay)
+        if (planets[newLoc].population <= shipsLanded) {
+            // attack reduces target planet's garrison but doesn't conquer it
+            planets[newLoc].population -= shipsLanded;
+        } else {
+            planets[newLoc].owner = player;
+            planets[newLoc].population = shipsLanded - planets[newLoc].population;
+        }
+
         planets[newLoc].population += shipsMoved;
 
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
