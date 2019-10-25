@@ -35,16 +35,20 @@ contract DarkForestV1 is Verifier {
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
-    mapping (uint => address) public planetToOwner;
     address[] public playerIds;
     mapping (address => bool) public playerInitialized;
+    // TODO: how to query all planets owned by player?
 
-    function planetIsInitialized(uint _r) private view returns (bool) {
-        return !(planets[_r].locationId == 0);
+    function planetIsInitialized(uint _loc) private view returns (bool) {
+        return !(planets[_loc].locationId == 0);
     }
 
-    function planetIsOccupied(uint _r) private view returns (bool) {
-        return !(planets[_r].owner == address(0)) || planets[_r].population == 0;
+    function planetIsOccupied(uint _loc) private view returns (bool) {
+        return !(planets[_loc].owner == address(0)) || planets[_loc].population == 0;
+    }
+
+    function ownerIfOccupiedElseZero(uint _loc) private view returns (address) {
+        return planetIsOccupied(_loc) ? planets[_loc].owner : address(0);
     }
 
     function getNPlanets() public view returns (uint) {
@@ -58,12 +62,11 @@ contract DarkForestV1 is Verifier {
     function initializePlanet(uint _loc, address _player, uint _population) private {
         planets[_loc] = Planet(_loc, _player, capacity, growth, _population, now, false, 0, 0, 1);
         planetIds.push(_loc);
-        planetToOwner[_loc] = _player;
     }
 
     function updatePopulation(uint _locationId) private {
         // logistic growth: in T time, population p1 increases to population
-        // p2 = C / (1 + e^{-4 * growth * T / capacity} * ((capacity / p1) - 1))
+        // p2 = capacity / (1 + e^{-4 * growth * T / capacity} * ((capacity / p1) - 1))
         if (!planetIsOccupied(_locationId)) {
             return;
         }
@@ -133,7 +136,7 @@ contract DarkForestV1 is Verifier {
         uint shipsMoved = _input[3];
 
         require(playerInitialized[player]); // player exists
-        require(planets[oldLoc].owner == player); // planet at oldLoc exists, and player owns it
+        require(ownerIfOccupiedElseZero(oldLoc) == player); // planet at oldLoc is occupied by player
 
         updatePopulation(oldLoc);
         updatePopulation(newLoc);
