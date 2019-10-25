@@ -61,6 +61,17 @@ contract DarkForestV1 is Verifier {
         return playerIds.length;
     }
 
+    function getPlanetsOfPlayer(address _player) public view returns (Planet[] memory) {
+        Planet[] memory planetsOfPlayer;
+        for (uint i=0; i<planetIds.length; i++) {
+            uint locationId = planetIds[i];
+            if (ownerIfOccupiedElseZero(locationId) == _player) {
+                planetsOfPlayer[planetsOfPlayer.length] = planets[locationId];
+            }
+        }
+        return planetsOfPlayer;
+    }
+
     function locationIdValid(uint _loc) private view returns (bool) {
         return (_loc < (LOCATION_ID_UB / difficulty));
     }
