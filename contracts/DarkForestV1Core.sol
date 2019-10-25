@@ -31,7 +31,7 @@ contract DarkForestV1 is Verifier {
     }
 
     event PlayerInitialized(address player, uint loc);
-    event PlayerMoved(address player, uint oldLoc, uint newLoc, uint maxDist);
+    event PlayerMoved(address player, uint oldLoc, uint newLoc, uint maxDist, uint shipsMoved);
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
@@ -55,9 +55,19 @@ contract DarkForestV1 is Verifier {
         return playerIds.length;
     }
 
-    function updatePopulation(Planet storage planet) private returns (uint) {
+    function initializePlanet(uint _loc, address _player, uint _population) private {
+        planets[_loc] = Planet(_loc, _player, capacity, growth, _population, now, false, 0, 0, 1);
+        planetIds.push(_loc);
+        planetToOwner[_loc] = _player;
+    }
+
+    function updatePopulation(uint _locationId) private {
         // logistic growth: in T time, population p1 increases to population
         // p2 = C / (1 + e^{-4 * growth * T / capacity} * ((capacity / p1) - 1))
+        if (!planetIsOccupied(_locationId)) {
+            return;
+        }
+        Planet storage planet = planets[_locationId];
         uint time_elapsed = now - planet.lastUpdated;
 
         // 1
@@ -100,12 +110,34 @@ contract DarkForestV1 is Verifier {
 
         playerIds.push(player);
         playerInitialized[player] = true;
-        Planet memory homePlanet = Planet(loc, player, capacity, growth, 100, now, false, 0, 0, 1);
-        planets[homePlanet.locationId] = homePlanet;
-        planetIds.push(homePlanet.locationId);
-        planetToOwner[homePlanet.locationId] = player;
+        initializePlanet(loc, player, 100);
 
         emit PlayerInitialized(player, loc);
+    }
+
+    function move_common(
+        uint[2] memory _a,
+        uint[2][2] memory _b,
+        uint[2] memory _c,
+        uint[4] memory _input
+    ) private {
+        uint[3] memory input012;
+        for (uint i=0; i<input012.length; i++) {
+            input012[i] = _input[i];
+        }
+        require(verifyMoveProof(_a, _b, _c, input012));
+
+        address player = msg.sender;
+        uint oldLoc = _input[0];
+        uint newLoc = _input[1];
+        uint shipsMoved = _input[3];
+
+        require(playerInitialized[player]); // player exists
+        require(planets[oldLoc].owner == player); // planet at oldLoc exists, and player owns it
+
+        updatePopulation(oldLoc);
+        updatePopulation(newLoc);
+        require(planets[oldLoc].population >= shipsMoved); // player can move at most as many ships as exist on oldLoc
     }
 
     function move_uninhabited(
@@ -114,26 +146,22 @@ contract DarkForestV1 is Verifier {
         uint[2] memory _c,
         uint[4] memory _input
     ) public {
-        uint[3] memory input012;
-        for (uint i=0; i<input012.length; i++) {
-            input012[i] = _input[i];
-        }
-        require(verifyMoveProof(_a, _b, _c, input012));
+        move_common(_a, _b, _c, _input);
+
         address player = msg.sender;
         uint oldLoc = _input[0];
         uint newLoc = _input[1];
         uint maxDist = _input[2];
         uint shipsMoved = _input[3];
 
-        require(playerInitialized[player]);
-        require(planets[oldLoc].owner == player);
-
-        // require(playerLocations[player] == oldLoc); // player at oldLoc
         require(!planetIsOccupied(newLoc)); // newLoc empty
+        if (!planetIsInitialized(newLoc)) {
+            initializePlanet(newLoc, player, 0);
+        }
+        planets[oldLoc].population -= shipsMoved;
+        planets[newLoc].population += shipsMoved;
 
-        // playerLocations[player] = newLoc;
-
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist);
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
     }
 
 }
