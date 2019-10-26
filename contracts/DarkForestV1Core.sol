@@ -89,6 +89,10 @@ contract DarkForestV1 is Verifier {
             return;
         }
         Planet storage planet = planets[_locationId];
+        // check for div by zero
+        if (planet.population == 0) {
+            return;
+        }
         uint time_elapsed = now - planet.lastUpdated;
 
         // 1
@@ -157,6 +161,7 @@ contract DarkForestV1 is Verifier {
     function moveCommon(
         uint[4] memory _input
     ) private {
+        // preliminary checks to ensure the move is not illegal
         address player = msg.sender;
         uint oldLoc = _input[0];
         uint newLoc = _input[1];
@@ -193,6 +198,9 @@ contract DarkForestV1 is Verifier {
         planets[oldLoc].population -= shipsMoved;
         uint shipsLanded = moveShipsDecay(shipsMoved);
         planets[newLoc].population += shipsLanded;
+        if (planets[newLoc].population > planets[newLoc].capacity) {
+            planets[newLoc].population = planets[newLoc].capacity;
+        }
 
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
     }
@@ -214,6 +222,9 @@ contract DarkForestV1 is Verifier {
         planets[oldLoc].population -= shipsMoved;
         uint shipsLanded = moveShipsDecay(shipsMoved);
         planets[newLoc].population += shipsLanded;
+        if (planets[newLoc].population > planets[newLoc].capacity) {
+            planets[newLoc].population = planets[newLoc].capacity;
+        }
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
     }
 
@@ -241,7 +252,7 @@ contract DarkForestV1 is Verifier {
 
         // TODO: maybe want to implement additional defender's advantage.
         // Currently ships annihilate 1 to 1
-        // (though attacking ships have alreadyundergone exponential decay)
+        // (though attacking ships have already undergone decay)
         if (planets[newLoc].population <= shipsLanded) {
             // attack reduces target planet's garrison but doesn't conquer it
             planets[newLoc].population -= shipsLanded;
