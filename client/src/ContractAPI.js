@@ -190,8 +190,10 @@ class ContractAPI extends EventEmitter {
     let x, y, hash;
     // search for a valid home planet
     while (!validHomePlanet) {
-      x = Math.floor(Math.random() * maxX);
-      y = Math.floor(Math.random() * maxY);
+      // x = Math.floor(Math.random() * maxX);
+      // y = Math.floor(Math.random() * maxY);
+      x = 19;
+      y = 26;
 
       hash = this.mimcHash(x, y);
       if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
@@ -202,13 +204,7 @@ class ContractAPI extends EventEmitter {
     }
     console.log(x, y, hash);
     this.initContractCall(x, y).then(contractCall => {
-      const loc = {
-        x: x.toString(),
-        y: y.toString(),
-        hash: hash.toString()
-      };
       this.emit('initializingPlayer');
-
       this.web3Manager.initializePlayer(...contractCall);
     });
     return this;
@@ -301,7 +297,8 @@ class ContractAPI extends EventEmitter {
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
     const publicSignals = [this.mimcHash(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
-    console.log(callArgs);
+    console.log(this.provingKeyInit);
+    console.log(stringifyBigInts(callArgs));
     return stringifyBigInts(callArgs);
   }
 
