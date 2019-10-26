@@ -1,6 +1,6 @@
 /*
     Prove: I know (x,y) such that:
-    - 0 <= x,y < 1000
+    - 0 <= x,y < 30
     - MiMCSponge(x,y) = pub
 */
 
@@ -13,7 +13,7 @@ template Main() {
 
     signal output pub;
 
-    /* check 0 <= x,y < 1000 */
+    /* check 0 <= x,y < 30 */
     component ltxlower = LessThan(32);
     component ltylower = LessThan(32);
 
@@ -28,10 +28,10 @@ template Main() {
     component ltyupper = LessThan(32);
 
     ltxupper.in[0] <== x;
-    ltxupper.in[1] <== 1000;
+    ltxupper.in[1] <== 30;
     ltxupper.out === 1;
     ltyupper.in[0] <== y;
-    ltyupper.in[1] <== 1000;
+    ltyupper.in[1] <== 30;
     ltyupper.out === 1;
 
     /* check MiMCSponge(x,y) = pub */

@@ -33457,7 +33457,7 @@
   ],
   [
    {
-    "0": "4294966296",
+    "0": "4294967266",
     "4": "1",
     "260": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "261": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -33524,7 +33524,7 @@
     "322": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294966295",
+    "0": "4294967265",
     "4": "1",
     "260": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "261": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -34224,7 +34224,7 @@
   ],
   [
    {
-    "0": "4294966296",
+    "0": "4294967266",
     "5": "1",
     "323": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "324": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -34291,7 +34291,7 @@
     "385": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294966295",
+    "0": "4294967265",
     "5": "1",
     "323": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "324": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -34991,7 +34991,7 @@
   ],
   [
    {
-    "0": "4294966296",
+    "0": "4294967266",
     "6": "1",
     "386": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "387": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -35058,7 +35058,7 @@
     "448": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294966295",
+    "0": "4294967265",
     "6": "1",
     "386": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "387": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -35758,7 +35758,7 @@
   ],
   [
    {
-    "0": "4294966296",
+    "0": "4294967266",
     "7": "1",
     "449": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "450": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -35825,7 +35825,7 @@
     "511": "21888242871839275222246405745257275088548364400416034343679757442502098944001"
    },
    {
-    "0": "4294966295",
+    "0": "4294967265",
     "7": "1",
     "449": "21888242871839275222246405745257275088548364400416034343698204186575808495615",
     "450": "21888242871839275222246405745257275088548364400416034343698204186575808495613",
@@ -71442,7 +71442,7 @@
   "GreaterThan": "function(ctx) {\n    ctx.setPin(\"lt\", [], \"in\", [\"0\"], ctx.getSignal(\"in\", [\"1\"]));\n    ctx.setPin(\"lt\", [], \"in\", [\"1\"], ctx.getSignal(\"in\", [\"0\"]));\n    ctx.setSignal(\"out\", [], ctx.getPin(\"lt\", [], \"out\", []));\n}\n",
   "GreaterEqThan": "function(ctx) {\n    ctx.setPin(\"lt\", [], \"in\", [\"0\"], ctx.getSignal(\"in\", [\"1\"]));\n    ctx.setPin(\"lt\", [], \"in\", [\"1\"], bigInt(ctx.getSignal(\"in\", [\"0\"])).add(bigInt(\"1\")).mod(__P__));\n    ctx.setSignal(\"out\", [], ctx.getPin(\"lt\", [], \"out\", []));\n}\n",
   "AbsoluteDifference": "function(ctx) {\n    ctx.setPin(\"lt\", [], \"in\", [\"0\"], ctx.getSignal(\"in\", [\"0\"]));\n    ctx.setPin(\"lt\", [], \"in\", [\"1\"], ctx.getSignal(\"in\", [\"1\"]));\n    ctx.setVar(\"bit\", [], bigInt(bigInt(\"2\").mul(bigInt(ctx.getPin(\"lt\", [], \"out\", []))).mod(__P__)).add(__P__).sub(bigInt(\"1\")).mod(__P__));\n    ctx.setVar(\"diff\", [], bigInt(ctx.getSignal(\"in\", [\"1\"])).add(__P__).sub(bigInt(ctx.getSignal(\"in\", [\"0\"]))).mod(__P__));\n    ctx.setSignal(\"out\", [], bigInt(ctx.getVar(\"bit\",[])).mul(bigInt(ctx.getVar(\"diff\",[]))).mod(__P__));\n}\n",
-  "Main": "function(ctx) {\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"ltx1lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:43:4\");\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"lty1lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:46:4\");\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"ltx2lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:49:4\");\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"0\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"lty2lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:52:4\");\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"1\"], \"1000\");\n    ctx.assert(ctx.getPin(\"ltx1upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:61:4\");\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"1\"], \"1000\");\n    ctx.assert(ctx.getPin(\"lty1upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:64:4\");\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"1\"], \"1000\");\n    ctx.assert(ctx.getPin(\"ltx2upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:67:4\");\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"1\"], \"1000\");\n    ctx.assert(ctx.getPin(\"lty2upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:70:4\");\n    ctx.setPin(\"abs1\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"abs1\", [], \"in\", [\"1\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"0\"], bigInt(ctx.getPin(\"abs1\", [], \"out\", [])).add(bigInt(ctx.getPin(\"abs2\", [], \"out\", []))).mod(__P__));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"1\"], bigInt(ctx.getSignal(\"distMax\", [])).add(bigInt(\"1\")).mod(__P__));\n    ctx.assert(ctx.getPin(\"ltDist\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:84:4\");\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"1\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"mimc1\", [], \"k\", [], \"0\");\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"mimc2\", [], \"k\", [], \"0\");\n    ctx.setSignal(\"pub1\", [], ctx.getPin(\"mimc1\", [], \"outs\", [\"0\"]));\n    ctx.setSignal(\"pub2\", [], ctx.getPin(\"mimc2\", [], \"outs\", [\"0\"]));\n}\n"
+  "Main": "function(ctx) {\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"ltx1lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"ltx1lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:43:4\");\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"lty1lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"lty1lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:46:4\");\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"ltx2lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"ltx2lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:49:4\");\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"0\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"lty2lower\", [], \"in\", [\"1\"], \"0\");\n    ctx.assert(ctx.getPin(\"lty2lower\", [], \"out\", []), \"0\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:52:4\");\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"ltx1upper\", [], \"in\", [\"1\"], \"30\");\n    ctx.assert(ctx.getPin(\"ltx1upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:61:4\");\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"lty1upper\", [], \"in\", [\"1\"], \"30\");\n    ctx.assert(ctx.getPin(\"lty1upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:64:4\");\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"ltx2upper\", [], \"in\", [\"1\"], \"30\");\n    ctx.assert(ctx.getPin(\"ltx2upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:67:4\");\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"0\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"lty2upper\", [], \"in\", [\"1\"], \"30\");\n    ctx.assert(ctx.getPin(\"lty2upper\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:70:4\");\n    ctx.setPin(\"abs1\", [], \"in\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"abs1\", [], \"in\", [\"1\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"0\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"abs2\", [], \"in\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"0\"], bigInt(ctx.getPin(\"abs1\", [], \"out\", [])).add(bigInt(ctx.getPin(\"abs2\", [], \"out\", []))).mod(__P__));\n    ctx.setPin(\"ltDist\", [], \"in\", [\"1\"], bigInt(ctx.getSignal(\"distMax\", [])).add(bigInt(\"1\")).mod(__P__));\n    ctx.assert(ctx.getPin(\"ltDist\", [], \"out\", []), \"1\", \"/Users/bgu/darkforest/circuits/move/circuit.circom:84:4\");\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"0\"], ctx.getSignal(\"x1\", []));\n    ctx.setPin(\"mimc1\", [], \"ins\", [\"1\"], ctx.getSignal(\"y1\", []));\n    ctx.setPin(\"mimc1\", [], \"k\", [], \"0\");\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"0\"], ctx.getSignal(\"x2\", []));\n    ctx.setPin(\"mimc2\", [], \"ins\", [\"1\"], ctx.getSignal(\"y2\", []));\n    ctx.setPin(\"mimc2\", [], \"k\", [], \"0\");\n    ctx.setSignal(\"pub1\", [], ctx.getPin(\"mimc1\", [], \"outs\", [\"0\"]));\n    ctx.setSignal(\"pub2\", [], ctx.getPin(\"mimc2\", [], \"outs\", [\"0\"]));\n}\n"
  },
  "functions": {
   "nbits": {

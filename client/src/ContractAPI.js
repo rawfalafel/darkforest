@@ -20,13 +20,11 @@ class ContractAPI extends EventEmitter {
   loadingError;
   constants;
   nPlayers;
+  nPlanets;
   players;
-  locPlayerMap;
+  planets;
   localStorageManager;
   hasJoinedGame;
-  myLocAddr;
-  myLocCurrent;
-  myLocStaged;
   inMemoryBoard;
   exploreInterval;
 
@@ -85,8 +83,15 @@ class ContractAPI extends EventEmitter {
       console.log(player);
       console.log("Location:");
       console.log(loc);
-      this.locPlayerMap[loc] = player;
       this.emit('locationsUpdate');
+    } else {
+      console.log("I spawned!");
+      console.log("Player:");
+      console.log(player);
+      console.log("Location:");
+      console.log(loc);
+      this.emit('initializedPlayer');
+
     }
   }
 
@@ -100,8 +105,6 @@ class ContractAPI extends EventEmitter {
       console.log(oldLoc);
       console.log("New location:");
       console.log(newLoc);
-      delete this.locPlayerMap[oldLoc];
-      this.locPlayerMap[newLoc] = player;
       this.emit('locationsUpdate');
     }
   }
@@ -134,93 +137,76 @@ class ContractAPI extends EventEmitter {
 
   // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
   async getPlayerData() {
+    // get nPlayers
     const nPlayers = parseInt(await this.web3Manager.contract.methods.getNPlayers().call());
     this.nPlayers = nPlayers;
+
+    // get nPlanets
+    const nPlanets = parseInt(await this.web3Manager.contract.methods.getNPlanets().call());
+    this.nPlanets = nPlanets;
+
+    // get players
     let playerPromises = [];
     for (let i = 0; i < nPlayers; i += 1) {
-      playerPromises.push(this.web3Manager.contract.methods.players(i).call().catch(() => null));
+      playerPromises.push(this.web3Manager.contract.methods.playerIds(i).call().catch(() => null));
     }
     let playerAddrs = await Promise.all(playerPromises);
-    let playerLocationPromises = [];
-    for (let i = 0; i < nPlayers; i += 1) {
-      playerLocationPromises.push(
-          playerAddrs[i] ? this.web3Manager.contract.methods.playerLocations(playerAddrs[i]).call().catch(() => null) : Promise.resolve(null)
-      );
-    }
-    let playerLocations = await Promise.all(playerLocationPromises);
-    let locationPlayerMap = {};
-    for (let i = 0; i < nPlayers; i += 1) {
-      if (playerAddrs[i] && playerLocations[i]) {
-        if (playerAddrs[i].toLowerCase() === this.web3Manager.account.toLowerCase()) {
-          this.myLocAddr = playerLocations[i];
-          this.hasJoinedGame = true;
-        } else {
-          locationPlayerMap[playerLocations[i]] = playerAddrs[i];
-        }
+    for (let player of players) {
+      if (player === this.account) {
+        this.hasJoinedGame = true;
       }
     }
     this.players = playerAddrs.filter(addr => !!addr);
-    this.locPlayerMap = locationPlayerMap;
+
+    // get planets
+    let planetPromises = [];
+    for (let i = 0; i < nPlanets; i += 1) {
+      planetPromises.push(this.web3Manager.contract.methods.planetIds(i).call().then(planetId => {
+        return this.web3Manager.contract.methods.planets(planetId).call()
+      }).catch(() => null));
+    }
+    let planets = await Promise.all(planetPromises);
+    this.planets = {};
+    for (let planet of planets) {
+      this.planets[planet.locationId] = planet;
+    }
   }
 
   async initLocalStorageManager() {
     this.localStorageManager = LocalStorageManager.getInstance();
     this.localStorageManager.setContractAPI(this);
     this.inMemoryBoard = this.localStorageManager.getKnownBoard();
-    let myLocCurrent = {};
-    if (this.myLocAddr) {
-      const localStorageLocationCurrent = this.localStorageManager.getLocationCurrent();
-      const localStorageLocationStaged = this.localStorageManager.getLocationStaged();
-      if (localStorageLocationCurrent.hash === this.myLocAddr) {
-        myLocCurrent = localStorageLocationCurrent;
-      } else if (localStorageLocationStaged.hash === this.myLocAddr) {
-        myLocCurrent = localStorageLocationStaged;
-      } else {
-        throw new Error('Can\'t find my coordinates');
-      }
-    }
-    this.setLocationCurrent(myLocCurrent);
     this.emit('localStorageInit');
   }
 
-  setLocationCurrent(loc) {
-    this.myLocCurrent = loc;
-    this.myLocStaged = {};
-    this.localStorageManager.setLocationCurrent(loc);
-    this.discover(loc);
-  }
-
-  setLocationStaged(loc) {
-    this.myLocStaged = loc;
-    this.localStorageManager.setLocationStaged(loc);
-    this.discover(loc);
-  }
-
+  // TODO: rewrite
   joinGame() {
     const {maxX, maxY} = this.getConstantInts();
-    const x = Math.floor(Math.random() * maxX);
-    const y = Math.floor(Math.random() * maxY);
+    const validHomePlanet = false;
+    let x, y, hash;
+    while (!validHomePlanet) {
+      x = Math.floor(Math.random() * maxX);
+      y = Math.floor(Math.random() * maxY);
 
-    const hash = this.mimcHash(x, y);
+      hash = this.mimcHash(x, y);
+      if (hash.)
+    }
     this.initContractCall(x, y).then(contractCall => {
       const loc = {
         x: x.toString(),
         y: y.toString(),
         hash: hash.toString()
       };
-      this.setLocationStaged(loc);
       this.emit('initializingPlayer');
 
-      this.web3Manager.initializePlayer(...contractCall).once('initializedPlayer', receipt => {
+      this.web3Manager.initializePlayer(...contractCall).once('initializedPlayer', () => {
         this.hasJoinedGame = true;
-        this.myLocAddr = hash;
-        this.setLocationCurrent(loc);
-        this.emit('initializedPlayer');
       });
     });
     return this;
   }
 
+  // TODO: rewrite
   move(dx, dy) {
     if (!!this.myLocStaged.hash) {
       throw new Error('another move is already queued');

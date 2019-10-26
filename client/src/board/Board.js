@@ -1,15 +1,9 @@
 import React, { Component } from "react";
 
 class Board extends Component {
-  getActorForCoords(i, j, locPlayerMap) {
-    if (
-      parseInt(this.props.myLocation.x) === j &&
-      parseInt(this.props.myLocation.y) === i
-    ) {
-      return <p>💩</p>;
-    }
+  getActorForCoords(i, j, planets) {
     const locAddress = this.props.knownBoard[j][i] ? this.props.knownBoard[j][i].toString() : null;
-    if (locPlayerMap[locAddress]) {
+    if (locAddress && !!planets[locAddress]) {
       return <p>👻</p>;
     }
     return null;
@@ -50,7 +44,7 @@ class Board extends Component {
                     : "white"
                 }}
               >
-                {this.getActorForCoords(i, j, this.props.locPlayerMap)}
+                {this.getActorForCoords(i, j, this.props.planets)}
               </div>
             ))}
           </div>

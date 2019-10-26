@@ -80,14 +80,11 @@ class Landing extends Component {
               <button onClick={this.moveRight.bind(this)}>Move right</button>
               <button onClick={this.startExplore.bind(this)}>Start telescope</button>
               <button onClick={this.stopExplore.bind(this)}>Pause telescope</button>
-              <p>{`current x: ${this.contractAPI.myLocCurrent.x}`}</p>
-              <p>{`current y: ${this.contractAPI.myLocCurrent.y}`}</p>
-              <p>{`current hash: ${this.contractAPI.myLocCurrent.hash}`}</p>
               <Board
                 maxX={parseInt(this.contractAPI.constants.maxX)}
                 maxY={parseInt(this.contractAPI.constants.maxY)}
                 knownBoard={this.contractAPI.inMemoryBoard}
-                locPlayerMap={this.contractAPI.locPlayerMap}
+                planets={this.contractAPI.planets}
                 myAddress={this.contractAPI.account}
                 myLocation={this.contractAPI.myLocCurrent}
               />

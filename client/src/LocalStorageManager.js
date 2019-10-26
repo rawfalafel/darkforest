@@ -37,8 +37,6 @@ class LocalStorageManager {
       this.setKey('init', 'true');
       this.setKey('hasLocation', 'false');
       this.setKey('knownBoard', stringify(emptyBoard));
-      this.setKey('myLocCurrent', stringify(currentLocation));
-      this.setKey('myLocStaged', stringify(stagedLocation));
     }
   }
 
@@ -60,38 +58,6 @@ class LocalStorageManager {
       if (knownBoard) {
         return JSON.parse(knownBoard);
       }
-    }
-  }
-
-  getLocationCurrent() {
-    if (this.account && this.contractAPI) {
-      const locationCurrent = this.getKey('myLocCurrent');
-      if (locationCurrent) {
-        return JSON.parse(locationCurrent);
-      }
-    }
-  }
-
-  getLocationStaged() {
-    if (this.account && this.contractAPI) {
-      const locationStaged = this.getKey('myLocStaged');
-      if (locationStaged) {
-        return JSON.parse(locationStaged);
-      }
-    }
-  }
-
-  setLocationCurrent(loc) {
-    if (this.account && this.contractAPI) {
-      this.setKey('hasLocation', 'true');
-      this.setKey('myLocCurrent', stringify(loc));
-      this.setKey('myLocStaged', stringify({}));
-    }
-  }
-
-  setLocationStaged(loc) {
-    if (this.account && this.contractAPI) {
-      this.setKey('myLocStaged', stringify(loc));
     }
   }
 

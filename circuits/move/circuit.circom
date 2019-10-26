@@ -1,6 +1,6 @@
 /*
     Prove: I know (x1,y1,x2,y2) such that:
-    - 0 <= x1, x2, y1, y2 < 1000
+    - 0 <= x1, x2, y1, y2 < 30
     - |x1-x2|+|y1-y2| <= distMax
     - MiMCSponge(x1,y1) = pub1
     - MiMCSponge(x2,y2) = pub2
@@ -32,7 +32,7 @@ template Main() {
     signal output pub1;
     signal output pub2;
 
-    /* check 0 <= x1, x2, y1, y2 < 1000 */
+    /* check 0 <= x1, x2, y1, y2 < 30 */
     component ltx1lower = LessThan(32);
     component lty1lower = LessThan(32);
     component ltx2lower = LessThan(32);
@@ -57,16 +57,16 @@ template Main() {
     component lty2upper = LessThan(32);
 
     ltx1upper.in[0] <== x1;
-    ltx1upper.in[1] <== 1000;
+    ltx1upper.in[1] <== 30;
     ltx1upper.out === 1;
     lty1upper.in[0] <== y1;
-    lty1upper.in[1] <== 1000;
+    lty1upper.in[1] <== 30;
     lty1upper.out === 1;
     ltx2upper.in[0] <== x2;
-    ltx2upper.in[1] <== 1000;
+    ltx2upper.in[1] <== 30;
     ltx2upper.out === 1;
     lty2upper.in[0] <== y2;
-    lty2upper.in[1] <== 1000;
+    lty2upper.in[1] <== 30;
     lty2upper.out === 1;
 
     /* check |x1-x2|+|y1-y2| <= distMax */
