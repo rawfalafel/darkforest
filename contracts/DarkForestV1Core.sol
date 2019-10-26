@@ -10,7 +10,7 @@ contract DarkForestV1 is Verifier {
 
     uint public maxX = 29;
     uint public maxY = 29;
-    uint difficulty = 32;
+    uint public difficulty = 32;
     uint capacity = 100000; // in milliPopulation
     uint growth = 1000; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second
 

@@ -125,14 +125,15 @@ class ContractAPI extends EventEmitter {
 
   // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
   async getContractConstants() {
-    const [maxX, maxY] = await Promise.all([
+    const [maxX, maxY, difficulty] = await Promise.all([
       this.web3Manager.contract.methods.maxX().call(),
-      this.web3Manager.contract.methods.maxY().call()
+      this.web3Manager.contract.methods.maxY().call(),
+      this.web3Manager.contract.methods.difficulty().call()
     ]).catch((err) => {
       this.emit('error', err);
       return [null, null];
     });
-    this.constants = {maxX, maxY};
+    this.constants = {maxX, maxY, difficulty};
   }
 
   // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
@@ -182,14 +183,18 @@ class ContractAPI extends EventEmitter {
   // TODO: rewrite
   joinGame() {
     const {maxX, maxY} = this.getConstantInts();
-    const validHomePlanet = false;
+    let validHomePlanet = false;
     let x, y, hash;
     while (!validHomePlanet) {
       x = Math.floor(Math.random() * maxX);
       y = Math.floor(Math.random() * maxY);
 
       hash = this.mimcHash(x, y);
-      if (hash.)
+      if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
+        .divide(32)
+        .geq(bigInt(hash))) {
+        validHomePlanet = true;
+      }
     }
     this.initContractCall(x, y).then(contractCall => {
       const loc = {
@@ -274,7 +279,8 @@ class ContractAPI extends EventEmitter {
   getConstantInts() {
     return {
       maxX: parseInt(this.constants.maxX),
-      maxY: parseInt(this.constants.maxY)
+      maxY: parseInt(this.constants.maxY),
+      difficulty: parseInt(this.constants.difficulty)
     };
   }
 

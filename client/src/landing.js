@@ -35,22 +35,6 @@ class Landing extends Component {
     });
   }
 
-  moveUp() {
-    this.contractAPI.move(0, -1);
-  }
-
-  moveDown() {
-    this.contractAPI.move(0, 1);
-  }
-
-  moveLeft() {
-    this.contractAPI.move(-1, 0);
-  }
-
-  moveRight() {
-    this.contractAPI.move(1, 0);
-  }
-
   startExplore() {
     this.contractAPI.startExplore();
   }
@@ -74,10 +58,6 @@ class Landing extends Component {
           {this.state.hasJoinedGame ? (
             <div>
               <p>have df account</p>
-              <button onClick={this.moveUp.bind(this)}>Move up</button>
-              <button onClick={this.moveDown.bind(this)}>Move down</button>
-              <button onClick={this.moveLeft.bind(this)}>Move left</button>
-              <button onClick={this.moveRight.bind(this)}>Move right</button>
               <button onClick={this.startExplore.bind(this)}>Start telescope</button>
               <button onClick={this.stopExplore.bind(this)}>Pause telescope</button>
               <Board
@@ -86,7 +66,6 @@ class Landing extends Component {
                 knownBoard={this.contractAPI.inMemoryBoard}
                 planets={this.contractAPI.planets}
                 myAddress={this.contractAPI.account}
-                myLocation={this.contractAPI.myLocCurrent}
               />
             </div>
           ) : (
