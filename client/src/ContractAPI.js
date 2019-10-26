@@ -7,7 +7,7 @@ const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
 
 const zkSnark = require("snarkjs");
-const {stringifyBigInts, unstringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
+const {stringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
 
 class ContractAPI extends EventEmitter {
   static instance;
@@ -76,13 +76,15 @@ class ContractAPI extends EventEmitter {
   }
 
   handlePlayerInitialized(event) {
-    const {player, loc} = event.returnValues;
+    const {player, loc, planet} = event.returnValues;
     if (player.toLowerCase() !== this.account.toLowerCase()) {
       console.log("Enemy player spawned!");
       console.log("Player:");
       console.log(player);
       console.log("Location:");
       console.log(loc);
+      console.log("Planet:");
+      console.log(planet);
       this.emit('locationsUpdate');
     } else {
       console.log("I spawned!");
@@ -90,8 +92,10 @@ class ContractAPI extends EventEmitter {
       console.log(player);
       console.log("Location:");
       console.log(loc);
+      console.log("Planet:");
+      console.log(planet);
+      this.hasJoinedGame = true;
       this.emit('initializedPlayer');
-
     }
   }
 
@@ -152,7 +156,7 @@ class ContractAPI extends EventEmitter {
       playerPromises.push(this.web3Manager.contract.methods.playerIds(i).call().catch(() => null));
     }
     let playerAddrs = await Promise.all(playerPromises);
-    for (let player of players) {
+    for (let player of playerAddrs) {
       if (player === this.account) {
         this.hasJoinedGame = true;
       }
@@ -180,11 +184,11 @@ class ContractAPI extends EventEmitter {
     this.emit('localStorageInit');
   }
 
-  // TODO: rewrite
   joinGame() {
     const {maxX, maxY} = this.getConstantInts();
     let validHomePlanet = false;
     let x, y, hash;
+    // search for a valid home planet
     while (!validHomePlanet) {
       x = Math.floor(Math.random() * maxX);
       y = Math.floor(Math.random() * maxY);
@@ -196,6 +200,7 @@ class ContractAPI extends EventEmitter {
         validHomePlanet = true;
       }
     }
+    console.log(x, y, hash);
     this.initContractCall(x, y).then(contractCall => {
       const loc = {
         x: x.toString(),
@@ -204,9 +209,7 @@ class ContractAPI extends EventEmitter {
       };
       this.emit('initializingPlayer');
 
-      this.web3Manager.initializePlayer(...contractCall).once('initializedPlayer', () => {
-        this.hasJoinedGame = true;
-      });
+      this.web3Manager.initializePlayer(...contractCall);
     });
     return this;
   }

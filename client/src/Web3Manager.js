@@ -4,7 +4,7 @@ import {contractAddress} from "./local_contract_addr"; // this is a gitignored f
 
 const ethereum = window.ethereum;
 
-const contractABI = require("./build/contracts/DarkForest.json").abi;
+const contractABI = require("./build/contracts/DarkForestV1.json").abi;
 
 class Web3Manager extends EventEmitter {
   static instancePromise;

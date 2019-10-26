@@ -1,4 +1,5 @@
 pragma solidity ^0.5.8;
+pragma experimental ABIEncoderV2;
 import "./Verifier.sol";
 import "./ABDKMath64x64.sol";
 
@@ -32,7 +33,7 @@ contract DarkForestV1 is Verifier {
         uint8 version;
     }
 
-    event PlayerInitialized(address player, uint loc);
+    event PlayerInitialized(address player, uint loc, Planet planet);
     event PlayerMoved(address player, uint oldLoc, uint newLoc, uint maxDist, uint shipsMoved);
 
     uint[] public planetIds;
@@ -59,17 +60,6 @@ contract DarkForestV1 is Verifier {
 
     function getNPlayers() public view returns (uint) {
         return playerIds.length;
-    }
-
-    function getPlanetsOfPlayer(address _player) public view returns (Planet[] memory) {
-        Planet[] memory planetsOfPlayer;
-        for (uint i=0; i<planetIds.length; i++) {
-            uint locationId = planetIds[i];
-            if (ownerIfOccupiedElseZero(locationId) == _player) {
-                planetsOfPlayer[planetsOfPlayer.length] = planets[locationId];
-            }
-        }
-        return planetsOfPlayer;
     }
 
     function locationIdValid(uint _loc) private view returns (bool) {
@@ -137,7 +127,7 @@ contract DarkForestV1 is Verifier {
         playerInitialized[player] = true;
         initializePlanet(loc, player, 100);
 
-        emit PlayerInitialized(player, loc);
+        emit PlayerInitialized(player, loc, planets[loc]);
     }
 
     function moveShipsDecay(uint shipsMoved) private pure returns (uint) {

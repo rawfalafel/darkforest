@@ -13,7 +13,7 @@ class Landing extends Component {
   }
 
   async startApp() {
-    // window.localStorage.clear();
+    window.localStorage.clear();
     this.contractAPI = ContractAPI.getInstance();
     this.contractAPI.on('initialized', contractAPI => {
       this.setState({
