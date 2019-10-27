@@ -3,6 +3,7 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import bigInt from "big-integer";
 import {witnessObjToBuffer} from "./utils/Utils";
+import {mimcHash} from "./utils/mimc";
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
 
@@ -221,7 +222,7 @@ class ContractAPI extends EventEmitter {
       x = 19;
       y = 26;
 
-      hash = this.mimcHash(x, y);
+      hash = mimcHash(x, y);
       if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
         .divide(32)
         .geq(bigInt(hash))) {
@@ -257,7 +258,7 @@ class ContractAPI extends EventEmitter {
       throw new Error('attempted to move from a planet not owned by player');
     }
 
-    const hash = this.mimcHash(newX, newY);
+    const hash = mimcHash(newX, newY);
     this.moveContractCall(oldX, oldY, newX, newY, distMax).then(contractCall => {
       const loc = {
         x: newX.toString(),
@@ -293,7 +294,7 @@ class ContractAPI extends EventEmitter {
         const {maxX, maxY} = this.getConstantInts();
         const x = Math.floor(Math.random() * maxX);
         const y = Math.floor(Math.random() * maxY);
-        const hash = this.mimcHash(x, y);
+        const hash = mimcHash(x, y);
         this.discover({x, y, hash});
       }, 5);
     }
@@ -322,19 +323,12 @@ class ContractAPI extends EventEmitter {
     };
   }
 
-  mimcHash(x, y) {
-    const circuit = new zkSnark.Circuit(initCircuit);
-    const input = {x: x.toString(), y: y.toString()};
-    const witness = circuit.calculateWitness(input);
-    return bigInt(witness[1]);
-  }
-
   async initContractCall(x, y) {
     const circuit = new zkSnark.Circuit(initCircuit);
     const input = {x: x.toString(), y: y.toString()};
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
-    const publicSignals = [this.mimcHash(x, y)];
+    const publicSignals = [mimcHash(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
     console.log(this.provingKeyInit);
     console.log(stringifyBigInts(callArgs));
@@ -352,7 +346,7 @@ class ContractAPI extends EventEmitter {
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
-    const publicSignals = [this.mimcHash(x1, y1), this.mimcHash(x2, y2), distMax, shipsMoved];
+    const publicSignals = [mimcHash(x1, y1), mimcHash(x2, y2), distMax, shipsMoved];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
