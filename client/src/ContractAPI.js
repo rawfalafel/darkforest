@@ -238,17 +238,13 @@ class ContractAPI extends EventEmitter {
   }
 
   // TODO: rewrite
-  move(dx, dy) {
-    if (!!this.myLocStaged.hash) {
-      throw new Error('another move is already queued');
-    }
-    if (!this.myLocCurrent.x || !this.myLocCurrent.y || !this.myLocCurrent.hash) {
-      throw new Error('don\'t have current location');
-    }
-    const oldX = parseInt(this.myLocCurrent.x);
-    const oldY = parseInt(this.myLocCurrent.y);
-    const newX = oldX + dx;
-    const newY = oldY + dy;
+  move(fromLoc, toLoc) {
+    const oldX = parseInt(fromLoc.x);
+    const oldY = parseInt(fromLoc.y);
+    const newX = parseInt(toLoc.x);
+    const newY = parseInt(toLoc.y);
+    const dx = newX - oldX;
+    const dy = newY - oldY;
     const distMax = Math.abs(dx) + Math.abs(dy);
 
     const { maxX, maxY } = this.getConstantInts();
@@ -263,11 +259,10 @@ class ContractAPI extends EventEmitter {
         y: newY.toString(),
         hash: hash.toString()
       };
-      this.setLocationStaged(loc);
+      this.discover(loc);
       this.emit('moveSend');
 
       this.web3Manager.move(...contractCall).once('moveComplete', receipt => {
-        this.setLocationCurrent(loc);
         this.emit('moveComplete');
       });
     });

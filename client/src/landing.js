@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Board from "./board/Board";
 import ContractAPI from "./ContractAPI";
+import ScrollableBoard from "./board/ScrollableBoard";
 
 class Landing extends Component {
   constructor(props) {
@@ -69,6 +70,8 @@ class Landing extends Component {
                 planets={this.contractAPI.planets}
                 myAddress={this.contractAPI.account}
               />
+
+              <ScrollableBoard></ScrollableBoard>
             </div>
           ) : (
             <button onClick={this.initialize.bind(this)}>Initialize me</button>
