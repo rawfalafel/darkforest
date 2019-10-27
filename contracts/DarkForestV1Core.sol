@@ -257,8 +257,6 @@ contract DarkForestV1 is Verifier {
             planets[newLoc].population = shipsLanded - planets[newLoc].population;
         }
 
-        planets[newLoc].population += shipsMoved;
-
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
     }
 
