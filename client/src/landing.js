@@ -9,6 +9,8 @@ class Landing extends Component {
     this.state = {
       loading: true,
       hasJoinedGame: false,
+      moving: false,
+      selectedCoords: null
     };
     this.startApp();
   }
@@ -26,6 +28,7 @@ class Landing extends Component {
     }).on('locationsUpdate', () => {
       this.setState({});
     }).on('initializedPlayer', () => {
+      console.log('spawned on a home planet');
       this.setState({});
     }).on('error', console.error);
   }
@@ -36,6 +39,34 @@ class Landing extends Component {
         hasJoinedGame: true
       });
     });
+  }
+
+  move(fromLocation, toLocation) {
+    if (this.state.moving) {
+      window.alert('a move is already queued');
+      return;
+    }
+    this.setState({
+      moving: true
+    }, () => {
+      this.contractAPI.move(fromLocation, toLocation).once('moveComplete', () => {
+        this.setState({
+          moving: false
+        });
+      })
+    });
+  }
+
+  toggleSelect(x, y) {
+    if (this.state.selectedCoords && this.state.selectedCoords.x === x && this.state.selectedCoords.y === y) {
+      this.setState({
+        selectedCoords: null
+      });
+    } else {
+      this.setState({
+        selectedCoords: {x, y}
+      });
+    }
   }
 
   startExplore() {
@@ -54,6 +85,13 @@ class Landing extends Component {
     this.contractAPI.moveCircuitTest(1, 1);
   }
 
+  async getTempLoc() {
+    const tempLoc = await this.contractAPI.web3Manager.contract.methods.tempLoc().call();
+    this.setState({
+      tempLoc
+    });
+  }
+
   render() {
     if (!this.state.loading) {
       return (
@@ -63,12 +101,17 @@ class Landing extends Component {
               <p>have df account</p>
               <button onClick={this.startExplore.bind(this)}>Start telescope</button>
               <button onClick={this.stopExplore.bind(this)}>Pause telescope</button>
+              <button onClick={this.getTempLoc.bind(this)}>debug</button>
+              <p>{`tempLoc: ${this.state.tempLoc}`}</p>
               <Board
                 maxX={parseInt(this.contractAPI.constants.maxX)}
                 maxY={parseInt(this.contractAPI.constants.maxY)}
                 knownBoard={this.contractAPI.inMemoryBoard}
                 planets={this.contractAPI.planets}
                 myAddress={this.contractAPI.account}
+                move={this.move.bind(this)}
+                toggleSelect={this.toggleSelect.bind(this)}
+                selected={this.state.selectedCoords}
               />
 
               <ScrollableBoard></ScrollableBoard>

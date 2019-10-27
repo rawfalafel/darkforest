@@ -9,7 +9,7 @@ class ScrollableBoard extends Component {
     y: 0
   };
 
-  state = {}
+  state = {};
   getActorForCoords(i, j) {
     if (i === 10 && j === 10) {
       return <p>💩</p>;

@@ -6,7 +6,6 @@ import "./ABDKMath64x64.sol";
 contract DarkForestV1 is Verifier {
     using ABDKMath64x64 for *;
 
-    uint256 constant UINT256_MAX = ~uint256(0);
     uint8 constant VERSION = 1;
 
     uint public maxX = 29;
@@ -47,7 +46,7 @@ contract DarkForestV1 is Verifier {
     }
 
     function planetIsOccupied(uint _loc) private view returns (bool) {
-        return !(planets[_loc].owner == address(0)) || planets[_loc].population == 0;
+        return !(planets[_loc].owner == address(0)) || planets[_loc].population != 0;
     }
 
     function ownerIfOccupiedElseZero(uint _loc) private view returns (address) {
@@ -139,7 +138,7 @@ contract DarkForestV1 is Verifier {
         uint[2] memory _a,
         uint[2][2] memory _b,
         uint[2] memory _c,
-        uint[4] memory _input
+        uint[3] memory _input
     ) private view {
         uint[3] memory input012;
         for (uint i=0; i<input012.length; i++) {
@@ -155,7 +154,11 @@ contract DarkForestV1 is Verifier {
         uint[4] memory _input
     ) private {
         // check proof validity
-        moveCheckproof(_a, _b, _c, _input);
+        uint[3] memory moveCheckproofInput;
+        for (uint i = 0; i < 3; i++) {
+            moveCheckproofInput[i] = _input[i];
+        }
+        moveCheckproof(_a, _b, _c, moveCheckproofInput);
         // preliminary checks to ensure the move is not illegal
         address player = msg.sender;
         uint oldLoc = _input[0];
@@ -225,6 +228,7 @@ contract DarkForestV1 is Verifier {
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
     }
 
+    // TODO: test this function
     function moveEnemy(
         uint[2] memory _a,
         uint[2][2] memory _b,

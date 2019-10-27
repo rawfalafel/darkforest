@@ -40,3 +40,10 @@ export const witnessObjToBuffer = (witness) => {
 
   return buff;
 };
+
+// is this address a habitable planet?
+
+export const isPlanet = locationId => {
+  return bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
+    .divide(32).geq(bigInt(locationId));
+};

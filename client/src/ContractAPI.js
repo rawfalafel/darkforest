@@ -78,6 +78,7 @@ class ContractAPI extends EventEmitter {
 
   handlePlayerInitialized(event) {
     const {player, loc, planet} = event.returnValues;
+    this.updateRawPlanetInMemory(planet);
     if (player.toLowerCase() !== this.account.toLowerCase()) {
       console.log("Enemy player spawned!");
       console.log("Player:");
@@ -98,23 +99,20 @@ class ContractAPI extends EventEmitter {
       this.hasJoinedGame = true;
       this.emit('initializedPlayer');
     }
-    this.updateRawPlanetInMemory(planet);
   }
 
   handlePlayerMoved(event) {
     const {player, oldLoc, newLoc, fromPlanet, toPlanet} = event.returnValues;
-    if (player.toLowerCase() !== this.account.toLowerCase()) {
-      console.log("Enemy player moved!");
-      console.log("Player:");
-      console.log(player);
-      console.log("Old Location:");
-      console.log(oldLoc);
-      console.log("New location:");
-      console.log(newLoc);
-      this.updateRawPlanetInMemory(fromPlanet);
-      this.updateRawPlanetInMemory(toPlanet);
-      this.emit('locationsUpdate');
-    }
+    this.updateRawPlanetInMemory(fromPlanet);
+    this.updateRawPlanetInMemory(toPlanet);
+    console.log("Player moved!");
+    console.log("Player:");
+    console.log(player);
+    console.log("Old Location:");
+    console.log(oldLoc);
+    console.log("New location:");
+    console.log(newLoc);
+    this.emit('locationsUpdate');
   }
 
   async getWeb3Manager() {
@@ -161,7 +159,6 @@ class ContractAPI extends EventEmitter {
     }
     let playerAddrs = await Promise.all(playerPromises);
     for (let player of playerAddrs) {
-      console.log(player);
       if (player.toLowerCase() === this.account.toLowerCase()) {
         this.hasJoinedGame = true;
       }
@@ -229,7 +226,6 @@ class ContractAPI extends EventEmitter {
         validHomePlanet = true;
       }
     }
-    console.log(x, y, hash);
     this.discover({x, y, hash});
     this.initContractCall(x, y).then(contractCall => {
       this.emit('initializingPlayer');
@@ -259,7 +255,7 @@ class ContractAPI extends EventEmitter {
     }
 
     const hash = mimcHash(newX, newY);
-    this.moveContractCall(oldX, oldY, newX, newY, distMax).then(contractCall => {
+    this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(fromPlanet.population / 2)).then(contractCall => {
       const loc = {
         x: newX.toString(),
         y: newY.toString(),
@@ -330,8 +326,6 @@ class ContractAPI extends EventEmitter {
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
     const publicSignals = [mimcHash(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
-    console.log(this.provingKeyInit);
-    console.log(stringifyBigInts(callArgs));
     return stringifyBigInts(callArgs);
   }
 
@@ -346,7 +340,7 @@ class ContractAPI extends EventEmitter {
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
-    const publicSignals = [mimcHash(x1, y1), mimcHash(x2, y2), distMax, shipsMoved];
+    const publicSignals = [mimcHash(x1, y1), mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
