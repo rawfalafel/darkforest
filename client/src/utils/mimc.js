@@ -225,29 +225,31 @@ const c = [
   "0"
 ].map(n => bigInt(n));
 
-function mimcFeistel(lIn, rIn, rounds, k){
-  let l = lIn.mod(p);
-  let r = rIn.mod(p);
+function inject(state, elt) {
+  state.l = state.l.add(elt).mod(p);
+}
+
+function mimcFeistel(state, rounds, k){
   for (let i=0; i<rounds-1; i++) {
-    let t = k.add(l).add(c[i]).mod(p);
-    let l_new = t.modPow(5, p).add(r).mod(p);
-    r = l;
-    l = l_new;
+    let t = k.add(state.l).add(c[i]).mod(p);
+    let l_new = t.modPow(5, p).add(state.r).mod(p);
+    state.r = state.l;
+    state.l = l_new;
   }
-  let t = k.add(l).add(c[rounds-1]).mod(p);
-  r = t.modPow(5, p).add(r).mod(p);
-  return {l, r}
+  let t = k.add(state.l).add(c[rounds-1]).mod(p);
+  state.r = t.modPow(5, p).add(state.r).mod(p);
 }
 
 function mimcSponge(inputs, n_outputs, rounds){
-  let st = {l: bigInt(0), r: bigInt(0)};
-  for (let ipt of inputs){
-    st = mimcFeistel(st.l.add(ipt).mod(p), st.r, rounds, bigInt(0));
+  let state = {l: bigInt(0), r: bigInt(0)};
+  for (let elt of inputs){
+    inject(state, elt);
+    mimcFeistel(state, rounds, bigInt(0));
   }
   let outputs = []
   for (let i=0; i<n_outputs; i++){
-    outputs.push(st.l);
-    st = mimcFeistel(st.l, st.r, rounds, bigInt(0));
+    outputs.push(state.l);
+    mimcFeistel(state, rounds, bigInt(0));
   }
   return outputs;
 }
