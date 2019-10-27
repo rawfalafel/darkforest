@@ -71,16 +71,42 @@ class Web3Manager extends EventEmitter {
     return this;
   }
 
-  move(...args) {
+  moveUninhabited(...args) {
     this.contract.methods
-        .move(...args)
-        .send({ from: this.account })
-        .on("receipt", async receipt => {
-          this.emit('moveComplete', receipt);
-        })
-        .on("error", error => {
-          console.log(`error: ${error}`);
-        });
+      .moveUninhabited(...args)
+      .send({ from: this.account })
+      .on("receipt", async receipt => {
+        this.emit('moveUninhabitedComplete', receipt);
+      })
+      .on("error", error => {
+        console.log(`error: ${error}`);
+      });
+    return this;
+  }
+
+  moveFriendly(...args) {
+    this.contract.methods
+      .moveFriendly(...args)
+      .send({ from: this.account })
+      .on("receipt", async receipt => {
+        this.emit('moveFriendlyComplete', receipt);
+      })
+      .on("error", error => {
+        console.log(`error: ${error}`);
+      });
+    return this;
+  }
+
+  moveEnemy(...args) {
+    this.contract.methods
+      .move(...args)
+      .send({ from: this.account })
+      .on("receipt", async receipt => {
+        this.emit('moveEnemyComplete', receipt);
+      })
+      .on("error", error => {
+        console.log(`error: ${error}`);
+      });
     return this;
   }
 }

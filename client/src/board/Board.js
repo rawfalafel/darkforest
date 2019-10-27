@@ -16,6 +16,10 @@ class Board extends Component {
     return null;
   }
 
+  toggleSelect() {
+
+  }
+
   render() {
     console.log(this.props.planets);
     return (

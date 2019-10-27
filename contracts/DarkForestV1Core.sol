@@ -125,7 +125,7 @@ contract DarkForestV1 is Verifier {
 
         playerIds.push(player);
         playerInitialized[player] = true;
-        initializePlanet(loc, player, 100);
+        initializePlanet(loc, player, 25000);
 
         emit PlayerInitialized(player, loc, planets[loc]);
     }
@@ -148,9 +148,14 @@ contract DarkForestV1 is Verifier {
         require(verifyMoveProof(_a, _b, _c, input012));
     }
 
-    function moveCommon(
+    function moveCommonChecks(
+        uint[2] memory _a,
+        uint[2][2] memory _b,
+        uint[2] memory _c,
         uint[4] memory _input
     ) private {
+        // check proof validity
+        moveCheckproof(_a, _b, _c, _input);
         // preliminary checks to ensure the move is not illegal
         address player = msg.sender;
         uint oldLoc = _input[0];
@@ -171,8 +176,7 @@ contract DarkForestV1 is Verifier {
         uint[2] memory _c,
         uint[4] memory _input
     ) public {
-        moveCheckproof(_a, _b, _c, _input);
-        moveCommon(_input);
+        moveCommonChecks(_a, _b, _c, _input);
 
         address player = msg.sender;
         uint oldLoc = _input[0];
@@ -196,9 +200,12 @@ contract DarkForestV1 is Verifier {
     }
 
     function moveFriendly(
+        uint[2] memory _a,
+        uint[2][2] memory _b,
+        uint[2] memory _c,
         uint[4] memory _input
     ) public {
-        moveCommon(_input);
+        moveCommonChecks(_a, _b, _c, _input);
 
         address player = msg.sender;
         uint oldLoc = _input[0];
@@ -224,8 +231,7 @@ contract DarkForestV1 is Verifier {
         uint[2] memory _c,
         uint[4] memory _input
     ) public {
-        moveCheckproof(_a, _b, _c, _input);
-        moveCommon(_input);
+        moveCommonChecks(_a, _b, _c, _input);
 
         address player = msg.sender;
         uint oldLoc = _input[0];

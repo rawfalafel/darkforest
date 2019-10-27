@@ -241,8 +241,10 @@ class ContractAPI extends EventEmitter {
   move(fromLoc, toLoc) {
     const oldX = parseInt(fromLoc.x);
     const oldY = parseInt(fromLoc.y);
+    const fromPlanet = this.planets[fromLoc.hash];
     const newX = parseInt(toLoc.x);
     const newY = parseInt(toLoc.y);
+    const toPlanet = this.planets[toLoc.hash];
     const dx = newX - oldX;
     const dy = newY - oldY;
     const distMax = Math.abs(dx) + Math.abs(dy);
@@ -250,6 +252,9 @@ class ContractAPI extends EventEmitter {
     const { maxX, maxY } = this.getConstantInts();
     if (0 > newX || 0 > newY || maxX < newX || maxY < newY) {
       throw new Error('attempted to move out of bounds');
+    }
+    if (!fromPlanet || fromPlanet.owner.toLowerCase() !== this.account.toLowerCase()) {
+      throw new Error('attempted to move from a planet not owned by player');
     }
 
     const hash = this.mimcHash(newX, newY);
@@ -261,10 +266,22 @@ class ContractAPI extends EventEmitter {
       };
       this.discover(loc);
       this.emit('moveSend');
-
-      this.web3Manager.move(...contractCall).once('moveComplete', receipt => {
-        this.emit('moveComplete');
-      });
+      if (!toPlanet) {
+        // colonizing uninhabited planet
+        this.web3Manager.moveUninhabited(...contractCall).once('moveUninhabitedComplete', receipt => {
+          this.emit('moveComplete');
+        })
+      } else if (toPlanet.owner.toLowerCase() !== this.account.toLowerCase()) {
+        // attacking enemy
+        this.web3Manager.moveEnemy(...contractCall).once('moveEnemyComplete', receipt => {
+          this.emit('moveComplete');
+        })
+      } else {
+        // friendly move
+        this.web3Manager.moveFriendly(...contractCall).once('moveFriendlyComplete', receipt => {
+          this.emit('moveComplete');
+        })
+      }
     });
 
     return this;
@@ -324,7 +341,7 @@ class ContractAPI extends EventEmitter {
     return stringifyBigInts(callArgs);
   }
 
-  async moveContractCall(x1, y1, x2, y2, distMax) {
+  async moveContractCall(x1, y1, x2, y2, distMax, shipsMoved) {
     const circuit = new zkSnark.Circuit(moveCircuit);
     const input = {
       x1: x1.toString(),
@@ -335,7 +352,7 @@ class ContractAPI extends EventEmitter {
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
-    const publicSignals = [this.mimcHash(x1, y1), this.mimcHash(x2, y2), distMax];
+    const publicSignals = [this.mimcHash(x1, y1), this.mimcHash(x2, y2), distMax, shipsMoved];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
