@@ -20,9 +20,11 @@ class Landing extends Component {
         loading: false,
         hasJoinedGame: contractAPI.hasJoinedGame
       });
-    }).on('discover', board => {
+    }).on('discover', () => {
       this.setState({});
     }).on('locationsUpdate', () => {
+      this.setState({});
+    }).on('initializedPlayer', () => {
       this.setState({});
     }).on('error', console.error);
   }

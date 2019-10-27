@@ -34,7 +34,7 @@ contract DarkForestV1 is Verifier {
     }
 
     event PlayerInitialized(address player, uint loc, Planet planet);
-    event PlayerMoved(address player, uint oldLoc, uint newLoc, uint maxDist, uint shipsMoved);
+    event PlayerMoved(address player, uint oldLoc, uint newLoc, uint maxDist, uint shipsMoved, Planet fromPlanet, Planet toPlanet);
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
@@ -192,7 +192,7 @@ contract DarkForestV1 is Verifier {
             planets[newLoc].population = planets[newLoc].capacity;
         }
 
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
     }
 
     function moveFriendly(
@@ -215,7 +215,7 @@ contract DarkForestV1 is Verifier {
         if (planets[newLoc].population > planets[newLoc].capacity) {
             planets[newLoc].population = planets[newLoc].capacity;
         }
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
     }
 
     function moveEnemy(
@@ -253,7 +253,7 @@ contract DarkForestV1 is Verifier {
 
         planets[newLoc].population += shipsMoved;
 
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
     }
 
 }

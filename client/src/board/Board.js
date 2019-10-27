@@ -1,15 +1,23 @@
 import React, { Component } from "react";
+import bigInt from "big-integer";
 
 class Board extends Component {
   getActorForCoords(i, j, planets) {
     const locAddress = this.props.knownBoard[j][i] ? this.props.knownBoard[j][i].toString() : null;
     if (locAddress && !!planets[locAddress]) {
-      return <p>👻</p>;
+      if (planets[locAddress].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
+        return <p>🌎</p>;
+      }
+      return <p>🌖</p>;
+    } else if (locAddress && bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
+      .divide(32).geq(bigInt(locAddress))) {
+      return <p>🌑</p>;
     }
     return null;
   }
 
   render() {
+    console.log(this.props.planets);
     return (
       <div
         style={{

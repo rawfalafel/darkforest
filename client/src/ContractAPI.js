@@ -97,10 +97,11 @@ class ContractAPI extends EventEmitter {
       this.hasJoinedGame = true;
       this.emit('initializedPlayer');
     }
+    this.updateRawPlanetInMemory(planet);
   }
 
   handlePlayerMoved(event) {
-    const {player, oldLoc, newLoc} = event.returnValues;
+    const {player, oldLoc, newLoc, fromPlanet, toPlanet} = event.returnValues;
     if (player.toLowerCase() !== this.account.toLowerCase()) {
       console.log("Enemy player moved!");
       console.log("Player:");
@@ -109,6 +110,8 @@ class ContractAPI extends EventEmitter {
       console.log(oldLoc);
       console.log("New location:");
       console.log(newLoc);
+      this.updateRawPlanetInMemory(fromPlanet);
+      this.updateRawPlanetInMemory(toPlanet);
       this.emit('locationsUpdate');
     }
   }
@@ -157,7 +160,8 @@ class ContractAPI extends EventEmitter {
     }
     let playerAddrs = await Promise.all(playerPromises);
     for (let player of playerAddrs) {
-      if (player === this.account) {
+      console.log(player);
+      if (player.toLowerCase() === this.account.toLowerCase()) {
         this.hasJoinedGame = true;
       }
     }
@@ -170,11 +174,33 @@ class ContractAPI extends EventEmitter {
         return this.web3Manager.contract.methods.planets(planetId).call()
       }).catch(() => null));
     }
-    let planets = await Promise.all(planetPromises);
+    let rawPlanets = await Promise.all(planetPromises);
     this.planets = {};
-    for (let planet of planets) {
-      this.planets[planet.locationId] = planet;
+    for (let rawPlanet of rawPlanets) {
+      this.updateRawPlanetInMemory(rawPlanet);
     }
+  }
+
+  updateRawPlanetInMemory(rawPlanet) {
+    const planet = this.rawPlanetToObject(rawPlanet);
+    this.planets[planet.locationId] = planet;
+  }
+
+  rawPlanetToObject(rawPlanet) {
+    let ret = {};
+    ret.capacity = parseInt(rawPlanet.capacity);
+    ret.growth = parseInt(rawPlanet.growth);
+    ret.coordinatesRevealed = rawPlanet.coordinatesRevealed;
+    ret.lastUpdated = parseInt(rawPlanet.lastUpdated);
+    ret.locationId = rawPlanet.locationId;
+    ret.owner = rawPlanet.owner.toLowerCase();
+    ret.population = parseInt(rawPlanet.population);
+    ret.version = parseInt(rawPlanet.version);
+    if (ret.coordinatesRevealed) {
+      ret.x = parseInt(rawPlanet.x);
+      ret.y = parseInt(rawPlanet.y);
+    }
+    return ret;
   }
 
   async initLocalStorageManager() {
@@ -203,6 +229,7 @@ class ContractAPI extends EventEmitter {
       }
     }
     console.log(x, y, hash);
+    this.discover({x, y, hash});
     this.initContractCall(x, y).then(contractCall => {
       this.emit('initializingPlayer');
       this.web3Manager.initializePlayer(...contractCall);
@@ -256,7 +283,7 @@ class ContractAPI extends EventEmitter {
         const y = Math.floor(Math.random() * maxY);
         const hash = this.mimcHash(x, y);
         this.discover({x, y, hash});
-      }, 500);
+      }, 5);
     }
   }
 
