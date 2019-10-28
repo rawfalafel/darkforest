@@ -92,6 +92,10 @@ class Landing extends Component {
     });
   }
 
+  testWorker() {
+    this.contractAPI.testWorker();
+  }
+
   render() {
     if (!this.state.loading) {
       return (
@@ -102,6 +106,7 @@ class Landing extends Component {
               <button onClick={this.startExplore.bind(this)}>Start telescope</button>
               <button onClick={this.stopExplore.bind(this)}>Pause telescope</button>
               <button onClick={this.getTempLoc.bind(this)}>debug</button>
+              <button onClick={this.testWorker.bind(this)}>Test worker</button>
               <p>{`tempLoc: ${this.state.tempLoc}`}</p>
               <ScrollableBoard
                 maxX={parseInt(this.contractAPI.constants.maxX)}

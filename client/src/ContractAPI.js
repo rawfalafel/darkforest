@@ -4,6 +4,9 @@ import LocalStorageManager from "./LocalStorageManager";
 import bigInt from "big-integer";
 import {witnessObjToBuffer} from "./utils/Utils";
 import {mimcHash} from "./utils/mimc";
+import worker from "./worker/worker";
+import WebWorker from "./worker/workerSetup";
+
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
 
@@ -28,6 +31,7 @@ class ContractAPI extends EventEmitter {
   hasJoinedGame;
   inMemoryBoard;
   exploreInterval;
+  worker;
 
   constructor() {
     super();
@@ -39,6 +43,7 @@ class ContractAPI extends EventEmitter {
     await this.getKeys();
     await this.getContractData();
     await this.initLocalStorageManager();
+    await this.initWorker();
     this.emit('initialized', this);
   }
 
@@ -208,6 +213,14 @@ class ContractAPI extends EventEmitter {
     this.emit('localStorageInit');
   }
 
+  async initWorker() {
+    this.worker = new WebWorker(worker);
+    this.worker.addEventListener("message", event => {
+      console.log('Reply received from worker');
+      console.log(event);
+    });
+  }
+
   joinGame() {
     const {maxX, maxY} = this.getConstantInts();
     let validHomePlanet = false;
@@ -351,6 +364,11 @@ class ContractAPI extends EventEmitter {
       snarkProof.pi_c.slice(0, 2), // pi_c
       publicSignals // input
     ]
+  }
+
+  testWorker() {
+    this.worker.postMessage('asdf');
+    console.log('Message sent to worker');
   }
 
   static getInstance() {
