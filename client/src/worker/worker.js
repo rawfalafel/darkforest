@@ -1,5 +1,4 @@
 /* eslint-disable */
-import {mimcHash} from "../utils/mimc";
 
 export default () => {
   self.addEventListener("message", event => {
@@ -7,7 +6,7 @@ export default () => {
 
     console.log('Worker: Message received from main');
     console.log(event)
-    // const hash = mimcHash(42, 42);
+    // const hash = window.mimc(42, 42);
 
     postMessage(1234);
     console.log('Worker: Message sent back to main');

@@ -3,7 +3,6 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import bigInt from "big-integer";
 import {witnessObjToBuffer} from "./utils/Utils";
-import {mimcHash} from "./utils/mimc";
 import worker from "./worker/worker";
 import WebWorker from "./worker/workerSetup";
 
@@ -230,7 +229,7 @@ class ContractAPI extends EventEmitter {
       x = Math.floor(Math.random() * (maxX + 1));
       y = Math.floor(Math.random() * (maxY + 1));
 
-      hash = mimcHash(x, y);
+      hash = window.mimc(x, y);
       if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
         .divide(32)
         .geq(bigInt(hash))) {
@@ -264,7 +263,7 @@ class ContractAPI extends EventEmitter {
       throw new Error('attempted to move from a planet not owned by player');
     }
 
-    const hash = mimcHash(newX, newY);
+    const hash = window.mimc(newX, newY);
     this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(fromPlanet.population / 2)).then(contractCall => {
       const loc = {
         x: newX.toString(),
@@ -300,7 +299,7 @@ class ContractAPI extends EventEmitter {
         const {maxX, maxY} = this.getConstantInts();
         const x = Math.floor(Math.random() * (maxX + 1));
         const y = Math.floor(Math.random() * (maxY + 1));
-        const hash = mimcHash(x, y);
+        const hash = window.mimc(x, y);
         this.discover({x, y, hash});
       }, 5);
     }
@@ -334,7 +333,7 @@ class ContractAPI extends EventEmitter {
     const input = {x: x.toString(), y: y.toString()};
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
-    const publicSignals = [mimcHash(x, y)];
+    const publicSignals = [window.mimc(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
     return stringifyBigInts(callArgs);
   }
@@ -350,7 +349,7 @@ class ContractAPI extends EventEmitter {
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
-    const publicSignals = [mimcHash(x1, y1), mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
+    const publicSignals = [window.mimc(x1, y1), window.mimc(x2, y2), distMax.toString(), shipsMoved.toString()];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
