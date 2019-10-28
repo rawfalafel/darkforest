@@ -214,9 +214,13 @@ class ContractAPI extends EventEmitter {
 
   async initWorker() {
     this.worker = new Worker(workerUrl);
-    this.worker.onmessage = function(event) {
-      console.log('Received reply from worker');
-      console.log(event);
+    this.worker.onmessage = function(e) {
+      // worker explored some coords
+      const data = e.data;
+      const x = data[0];
+      const y = data[1];
+      const hash = data[2];
+      this.discover({x, y, hash});
     }
   }
 
@@ -229,7 +233,7 @@ class ContractAPI extends EventEmitter {
       x = Math.floor(Math.random() * (maxX + 1));
       y = Math.floor(Math.random() * (maxY + 1));
 
-      hash = window.mimc(x, y);
+      hash = window.mimcHash(x, y);
       if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
         .divide(32)
         .geq(bigInt(hash))) {
@@ -263,7 +267,7 @@ class ContractAPI extends EventEmitter {
       throw new Error('attempted to move from a planet not owned by player');
     }
 
-    const hash = window.mimc(newX, newY);
+    const hash = window.mimcHash(newX, newY);
     this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(fromPlanet.population / 2)).then(contractCall => {
       const loc = {
         x: newX.toString(),
@@ -299,7 +303,7 @@ class ContractAPI extends EventEmitter {
         const {maxX, maxY} = this.getConstantInts();
         const x = Math.floor(Math.random() * (maxX + 1));
         const y = Math.floor(Math.random() * (maxY + 1));
-        const hash = window.mimc(x, y);
+        const hash = window.mimcHash(x, y);
         this.discover({x, y, hash});
       }, 5);
     }
@@ -310,6 +314,14 @@ class ContractAPI extends EventEmitter {
       clearInterval(this.exploreInterval);
       this.exploreInterval = null;
     }
+  }
+
+  startExploreWorker() {
+    this.worker.postMessage(this.composeMessage('start', []));
+  }
+
+  stopExploreWorker() {
+    this.worker.postMessage(this.composeMessage('stop', []));
   }
 
   discover(loc) {
@@ -333,7 +345,7 @@ class ContractAPI extends EventEmitter {
     const input = {x: x.toString(), y: y.toString()};
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
-    const publicSignals = [window.mimc(x, y)];
+    const publicSignals = [window.mimcHash(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
     return stringifyBigInts(callArgs);
   }
@@ -349,7 +361,7 @@ class ContractAPI extends EventEmitter {
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
-    const publicSignals = [window.mimc(x1, y1), window.mimc(x2, y2), distMax.toString(), shipsMoved.toString()];
+    const publicSignals = [window.mimcHash(x1, y1), window.mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
@@ -367,7 +379,11 @@ class ContractAPI extends EventEmitter {
 
   testWorker() {
     console.log('Sending message to worker');
-    this.worker.postMessage('asdf');
+    this.worker.postMessage(this.composeMessage('start', []));
+  }
+
+  composeMessage(type, payload) {
+    return [type].concat(payload);
   }
 
   static getInstance() {

@@ -271,5 +271,5 @@ const mimcHash = (...inputs) => {
 
 // this is a little not kosher apparently
 if (this.document !== undefined) {
-  window.mimc = mimcHash;
+  window.mimcHash = mimcHash;
 }
