@@ -2,8 +2,8 @@ self.importScripts('./mimc.js');
 
 var minX = 0;
 var minY = 0;
-var maxX = 30;
-var maxY = 30;
+var maxX = 29;
+var maxY = 29;
 var exploreInterval = null;
 
 startExplore = function() {
@@ -13,9 +13,9 @@ startExplore = function() {
       const rangeY = maxY - minY + 1;
       const x = minX + Math.floor(Math.random() * rangeX);
       const y = Math.floor(Math.random() * rangeY);
-      const hash = mimcHash(x, y);
+      const hash = mimcHash(x, y).toString();
       postMessage([x, y, hash]);
-    }, 5);
+    }, 0);
   }
 }
 stopExplore = function() {

@@ -77,22 +77,6 @@ class Landing extends Component {
     this.contractAPI.stopExplore();
   }
 
-  startExploreWorker() {
-    this.contractAPI.startExploreWorker();
-  }
-
-  stopExploreWorker() {
-    this.contractAPI.stopExploreWorker();
-  }
-
-  initCircuitTest() {
-    this.contractAPI.initCircuitTest(14,9);
-  }
-
-  moveCircuitTest() {
-    this.contractAPI.moveCircuitTest(1, 1);
-  }
-
   async getTempLoc() {
     const tempLoc = await this.contractAPI.web3Manager.contract.methods.tempLoc().call();
     this.setState({
@@ -110,8 +94,6 @@ class Landing extends Component {
               <button onClick={this.startExplore.bind(this)}>Start telescope</button>
               <button onClick={this.stopExplore.bind(this)}>Pause telescope</button>
               <button onClick={this.getTempLoc.bind(this)}>debug</button>
-              <button onClick={this.startExploreWorker.bind(this)}>Start telescope with worker</button>
-              <button onClick={this.stopExploreWorker.bind(this)}>Pause telescope with worker</button>
               <p>{`tempLoc: ${this.state.tempLoc}`}</p>
               <ScrollableBoard
                 maxX={parseInt(this.contractAPI.constants.maxX)}

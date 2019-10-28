@@ -214,12 +214,12 @@ class ContractAPI extends EventEmitter {
 
   async initWorker() {
     this.worker = new Worker(workerUrl);
-    this.worker.onmessage = function(e) {
+    this.worker.onmessage = (e) => {
       // worker explored some coords
       const data = e.data;
       const x = data[0];
       const y = data[1];
-      const hash = data[2];
+      const hash = bigInt(data[2]);
       this.discover({x, y, hash});
     }
   }
@@ -298,30 +298,15 @@ class ContractAPI extends EventEmitter {
   }
 
   startExplore() {
-    if (!this.exploreInterval) {
-      this.exploreInterval = setInterval(() => {
-        const {maxX, maxY} = this.getConstantInts();
-        const x = Math.floor(Math.random() * (maxX + 1));
-        const y = Math.floor(Math.random() * (maxY + 1));
-        const hash = window.mimcHash(x, y);
-        this.discover({x, y, hash});
-      }, 5);
-    }
-  }
-
-  stopExplore() {
-    if (this.exploreInterval) {
-      clearInterval(this.exploreInterval);
-      this.exploreInterval = null;
-    }
-  }
-
-  startExploreWorker() {
     this.worker.postMessage(this.composeMessage('start', []));
   }
 
-  stopExploreWorker() {
+  stopExplore() {
     this.worker.postMessage(this.composeMessage('stop', []));
+  }
+
+  setExplorationBounds(minX, minY, maxX, maxY) {
+    this.worker.postMessage(this.composeMessage('setBounds', [minX, minY, maxX, maxY]));
   }
 
   discover(loc) {
