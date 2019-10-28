@@ -2,12 +2,12 @@ self.importScripts('./mimc.js');
 
 var xLower = 0;
 var yLower = 0;
-var xUpper = 29;
-var yUpper = 29;
+var xUpper = 30;
+var yUpper = 30;
 var exploreInterval = null;
 
 const CHUNK_SIZE = 10;
-const MAX_HASH = bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617');
+const LOCATION_ID_UB = bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617');
 const DIFFICULTY = 32;
 
 exploreChunk = function(chunk_x, chunk_y) {
@@ -15,7 +15,7 @@ exploreChunk = function(chunk_x, chunk_y) {
   for (let x=CHUNK_SIZE*chunk_x; x<CHUNK_SIZE*(chunk_x+1); x++) {
     for (let y=CHUNK_SIZE*chunk_y; y<CHUNK_SIZE*(chunk_y+1); y++) {
       const hash = mimcHash(x, y);
-      if (hash.lesser(MAX_HASH.divide(DIFFICULTY))) {
+      if (hash.lesser(LOCATION_ID_UB.divide(DIFFICULTY))) {
         planets.push((x, y, hash));
       }
     }

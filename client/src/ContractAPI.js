@@ -3,6 +3,7 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import bigInt from "big-integer";
 import {witnessObjToBuffer} from "./utils/Utils";
+import {LOCATION_ID_UB, DIFFICULTY} from "./constants";
 
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
@@ -213,9 +214,7 @@ class ContractAPI extends EventEmitter {
       y = Math.floor(Math.random() * ySize);
 
       hash = window.mimcHash(x, y);
-      if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
-        .divide(32)
-        .geq(bigInt(hash))) {
+      if (hash.lesser(LOCATION_ID_UB.divide(DIFFICULTY))) {
         validHomePlanet = true;
       }
     }
