@@ -6,6 +6,23 @@ var maxX = 29;
 var maxY = 29;
 var exploreInterval = null;
 
+const CHUNK_SIZE = 10;
+const MAX_HASH = bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617');
+const DIFFICULTY = 32;
+
+exploreChunk = function(chunk_x, chunk_y) {
+  planets = [];
+  for (let x=CHUNK_SIZE*chunk_x; x<CHUNK_SIZE*(chunk_x+1); x++) {
+    for (let y=CHUNK_SIZE*chunk_y; y<CHUNK_SIZE*(chunk_y+1); y++) {
+      const hash = mimcHash(x, y);
+      if (hash.lesser(MAX_HASH.divide(DIFFICULTY))) {
+        planets.push((x, y, hash));
+      }
+    }
+  }
+  postMessage(planets);
+}
+
 startExplore = function() {
   if (!exploreInterval) {
     exploreInterval = setInterval(() => {
@@ -45,6 +62,8 @@ onmessage = function(e) {
   } else if (type === 'stop') {
     stopExplore();
   } else if (type === 'setBounds') {
+    setBounds(...payload);
+  } else if (type === 'exploreChunk') {
     setBounds(...payload);
   }
 }
