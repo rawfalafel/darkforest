@@ -80,7 +80,7 @@ class ScrollableBoard extends Component {
       hoveringOver: {x: worldX, y: worldY}
     });
     if (!!this.state.mouseDown && !isPlanet(this.props.knownBoard[this.state.mouseDown.x][this.state.mouseDown.y])) {
-      // move if not holding down on a planet
+      // move camera if not holding down on a planet
       this.camera.onMouseMove(canvasX, canvasY);
     }
   }
@@ -96,9 +96,11 @@ class ScrollableBoard extends Component {
       return;
     }
     if (worldX === this.state.mouseDown.x && worldY === this.state.mouseDown.y && isPlanet(this.props.knownBoard[worldX][worldY])) {
+      // if clicked on a planet, select it
       this.props.toggleSelect(worldX, worldY);
     } else {
       if (this.props.knownBoard[worldX][worldY] && isPlanet(this.props.knownBoard[worldX][worldY])) {
+        // if dragged between two planets, initiate a move if legal
         const startX = this.state.mouseDown.x;
         const startY = this.state.mouseDown.y;
         if (this.props.knownBoard[startX][startY]) {
