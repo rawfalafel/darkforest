@@ -214,10 +214,8 @@ class ContractAPI extends EventEmitter {
     let x, y, hash;
     // search for a valid home planet
     while (!validHomePlanet) {
-      // x = Math.floor(Math.random() * maxX);
-      // y = Math.floor(Math.random() * maxY);
-      x = 19;
-      y = 26;
+      x = Math.floor(Math.random() * maxX);
+      y = Math.floor(Math.random() * maxY);
 
       hash = mimcHash(x, y);
       if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
@@ -234,7 +232,6 @@ class ContractAPI extends EventEmitter {
     return this;
   }
 
-  // TODO: rewrite
   move(fromLoc, toLoc) {
     const oldX = parseInt(fromLoc.x);
     const oldY = parseInt(fromLoc.y);

@@ -256,9 +256,9 @@ function mimcSponge(inputs, n_outputs, rounds){
     state.inject(elt);
     state.mix();
   }
-  let outputs = [state.l]
+  let outputs = [state.l];
   for (let i=0; i<n_outputs-1; i++){
-    state.mix()
+    state.mix();
     outputs.push(state.l);
   }
   return outputs;
@@ -266,6 +266,6 @@ function mimcSponge(inputs, n_outputs, rounds){
 
 const mimcHash = (...inputs) => {
   return mimcSponge(inputs.map(n => bigInt(n)), 1, ROUNDS)[0];
-}
+};
 
 export { mimcHash };

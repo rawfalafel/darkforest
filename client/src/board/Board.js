@@ -30,6 +30,9 @@ class Board extends Component {
   }
 
   onMouseUp(x, y) {
+    if (!this.state.mouseDown) {
+      return;
+    }
     if (x === this.state.mouseDown.x && y === this.state.mouseDown.y) {
       this.props.toggleSelect(x, y);
     } else {
