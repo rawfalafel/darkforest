@@ -103,7 +103,7 @@ class Landing extends Component {
               <button onClick={this.stopExplore.bind(this)}>Pause telescope</button>
               <button onClick={this.getTempLoc.bind(this)}>debug</button>
               <p>{`tempLoc: ${this.state.tempLoc}`}</p>
-              <Board
+              <ScrollableBoard
                 maxX={parseInt(this.contractAPI.constants.maxX)}
                 maxY={parseInt(this.contractAPI.constants.maxY)}
                 knownBoard={this.contractAPI.inMemoryBoard}
@@ -113,8 +113,6 @@ class Landing extends Component {
                 toggleSelect={this.toggleSelect.bind(this)}
                 selected={this.state.selectedCoords}
               />
-
-              <ScrollableBoard></ScrollableBoard>
             </div>
           ) : (
             <button onClick={this.initialize.bind(this)}>Initialize me</button>

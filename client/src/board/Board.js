@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import bigInt from "big-integer";
 import {isPlanet} from "../utils/Utils";
 
 class Board extends Component {

@@ -214,8 +214,8 @@ class ContractAPI extends EventEmitter {
     let x, y, hash;
     // search for a valid home planet
     while (!validHomePlanet) {
-      x = Math.floor(Math.random() * maxX);
-      y = Math.floor(Math.random() * maxY);
+      x = Math.floor(Math.random() * (maxX + 1));
+      y = Math.floor(Math.random() * (maxY + 1));
 
       hash = mimcHash(x, y);
       if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
@@ -285,8 +285,8 @@ class ContractAPI extends EventEmitter {
     if (!this.exploreInterval) {
       this.exploreInterval = setInterval(() => {
         const {maxX, maxY} = this.getConstantInts();
-        const x = Math.floor(Math.random() * maxX);
-        const y = Math.floor(Math.random() * maxY);
+        const x = Math.floor(Math.random() * (maxX + 1));
+        const y = Math.floor(Math.random() * (maxY + 1));
         const hash = mimcHash(x, y);
         this.discover({x, y, hash});
       }, 5);

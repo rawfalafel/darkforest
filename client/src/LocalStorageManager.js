@@ -29,11 +29,9 @@ class LocalStorageManager {
     if (!this.getKey('init')) {
       const maxX = parseInt(contractAPI.constants.maxX);
       const maxY = parseInt(contractAPI.constants.maxY);
-      const emptyBoard = Array(maxX)
+      const emptyBoard = Array(maxX + 1)
           .fill(0)
-          .map(() => Array(maxY).fill(null));
-      const currentLocation = {};
-      const stagedLocation = {};
+          .map(() => Array(maxY + 1).fill(null));
       this.setKey('init', 'true');
       this.setKey('hasLocation', 'false');
       this.setKey('knownBoard', stringify(emptyBoard));
