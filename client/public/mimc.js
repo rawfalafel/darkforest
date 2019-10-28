@@ -269,4 +269,7 @@ const mimcHash = (...inputs) => {
   return mimcSponge(inputs.map(n => bigInt(n)), 1, ROUNDS)[0];
 };
 
-window.mimc = mimcHash;
+// this is a little not kosher apparently
+if (this.document !== undefined) {
+  window.mimc = mimcHash;
+}

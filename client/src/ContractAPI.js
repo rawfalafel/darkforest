@@ -3,14 +3,14 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import bigInt from "big-integer";
 import {witnessObjToBuffer} from "./utils/Utils";
-import worker from "./worker/worker";
-import WebWorker from "./worker/workerSetup";
 
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
 
 const zkSnark = require("snarkjs");
 const {stringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
+
+const workerUrl = process.env.PUBLIC_URL + "/worker.js";
 
 class ContractAPI extends EventEmitter {
   static instance;
@@ -213,11 +213,11 @@ class ContractAPI extends EventEmitter {
   }
 
   async initWorker() {
-    this.worker = new WebWorker(worker);
-    this.worker.addEventListener("message", event => {
-      console.log('Reply received from worker');
+    this.worker = new Worker(workerUrl);
+    this.worker.onmessage = function(event) {
+      console.log('Received reply from worker');
       console.log(event);
-    });
+    }
   }
 
   joinGame() {
@@ -366,8 +366,8 @@ class ContractAPI extends EventEmitter {
   }
 
   testWorker() {
+    console.log('Sending message to worker');
     this.worker.postMessage('asdf');
-    console.log('Message sent to worker');
   }
 
   static getInstance() {
