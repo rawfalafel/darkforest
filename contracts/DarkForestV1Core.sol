@@ -8,8 +8,8 @@ contract DarkForestV1 is Verifier {
 
     uint8 constant VERSION = 1;
 
-    uint public maxX = 29;
-    uint public maxY = 29;
+    uint public xSize = 30;
+    uint public ySize = 30;
     uint public difficulty = 32;
     uint capacity = 100000; // in milliPopulation
     uint growth = 1000; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second

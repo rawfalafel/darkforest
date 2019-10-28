@@ -27,11 +27,11 @@ class LocalStorageManager {
 
     // also initializes keys if they haven't already been
     if (!this.getKey('init')) {
-      const maxX = parseInt(contractAPI.constants.maxX);
-      const maxY = parseInt(contractAPI.constants.maxY);
-      const emptyBoard = Array(maxX + 1)
+      const xSize = parseInt(contractAPI.constants.xSize);
+      const ySize = parseInt(contractAPI.constants.ySize);
+      const emptyBoard = Array(xSize)
           .fill(0)
-          .map(() => Array(maxY + 1).fill(null));
+          .map(() => Array(ySize).fill(null));
       this.setKey('init', 'true');
       this.setKey('hasLocation', 'false');
       this.setKey('knownBoard', stringify(emptyBoard));

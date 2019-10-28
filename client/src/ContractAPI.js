@@ -114,15 +114,15 @@ class ContractAPI extends EventEmitter {
 
   // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
   async getContractConstants() {
-    const [maxX, maxY, difficulty] = await Promise.all([
-      this.web3Manager.contract.methods.maxX().call(),
-      this.web3Manager.contract.methods.maxY().call(),
+    const [xSize, ySize, difficulty] = await Promise.all([
+      this.web3Manager.contract.methods.xSize().call(),
+      this.web3Manager.contract.methods.ySize().call(),
       this.web3Manager.contract.methods.difficulty().call()
     ]).catch((err) => {
       this.emit('error', err);
       return [null, null];
     });
-    this.constants = {maxX, maxY, difficulty};
+    this.constants = {xSize, ySize, difficulty};
   }
 
   // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
@@ -204,13 +204,13 @@ class ContractAPI extends EventEmitter {
   }
 
   joinGame() {
-    const {maxX, maxY} = this.getConstantInts();
+    const {xSize, ySize} = this.getConstantInts();
     let validHomePlanet = false;
     let x, y, hash;
     // search for a valid home planet
     while (!validHomePlanet) {
-      x = Math.floor(Math.random() * (maxX + 1));
-      y = Math.floor(Math.random() * (maxY + 1));
+      x = Math.floor(Math.random() * xSize);
+      y = Math.floor(Math.random() * ySize);
 
       hash = window.mimcHash(x, y);
       if (bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
@@ -238,8 +238,8 @@ class ContractAPI extends EventEmitter {
     const dy = newY - oldY;
     const distMax = Math.abs(dx) + Math.abs(dy);
 
-    const { maxX, maxY } = this.getConstantInts();
-    if (0 > newX || 0 > newY || maxX < newX || maxY < newY) {
+    const { xSize, ySize } = this.getConstantInts();
+    if (0 > newX || 0 > newY || xSize <= newX || ySize <= newY) {
       throw new Error('attempted to move out of bounds');
     }
     if (!fromPlanet || fromPlanet.owner.toLowerCase() !== this.account.toLowerCase()) {
@@ -284,8 +284,8 @@ class ContractAPI extends EventEmitter {
     this.worker.postMessage(this.composeMessage('stop', []));
   }
 
-  setExplorationBounds(minX, minY, maxX, maxY) {
-    this.worker.postMessage(this.composeMessage('setBounds', [minX, minY, maxX, maxY]));
+  setExplorationBounds(xLower, yLower, xUpper, yUpper) {
+    this.worker.postMessage(this.composeMessage('setBounds', [xLower, yLower, xUpper, yUpper]));
   }
 
   discover(loc) {
@@ -298,8 +298,8 @@ class ContractAPI extends EventEmitter {
 
   getConstantInts() {
     return {
-      maxX: parseInt(this.constants.maxX),
-      maxY: parseInt(this.constants.maxY),
+      xSize: parseInt(this.constants.xSize),
+      ySize: parseInt(this.constants.ySize),
       difficulty: parseInt(this.constants.difficulty)
     };
   }

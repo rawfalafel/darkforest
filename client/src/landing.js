@@ -96,8 +96,8 @@ class Landing extends Component {
               <button onClick={this.getTempLoc.bind(this)}>debug</button>
               <p>{`tempLoc: ${this.state.tempLoc}`}</p>
               <ScrollableBoard
-                maxX={parseInt(this.contractAPI.constants.maxX)}
-                maxY={parseInt(this.contractAPI.constants.maxY)}
+                xSize={parseInt(this.contractAPI.constants.xSize)}
+                ySize={parseInt(this.contractAPI.constants.ySize)}
                 knownBoard={this.contractAPI.inMemoryBoard}
                 planets={this.contractAPI.planets}
                 myAddress={this.contractAPI.account}

@@ -77,7 +77,7 @@ class Board extends Component {
           alignItems: "center"
         }}
       >
-        {[...Array(this.props.maxY - 1).keys()].map(i => (
+        {[...Array(this.props.ySize).keys()].map(i => (
           <div
             key={i}
             style={{
@@ -87,7 +87,7 @@ class Board extends Component {
               alignItems: "center"
             }}
           >
-            {[...Array(this.props.maxX).keys()].map(j => (
+            {[...Array(this.props.xSize+1).keys()].map(j => (
               <div
                 key={j}
                 style={{

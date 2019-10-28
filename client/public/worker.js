@@ -1,9 +1,9 @@
 self.importScripts('./mimc.js');
 
-var minX = 0;
-var minY = 0;
-var maxX = 29;
-var maxY = 29;
+var xLower = 0;
+var yLower = 0;
+var xUpper = 29;
+var yUpper = 29;
 var exploreInterval = null;
 
 const CHUNK_SIZE = 10;
@@ -26,9 +26,9 @@ exploreChunk = function(chunk_x, chunk_y) {
 startExplore = function() {
   if (!exploreInterval) {
     exploreInterval = setInterval(() => {
-      const rangeX = maxX - minX + 1;
-      const rangeY = maxY - minY + 1;
-      const x = minX + Math.floor(Math.random() * rangeX);
+      const rangeX = xUpper - xLower;
+      const rangeY = yUpper - yLower;
+      const x = xLower + Math.floor(Math.random() * rangeX);
       const y = Math.floor(Math.random() * rangeY);
       const hash = mimcHash(x, y).toString();
       postMessage([x, y, hash]);
@@ -41,11 +41,11 @@ stopExplore = function() {
     exploreInterval = null;
   }
 }
-setBounds = function(_minX, _minY, _maxX, _maxY) {
-  minX = _minX;
-  minY = _minY;
-  maxX = _maxX;
-  maxY = _maxY;
+setBounds = function(_xLower, _yLower, _xUpper, _yUpper) {
+  xLower = _xLower;
+  yLower = _yLower;
+  xUpper = _xUpper;
+  yUpper = _yUpper;
 }
 
 parseMessage = function (data) {
