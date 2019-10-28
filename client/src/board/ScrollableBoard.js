@@ -83,7 +83,6 @@ class ScrollableBoard extends Component {
       // move if not holding down on a planet
       this.camera.onMouseMove(canvasX, canvasY);
     }
-    this.drawGame();
   }
 
   onMouseUp(e) {
@@ -96,7 +95,7 @@ class ScrollableBoard extends Component {
     if (!this.state.mouseDown) {
       return;
     }
-    if (worldX === this.state.mouseDown.x && worldY === this.state.mouseDown.y) {
+    if (worldX === this.state.mouseDown.x && worldY === this.state.mouseDown.y && isPlanet(this.props.knownBoard[worldX][worldY])) {
       this.props.toggleSelect(worldX, worldY);
     } else {
       if (this.props.knownBoard[worldX][worldY] && isPlanet(this.props.knownBoard[worldX][worldY])) {
