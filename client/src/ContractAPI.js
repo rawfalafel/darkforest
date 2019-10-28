@@ -84,22 +84,8 @@ class ContractAPI extends EventEmitter {
     const {player, loc, planet} = event.returnValues;
     this.updateRawPlanetInMemory(planet);
     if (player.toLowerCase() !== this.account.toLowerCase()) {
-      console.log("Enemy player spawned!");
-      console.log("Player:");
-      console.log(player);
-      console.log("Location:");
-      console.log(loc);
-      console.log("Planet:");
-      console.log(planet);
       this.emit('locationsUpdate');
     } else {
-      console.log("I spawned!");
-      console.log("Player:");
-      console.log(player);
-      console.log("Location:");
-      console.log(loc);
-      console.log("Planet:");
-      console.log(planet);
       this.hasJoinedGame = true;
       this.emit('initializedPlayer');
     }
@@ -109,13 +95,6 @@ class ContractAPI extends EventEmitter {
     const {player, oldLoc, newLoc, fromPlanet, toPlanet} = event.returnValues;
     this.updateRawPlanetInMemory(fromPlanet);
     this.updateRawPlanetInMemory(toPlanet);
-    console.log("Player moved!");
-    console.log("Player:");
-    console.log(player);
-    console.log("Old Location:");
-    console.log(oldLoc);
-    console.log("New location:");
-    console.log(newLoc);
     this.emit('locationsUpdate');
   }
 
@@ -360,11 +339,6 @@ class ContractAPI extends EventEmitter {
       snarkProof.pi_c.slice(0, 2), // pi_c
       publicSignals // input
     ]
-  }
-
-  testWorker() {
-    console.log('Sending message to worker');
-    this.worker.postMessage(this.composeMessage('start', []));
   }
 
   composeMessage(type, payload) {
