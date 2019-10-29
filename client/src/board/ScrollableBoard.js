@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import {getCurrentPopulation, isPlanet} from "../utils/Utils";
+import {getCurrentPopulation, getPlanetLocationIfKnown, isPlanet} from "../utils/Utils";
 import Camera from "./Camera";
+import {CHUNK_SIZE} from "../constants";
 
 class ScrollableBoard extends Component {
   canvasRef = React.createRef();
@@ -85,7 +86,7 @@ class ScrollableBoard extends Component {
     this.setState({
       hoveringOver: {x: worldX, y: worldY}
     });
-    if (!!this.state.mouseDown && !isPlanet(this.props.knownBoard[this.state.mouseDown.x][this.state.mouseDown.y])) {
+    if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
       // move camera if not holding down on a planet
       this.camera.onMouseMove(canvasX, canvasY);
     }
@@ -101,27 +102,27 @@ class ScrollableBoard extends Component {
     if (!this.state.mouseDown) {
       return;
     }
-    if (worldX === this.state.mouseDown.x && worldY === this.state.mouseDown.y && isPlanet(this.props.knownBoard[worldX][worldY])) {
+    if (worldX === this.state.mouseDown.x && worldY === this.state.mouseDown.y && !!getPlanetLocationIfKnown(worldX, worldY, this.props.knownBoard)) {
       // if clicked on a planet, select it
       this.props.toggleSelect(worldX, worldY);
     } else {
-      if (this.props.knownBoard[worldX][worldY] && isPlanet(this.props.knownBoard[worldX][worldY])) {
+      const endPlanetLocation = getPlanetLocationIfKnown(worldX, worldY, this.props.knownBoard);
+      if (!!endPlanetLocation) {
         // if dragged between two planets, initiate a move if legal
         const startX = this.state.mouseDown.x;
         const startY = this.state.mouseDown.y;
-        if (this.props.knownBoard[startX][startY]) {
-          if (this.props.planets[this.props.knownBoard[startX][startY]]) {
-            if (this.props.planets[this.props.knownBoard[startX][startY]].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
-              this.props.move({
-                x: startX,
-                y: startY,
-                hash: this.props.knownBoard[startX][startY]
-              }, {
-                x: worldX,
-                y: worldY,
-                hash: this.props.knownBoard[worldX][worldY]
-              });
-            }
+        const startPlanetLocation = getPlanetLocationIfKnown(startX, startY, this.props.knownBoard);
+        if (!!startPlanetLocation) {
+          if (this.props.planets[startPlanetLocation.hash].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
+            this.props.move({
+              x: startX,
+              y: startY,
+              hash: startPlanetLocation.hash
+            }, {
+              x: worldX,
+              y: worldY,
+              hash: endPlanetLocation.hash
+            });
           }
         }
       }
@@ -129,7 +130,7 @@ class ScrollableBoard extends Component {
     this.setState({
       mouseDown: null
     });
-    if (!!this.state.mouseDown && !isPlanet(this.props.knownBoard[this.state.mouseDown.x][this.state.mouseDown.y])) {
+    if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
       // move if not holding down on a planet
       this.camera.onMouseUp(canvasX, canvasY);
     }
@@ -138,7 +139,7 @@ class ScrollableBoard extends Component {
   onMouseOut(e) {
     const rect = this.canvas.getBoundingClientRect();
     this.setState({hoveringOver: null, mouseDown: null});
-    if (!!this.state.mouseDown && !isPlanet(this.props.knownBoard[this.state.mouseDown.x][this.state.mouseDown.y])) {
+    if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
       // move if not holding down on a planet
       this.camera.onMouseUp(e.clientX - rect.left, e.clientY - rect.top);
     }
@@ -218,47 +219,53 @@ class ScrollableBoard extends Component {
 
   drawBoard() {
     this.ctx.clearRect(0, 0, this.state.width, this.state.height);
-    this.ctx.fillStyle = 'black';
+    this.ctx.fillStyle = 'grey';
     this.ctx.fillRect(0, 0, this.state.width, this.state.height);
-    for (let x = 0; x < this.props.knownBoard.length; x += 1) {
-      for (let y = 0; y < this.props.knownBoard[x].length; y += 1) {
-        if (!this.props.knownBoard[x][y]) {
-          this.ctx.fillStyle = 'grey';
-          this.drawGameObject({
-            x,
-            y,
-            width: 1.1,
-            height: 1.1
-          });
-        } else if ((!this.props.planets[this.props.knownBoard[x][y]] || this.props.planets[this.props.knownBoard[x][y]].population === 0)
-          && isPlanet(this.props.knownBoard[x][y])) {
-          this.drawPlanet({
-            x,
-            y,
-            type: this.PlanetViewTypes.UNOCCUPIED,
-            population: 0
-          });
-        } else if (this.props.planets[this.props.knownBoard[x][y]]) {
-          if (this.props.planets[this.props.knownBoard[x][y]].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
-            this.drawPlanet({
-              x,
-              y,
-              type: this.PlanetViewTypes.MINE,
-              population: Math.floor(getCurrentPopulation(this.props.planets[this.props.knownBoard[x][y]]) / 100)
-            });
-          } else {
-            this.drawPlanet({
-              x,
-              y,
-              type: this.PlanetViewTypes.ENEMY,
-              population: Math.floor(getCurrentPopulation(this.props.planets[this.props.knownBoard[x][y]]) / 100)
-            });
+    for (let chunkX = 0; chunkX < this.props.knownBoard.length; chunkX += 1) {
+      for (let chunkY = 0; chunkY < this.props.knownBoard[chunkX].length; chunkY += 1) {
+        const chunk = this.props.knownBoard[chunkX][chunkY];
+        if (!!chunk) {
+          // chunk is discovered, color it black and draw all planets
+          for (let x = chunkX * CHUNK_SIZE; x < (chunkX + 1) * CHUNK_SIZE; x += 1) {
+            for (let y = chunkY * CHUNK_SIZE; y < (chunkY + 1) * CHUNK_SIZE; y += 1) {
+              this.ctx.fillStyle = 'black';
+              this.drawGameObject({
+                x,
+                y,
+                width: 1.1,
+                height: 1.1
+              });
+            }
+          }
+          for (let planetLoc of chunk.planets) {
+            if (!this.props.planets[planetLoc.hash]) {
+              this.drawPlanet({
+                x: planetLoc.x,
+                y: planetLoc.y,
+                type: this.PlanetViewTypes.UNOCCUPIED,
+                population: 0
+              });
+            } else if (this.props.planets[planetLoc.hash].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
+              this.drawPlanet({
+                x: planetLoc.x,
+                y: planetLoc.y,
+                type: this.PlanetViewTypes.MINE,
+                population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
+              });
+            } else {
+              this.drawPlanet({
+                x: planetLoc.x,
+                y: planetLoc.y,
+                type: this.PlanetViewTypes.ENEMY,
+                population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
+              });
+            }
           }
         }
       }
     }
     if (this.state.hoveringOver && this.state.mouseDown) {
-      if (isPlanet(this.props.knownBoard[this.state.mouseDown.x][this.state.mouseDown.y])
+      if (!!getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)
         && (this.state.hoveringOver.x !== this.state.mouseDown.x || this.state.hoveringOver.y !== this.state.mouseDown.y)) {
         this.ctx.beginPath();
         this.ctx.lineWidth = 4;

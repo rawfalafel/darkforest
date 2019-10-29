@@ -15,7 +15,7 @@ class Landing extends Component {
   }
 
   async startApp() {
-    // window.localStorage.clear();
+    window.localStorage.clear();
     this.contractAPI = ContractAPI.getInstance();
     this.contractAPI.on('initialized', contractAPI => {
       this.setState({
@@ -68,23 +68,8 @@ class Landing extends Component {
     }
   }
 
-  startExplore() {
-    this.contractAPI.startExplore();
-  }
-
-  stopExplore() {
-    this.contractAPI.stopExplore();
-  }
-
   exploreRandomChunk() {
     this.contractAPI.exploreRandomChunk();
-  }
-
-  async getTempLoc() {
-    const tempLoc = await this.contractAPI.web3Manager.contract.methods.tempLoc().call();
-    this.setState({
-      tempLoc
-    });
   }
 
   render() {
@@ -94,11 +79,17 @@ class Landing extends Component {
           {this.state.hasJoinedGame ? (
             <div>
               <p>have df account</p>
-              <button onClick={this.startExplore.bind(this)}>[Obsolete] Start telescope</button>
-              <button onClick={this.stopExplore.bind(this)}>[Obsolete] Pause telescope</button>
               <button onClick={this.exploreRandomChunk.bind(this)}>Explore Random Chunk</button>
-              <button onClick={this.getTempLoc.bind(this)}>debug</button>
-              <p>{`tempLoc: ${this.state.tempLoc}`}</p>
+              <ScrollableBoard
+                xSize={parseInt(this.contractAPI.constants.xSize)}
+                ySize={parseInt(this.contractAPI.constants.ySize)}
+                knownBoard={this.contractAPI.inMemoryBoard}
+                planets={this.contractAPI.planets}
+                myAddress={this.contractAPI.account}
+                move={this.move.bind(this)}
+                toggleSelect={this.toggleSelect.bind(this)}
+                selected={this.state.selectedCoords}
+              />
             </div>
           ) : (
             <button onClick={this.initialize.bind(this)}>Initialize me</button>
@@ -110,15 +101,6 @@ class Landing extends Component {
   }
 }
 
-              // <ScrollableBoard
-              //   xSize={parseInt(this.contractAPI.constants.xSize)}
-              //   ySize={parseInt(this.contractAPI.constants.ySize)}
-              //   knownBoard={this.contractAPI.inMemoryBoard}
-              //   planets={this.contractAPI.planets}
-              //   myAddress={this.contractAPI.account}
-              //   move={this.move.bind(this)}
-              //   toggleSelect={this.toggleSelect.bind(this)}
-              //   selected={this.state.selectedCoords}
-              // />
+
 
 export default Landing;

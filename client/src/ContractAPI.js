@@ -1,8 +1,7 @@
 import * as EventEmitter from 'events';
 import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
-import bigInt from "big-integer";
-import {witnessObjToBuffer} from "./utils/Utils";
+import {getCurrentPopulation, witnessObjToBuffer} from "./utils/Utils";
 import {CHUNK_SIZE, DIFFICULTY, LOCATION_ID_UB} from "./constants";
 
 const initCircuit = require("./circuits/init/circuit.json");
@@ -30,7 +29,6 @@ class ContractAPI extends EventEmitter {
   localStorageManager;
   hasJoinedGame;
   inMemoryBoard;
-  exploreInterval;
   worker;
 
   constructor() {
@@ -252,7 +250,7 @@ class ContractAPI extends EventEmitter {
     }
 
     const hash = window.mimcHash(newX, newY);
-    this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(fromPlanet.population / 2)).then(contractCall => {
+    this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(getCurrentPopulation(fromPlanet) / 2)).then(contractCall => {
       const loc = {
         x: newX.toString(),
         y: newY.toString(),
@@ -280,22 +278,10 @@ class ContractAPI extends EventEmitter {
     return this;
   }
 
-  startExplore() {
-    this.worker.postMessage(this.composeMessage('start', []));
-  }
-
-  stopExplore() {
-    this.worker.postMessage(this.composeMessage('stop', []));
-  }
-
   exploreRandomChunk() {
     const chunk_x = Math.floor(Math.random() * 3);
     const chunk_y = Math.floor(Math.random() * 3);
     this.worker.postMessage(this.composeMessage('exploreChunk', [chunk_x, chunk_y]));
-  }
-
-  setExplorationBounds(xLower, yLower, xUpper, yUpper) {
-    this.worker.postMessage(this.composeMessage('setBounds', [xLower, yLower, xUpper, yUpper]));
   }
 
   discover(chunk) {

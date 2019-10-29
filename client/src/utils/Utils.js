@@ -1,4 +1,5 @@
 import bigInt from "big-integer";
+import {CHUNK_SIZE} from "../constants";
 
 // largely taken from websnark/tools/buildwitness.js
 
@@ -47,6 +48,21 @@ export const isPlanet = locationId => {
   if (!locationId) return false;
   return bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
     .divide(32).geq(bigInt(locationId));
+};
+
+export const getPlanetLocationIfKnown = (x, y, knownBoard) => {
+  const chunkX = Math.floor(x / CHUNK_SIZE);
+  const chunkY = Math.floor(y / CHUNK_SIZE);
+  const chunk = knownBoard[chunkX][chunkY];
+  if (!chunk) {
+    return null;
+  }
+  for (let planet of chunk.planets) {
+    if (planet.x === x && planet.y === y) {
+      return planet;
+    }
+  }
+  return null;
 };
 
 export const getCurrentPopulation = planet => {
