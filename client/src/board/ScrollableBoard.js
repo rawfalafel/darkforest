@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {isPlanet} from "../utils/Utils";
+import {getCurrentPopulation, isPlanet} from "../utils/Utils";
 import Camera from "./Camera";
 
 class ScrollableBoard extends Component {
@@ -30,6 +30,12 @@ class ScrollableBoard extends Component {
     y: 14.5,
     width: 0.2,
     height: 30
+  };
+
+  PlanetViewTypes = {
+    UNOCCUPIED: 0,
+    MINE: 1,
+    ENEMY: 2
   };
 
   constructor(props) {
@@ -163,6 +169,31 @@ class ScrollableBoard extends Component {
       gameObject.height / this.camera.scale);
   }
 
+  drawPlanet(planetDesc) {
+    if (planetDesc.type === this.PlanetViewTypes.UNOCCUPIED) {
+      this.ctx.fillStyle = 'green';
+    }
+    if (planetDesc.type === this.PlanetViewTypes.MINE) {
+      this.ctx.fillStyle = 'blue';
+    }
+    if (planetDesc.type === this.PlanetViewTypes.ENEMY) {
+      this.ctx.fillStyle = 'red';
+    }
+    const centerCanvasCoords = this.camera.worldToCanvasCoords(planetDesc.x, planetDesc.y);
+    const width = 0.6;
+    const height = 0.6;
+    this.ctx.fillRect(centerCanvasCoords.x - width / this.camera.scale / 2,
+      centerCanvasCoords.y - height / this.camera.scale / 2,
+      width / this.camera.scale,
+      height / this.camera.scale);
+    // draw text
+    this.ctx.font = '15px sans-serif';
+    this.ctx.textBaseline = 'top';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillText(planetDesc.population.toString(), centerCanvasCoords.x, centerCanvasCoords.y + 0.5 * height / this.camera.scale);
+  }
+
   drawHoveringRect(x, y) {
     this.ctx.fillStyle = "rgba(0, 0, 255, 0.2)";
     this.ctx.strokeStyle = "white";
@@ -199,30 +230,28 @@ class ScrollableBoard extends Component {
             width: 1.1,
             height: 1.1
           });
-        } else if (!this.props.planets[this.props.knownBoard[x][y]] && isPlanet(this.props.knownBoard[x][y])) {
-          this.ctx.fillStyle = 'green';
-          this.drawGameObject({
+        } else if ((!this.props.planets[this.props.knownBoard[x][y]] || this.props.planets[this.props.knownBoard[x][y]].population === 0)
+          && isPlanet(this.props.knownBoard[x][y])) {
+          this.drawPlanet({
             x,
             y,
-            width: 0.6,
-            height: 0.6
+            type: this.PlanetViewTypes.UNOCCUPIED,
+            population: 0
           });
         } else if (this.props.planets[this.props.knownBoard[x][y]]) {
           if (this.props.planets[this.props.knownBoard[x][y]].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
-            this.ctx.fillStyle = 'blue';
-            this.drawGameObject({
+            this.drawPlanet({
               x,
               y,
-              width: 0.6,
-              height: 0.6
+              type: this.PlanetViewTypes.MINE,
+              population: Math.floor(getCurrentPopulation(this.props.planets[this.props.knownBoard[x][y]]) / 100)
             });
           } else {
-            this.ctx.fillStyle = 'red';
-            this.drawGameObject({
+            this.drawPlanet({
               x,
               y,
-              width: 0.6,
-              height: 0.6
+              type: this.PlanetViewTypes.ENEMY,
+              population: Math.floor(getCurrentPopulation(this.props.planets[this.props.knownBoard[x][y]]) / 100)
             });
           }
         }

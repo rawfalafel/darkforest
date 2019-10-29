@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import Board from "./board/Board";
 import ContractAPI from "./ContractAPI";
 import ScrollableBoard from "./board/ScrollableBoard";
 

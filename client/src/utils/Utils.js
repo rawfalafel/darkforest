@@ -48,3 +48,13 @@ export const isPlanet = locationId => {
   return bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
     .divide(32).geq(bigInt(locationId));
 };
+
+export const getCurrentPopulation = planet => {
+  if (!planet || planet.population === 0) {
+    return 0;
+  }
+  const timeElapsed = (Date.now() / 1000) - planet.lastUpdated;
+  const denom = Math.exp(-4 * planet.growth * timeElapsed / planet.capacity) * ((planet.capacity / planet.population) - 1) + 1;
+  const currentPop = planet.capacity / denom;
+  return currentPop;
+};
