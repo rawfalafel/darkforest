@@ -60,9 +60,11 @@ class LocalStorageManager {
   }
 
   updateKnownBoard(board) {
-    if (this.account && this.contractAPI) {
+    if (!!this.account && !!this.contractAPI) {
       this.setKey('knownBoard', stringify(board));
     }
+    console.log('updated localstorage board');
+    console.log(this.getKnownBoard());
   }
 
 }
