@@ -3,7 +3,7 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import bigInt from "big-integer";
 import {witnessObjToBuffer} from "./utils/Utils";
-import {LOCATION_ID_UB, DIFFICULTY} from "./constants";
+import {CHUNK_SIZE, DIFFICULTY, LOCATION_ID_UB} from "./constants";
 
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit");
@@ -123,7 +123,10 @@ class ContractAPI extends EventEmitter {
       this.emit('error', err);
       return [null, null];
     });
-    this.constants = {xSize, ySize, difficulty};
+    // TODO: xSize should be a multiple of CHUNK_SIZE
+    const xChunks = xSize / CHUNK_SIZE;
+    const yChunks = ySize / CHUNK_SIZE;
+    this.constants = {xSize, ySize, difficulty, xChunks, yChunks};
   }
 
   // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
@@ -196,11 +199,10 @@ class ContractAPI extends EventEmitter {
     this.worker = new Worker(workerUrl);
     this.worker.onmessage = (e) => {
       // worker explored some coords
-      const data = e.data;
-      const x = data[0];
-      const y = data[1];
-      const hash = bigInt(data[2]);
-      this.discover({x, y, hash});
+      console.log(e.data);
+      const {chunkX, chunkY} = e.data.id;
+      this.discover({chunkX, chunkY, chunkData: e.data});
+      console.log(this.inMemoryBoard);
     }
   }
 
@@ -218,7 +220,11 @@ class ContractAPI extends EventEmitter {
         validHomePlanet = true;
       }
     }
-    this.discover({x, y, hash});
+
+    this.worker.postMessage(this.composeMessage(
+      'exploreChunk',
+      [Math.floor(x / CHUNK_SIZE), Math.floor(y / CHUNK_SIZE)]
+    ));
     this.initContractCall(x, y).then(contractCall => {
       this.emit('initializingPlayer');
       this.web3Manager.initializePlayer(...contractCall);
@@ -252,7 +258,6 @@ class ContractAPI extends EventEmitter {
         y: newY.toString(),
         hash: hash.toString()
       };
-      this.discover(loc);
       this.emit('moveSend');
       if (!toPlanet) {
         // colonizing uninhabited planet
@@ -283,13 +288,19 @@ class ContractAPI extends EventEmitter {
     this.worker.postMessage(this.composeMessage('stop', []));
   }
 
+  exploreRandomChunk() {
+    const chunk_x = Math.floor(Math.random() * 3);
+    const chunk_y = Math.floor(Math.random() * 3);
+    this.worker.postMessage(this.composeMessage('exploreChunk', [chunk_x, chunk_y]));
+  }
+
   setExplorationBounds(xLower, yLower, xUpper, yUpper) {
     this.worker.postMessage(this.composeMessage('setBounds', [xLower, yLower, xUpper, yUpper]));
   }
 
-  discover(loc) {
-    if ((loc.x != null) && (loc.y != null) && (loc.hash != null)) {
-      this.inMemoryBoard[loc.x][loc.y] = loc.hash;
+  discover(chunk) {
+    if ((chunk.chunkX != null) && (chunk.chunkY != null) && (chunk.chunkData != null)) {
+      this.inMemoryBoard[chunk.chunkX][chunk.chunkY] = chunk.chunkData;
       this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
       this.emit('discover', this.inMemoryBoard);
     }

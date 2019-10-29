@@ -10,17 +10,17 @@ const CHUNK_SIZE = 10;
 const LOCATION_ID_UB = bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617');
 const DIFFICULTY = 32;
 
-exploreChunk = function(chunk_x, chunk_y) {
+exploreChunk = function(chunkX, chunkY) {
   planets = [];
-  for (let x=CHUNK_SIZE*chunk_x; x<CHUNK_SIZE*(chunk_x+1); x++) {
-    for (let y=CHUNK_SIZE*chunk_y; y<CHUNK_SIZE*(chunk_y+1); y++) {
+  for (let x=CHUNK_SIZE*chunkX; x<CHUNK_SIZE*(chunkX+1); x++) {
+    for (let y=CHUNK_SIZE*chunkY; y<CHUNK_SIZE*(chunkY+1); y++) {
       const hash = mimcHash(x, y);
       if (hash.lesser(LOCATION_ID_UB.divide(DIFFICULTY))) {
-        planets.push((x, y, hash));
+        planets.push({x, y, hash: hash.toString()});
       }
     }
   }
-  postMessage(planets);
+  postMessage({id: {chunkX, chunkY}, planets});
 }
 
 startExplore = function() {
@@ -64,6 +64,6 @@ onmessage = function(e) {
   } else if (type === 'setBounds') {
     setBounds(...payload);
   } else if (type === 'exploreChunk') {
-    setBounds(...payload);
+    exploreChunk(...payload);
   }
 }
