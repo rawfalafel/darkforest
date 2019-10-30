@@ -7,31 +7,10 @@ class ScrollableBoard extends Component {
   canvasRef = React.createRef();
   ctx;
   camera;
-
-  topBorder = {
-    x: 14.5,
-    y: 29.3,
-    width: 30,
-    height: 0.2
-  };
-  bottomBorder = {
-    x: 14.5,
-    y: -0.3,
-    width: 30,
-    height: 0.2
-  };
-  leftBorder = {
-    x: -0.3,
-    y: 14.5,
-    width: 0.2,
-    height: 30
-  };
-  rightBorder = {
-    x: 29.3,
-    y: 14.5,
-    width: 0.2,
-    height: 30
-  };
+  topBorder;
+  bottomBorder;
+  leftBorder;
+  rightBorder;
 
   PlanetViewTypes = {
     UNOCCUPIED: 0,
@@ -48,13 +27,39 @@ class ScrollableBoard extends Component {
       mouseDown: null, // world coords, rounded to int
       hoveringOver: null // world coords, rounded to int
     };
+    const {xSize, ySize} = props;
+    this.topBorder = {
+      x: xSize/2 - 0.5,
+      y: ySize - 0.7,
+      width: xSize,
+      height: 0.2
+    };
+    this.bottomBorder = {
+      x: xSize/2 - 0.5,
+      y: -0.3,
+      width: xSize,
+      height: 0.2
+    };
+    this.leftBorder = {
+      x: -0.3,
+      y: ySize/2 - 0.5,
+      width: 0.2,
+      height: ySize
+    };
+    this.rightBorder = {
+      x: xSize - 0.7,
+      y: ySize/2 - 0.5,
+      width: 0.2,
+      height: ySize
+    };
   }
 
   componentDidMount() {
     this.canvas = this.canvasRef.current;
     this.ctx = this.canvas.getContext("2d");
     // TODO: pull viewportwidth and height from page, set page size listener to update
-    this.camera = new Camera(14.5, 14.5, -0.5, -0.5, 29.5, 29.5, 15, this.state.width, this.state.height);
+    const {xSize, ySize} = this.props;
+    this.camera = new Camera(xSize/2 - 0.5, ySize/2 - 0.5, -0.5, -0.5, xSize-0.5, ySize-0.5, xSize/2, this.state.width, this.state.height);
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
