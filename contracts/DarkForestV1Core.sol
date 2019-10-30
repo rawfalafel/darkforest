@@ -13,6 +13,7 @@ contract DarkForestV1 is Verifier {
     uint public difficulty = 32;
     uint capacity = 100000; // in milliPopulation
     uint growth = 100; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second
+    uint moveDecayNumerator = 40;
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
@@ -129,9 +130,9 @@ contract DarkForestV1 is Verifier {
         emit PlayerInitialized(player, loc, planets[loc]);
     }
 
-    function moveShipsDecay(uint shipsMoved) private pure returns (uint) {
-        // TODO: implement decay. Will need to take distance as param.
-        return shipsMoved;
+    function moveShipsDecay(uint shipsMoved, uint dist) private view returns (uint) {
+        int128 decayRatio = ABDKMath64x64.divu(moveDecayNumerator, moveDecayNumerator + dist);
+        return ABDKMath64x64.mulu(decayRatio, shipsMoved);
     }
 
     function moveCheckproof(
@@ -193,7 +194,7 @@ contract DarkForestV1 is Verifier {
             initializePlanet(newLoc, player, 0);
         }
         planets[oldLoc].population -= shipsMoved;
-        uint shipsLanded = moveShipsDecay(shipsMoved);
+        uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
         planets[newLoc].population += shipsLanded;
         if (planets[newLoc].population > planets[newLoc].capacity) {
             planets[newLoc].population = planets[newLoc].capacity;
@@ -220,7 +221,7 @@ contract DarkForestV1 is Verifier {
         require(ownerIfOccupiedElseZero(newLoc) == player);
 
         planets[oldLoc].population -= shipsMoved;
-        uint shipsLanded = moveShipsDecay(shipsMoved);
+        uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
         planets[newLoc].population += shipsLanded;
         if (planets[newLoc].population > planets[newLoc].capacity) {
             planets[newLoc].population = planets[newLoc].capacity;
@@ -248,7 +249,7 @@ contract DarkForestV1 is Verifier {
         require (enemyOwner != address(0) && enemyOwner != player);
 
         planets[oldLoc].population -= shipsMoved;
-        uint shipsLanded = moveShipsDecay(shipsMoved);
+        uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
 
         // TODO: maybe want to implement additional defender's advantage.
         // Currently ships annihilate 1 to 1
