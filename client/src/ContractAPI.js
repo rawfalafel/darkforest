@@ -216,8 +216,9 @@ class ContractAPI extends EventEmitter {
   }
 
   exploreRandomChunk() {
-    const chunk_x = Math.floor(Math.random() * this.constants.xChunks);
-    const chunk_y = Math.floor(Math.random() * this.constants.yChunks);
+    const {xChunks, yChunks} = this.getConstantInts();
+    const chunk_x = Math.floor(Math.random() * xChunks);
+    const chunk_y = Math.floor(Math.random() * yChunks);
     this.worker.postMessage(this.composeMessage('exploreChunk', [chunk_x, chunk_y]));
   }
 
