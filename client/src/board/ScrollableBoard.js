@@ -191,12 +191,17 @@ class ScrollableBoard extends Component {
       if (planetDesc.type === this.PlanetViewTypes.ENEMY) {
         this.ctx.strokeStyle = 'red';
       }
-      this.ctx.strokeRect(
-        centerCanvasCoords.x - 1 / this.camera.scale / 2,
-        centerCanvasCoords.y - 1 / this.camera.scale / 2,
-        1 / this.camera.scale,
-        1 / this.camera.scale
+      const ringWidth = 0.8;
+      this.ctx.beginPath();
+      this.ctx.arc(
+        centerCanvasCoords.x,
+        centerCanvasCoords.y,
+        ringWidth / this.camera.scale / 2,
+        0,
+        2*Math.PI,
+        0
       );
+      this.ctx.stroke();
     }
 
     // planet color depending on hash suffix
@@ -206,16 +211,31 @@ class ScrollableBoard extends Component {
 
     const width = 0.6;
     const height = 0.6;
-    this.ctx.fillRect(centerCanvasCoords.x - width / this.camera.scale / 2,
-      centerCanvasCoords.y - height / this.camera.scale / 2,
-      width / this.camera.scale,
-      height / this.camera.scale);
+    this.ctx.beginPath();
+    this.ctx.arc(
+      centerCanvasCoords.x,
+      centerCanvasCoords.y,
+      width / this.camera.scale / 2,
+      0,
+      2*Math.PI,
+      0
+    );
+    this.ctx.fill();
+
+    // this.ctx.fillRect(centerCanvasCoords.x - width / this.camera.scale / 2,
+    //   centerCanvasCoords.y - height / this.camera.scale / 2,
+    //   width / this.camera.scale,
+    //   height / this.camera.scale);
     // draw text
     this.ctx.font = '15px sans-serif';
     this.ctx.textBaseline = 'top';
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = 'white';
-    this.ctx.fillText(planetDesc.population.toString(), centerCanvasCoords.x, centerCanvasCoords.y + 0.5 * height / this.camera.scale);
+    this.ctx.fillText(
+      planetDesc.population.toString(),
+      centerCanvasCoords.x,
+      centerCanvasCoords.y + (planetDesc.type === this.PlanetViewTypes.UNOCCUPIED ? 0.5 : 0.8) * height / this.camera.scale
+    );
   }
 
   drawHoveringRect(x, y) {
