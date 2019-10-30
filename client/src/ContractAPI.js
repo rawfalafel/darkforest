@@ -261,17 +261,23 @@ class ContractAPI extends EventEmitter {
         // colonizing uninhabited planet
         this.web3Manager.moveUninhabited(...contractCall).once('moveUninhabitedComplete', receipt => {
           this.emit('moveComplete');
-        })
+        }).once('moveError', () => {
+          this.emit('moveError');
+        });
       } else if (toPlanet.owner.toLowerCase() !== this.account.toLowerCase()) {
         // attacking enemy
         this.web3Manager.moveEnemy(...contractCall).once('moveEnemyComplete', receipt => {
           this.emit('moveComplete');
-        })
+        }).once('moveError', () => {
+          this.emit('moveError');
+        });
       } else {
         // friendly move
         this.web3Manager.moveFriendly(...contractCall).once('moveFriendlyComplete', receipt => {
           this.emit('moveComplete');
-        })
+        }).once('moveError', () => {
+          this.emit('moveError');
+        });
       }
     });
 

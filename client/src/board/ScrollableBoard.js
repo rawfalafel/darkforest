@@ -86,9 +86,14 @@ class ScrollableBoard extends Component {
     this.setState({
       hoveringOver: {x: worldX, y: worldY}
     });
-    if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
-      // move camera if not holding down on a planet
-      this.camera.onMouseMove(canvasX, canvasY);
+    if (!!this.state.mouseDown) {
+      // user is hold-dragging
+      const startLocation = getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard);
+      const mouseDownPlanet = startLocation ? this.props.planets[startLocation.hash] : null;
+      if (!mouseDownPlanet || mouseDownPlanet.owner.toLowerCase() !== this.props.myAddress.toLowerCase()) {
+        // move camera if not holding down on a planet
+        this.camera.onMouseMove(canvasX, canvasY);
+      }
     }
   }
 
@@ -112,18 +117,17 @@ class ScrollableBoard extends Component {
         const startX = this.state.mouseDown.x;
         const startY = this.state.mouseDown.y;
         const startPlanetLocation = getPlanetLocationIfKnown(startX, startY, this.props.knownBoard);
-        if (!!startPlanetLocation) {
-          if (this.props.planets[startPlanetLocation.hash].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
-            this.props.move({
-              x: startX,
-              y: startY,
-              hash: startPlanetLocation.hash
-            }, {
-              x: worldX,
-              y: worldY,
-              hash: endPlanetLocation.hash
-            });
-          }
+        const mouseDownPlanet = startPlanetLocation ? this.props.planets[startPlanetLocation.hash] : null;
+        if (!!mouseDownPlanet && mouseDownPlanet.owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
+          this.props.move({
+            x: startX,
+            y: startY,
+            hash: startPlanetLocation.hash
+          }, {
+            x: worldX,
+            y: worldY,
+            hash: endPlanetLocation.hash
+          });
         }
       }
     }
@@ -265,7 +269,9 @@ class ScrollableBoard extends Component {
       }
     }
     if (this.state.hoveringOver && this.state.mouseDown) {
-      if (!!getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)
+      const startPlanetLocation = getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard);
+      const startPlanet = startPlanetLocation ? this.props.planets[startPlanetLocation.hash] : null;
+      if (startPlanet && startPlanet.owner.toLowerCase() === this.props.myAddress.toLowerCase()
         && (this.state.hoveringOver.x !== this.state.mouseDown.x || this.state.hoveringOver.y !== this.state.mouseDown.y)) {
         this.ctx.beginPath();
         this.ctx.lineWidth = 4;

@@ -52,7 +52,11 @@ class Landing extends Component {
         this.setState({
           moving: false
         });
-      })
+      }).once('moveError', () => {
+        this.setState({
+          moving: false
+        });
+      });
     });
   }
 

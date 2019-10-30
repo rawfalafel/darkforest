@@ -80,6 +80,7 @@ class Web3Manager extends EventEmitter {
       })
       .on("error", error => {
         console.log(`error: ${error}`);
+        this.emit('moveError');
       });
     return this;
   }
