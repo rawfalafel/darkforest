@@ -271,17 +271,15 @@ class ScrollableBoard extends Component {
         const chunk = this.props.knownBoard[chunkX][chunkY];
         if (!!chunk) {
           // chunk is discovered, color it black and draw all planets
-          for (let x = chunkX * CHUNK_SIZE; x < (chunkX + 1) * CHUNK_SIZE; x += 1) {
-            for (let y = chunkY * CHUNK_SIZE; y < (chunkY + 1) * CHUNK_SIZE; y += 1) {
-              this.ctx.fillStyle = 'black';
-              this.drawGameObject({
-                x,
-                y,
-                width: 1.1,
-                height: 1.1
-              });
-            }
-          }
+          let chunkCenterX = (chunkX + 0.5) * CHUNK_SIZE - 0.5;
+          let chunkCenterY = (chunkY + 0.5) * CHUNK_SIZE - 0.5;
+          this.ctx.fillStyle = 'black';
+          this.drawGameObject({
+            x: chunkCenterX,
+            y: chunkCenterY,
+            width: CHUNK_SIZE + 0.1,
+            height: CHUNK_SIZE + 0.1
+          });
           for (let planetLoc of chunk.planets) {
             if (!this.props.planets[planetLoc.hash]) {
               this.drawPlanet({
