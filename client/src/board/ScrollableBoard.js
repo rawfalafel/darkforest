@@ -1,3 +1,4 @@
+import bigInt from "big-integer";
 import React, { Component } from "react";
 import {getCurrentPopulation, getPlanetLocationIfKnown, isPlanet} from "../utils/Utils";
 import Camera from "./Camera";
@@ -180,16 +181,29 @@ class ScrollableBoard extends Component {
   }
 
   drawPlanet(planetDesc) {
-    if (planetDesc.type === this.PlanetViewTypes.UNOCCUPIED) {
-      this.ctx.fillStyle = 'green';
-    }
-    if (planetDesc.type === this.PlanetViewTypes.MINE) {
-      this.ctx.fillStyle = 'blue';
-    }
-    if (planetDesc.type === this.PlanetViewTypes.ENEMY) {
-      this.ctx.fillStyle = 'red';
-    }
     const centerCanvasCoords = this.camera.worldToCanvasCoords(planetDesc.x, planetDesc.y);
+
+    // border around planet indicating planet allegiance, if planet occupied
+    if (planetDesc.type !== this.PlanetViewTypes.UNOCCUPIED) {
+      if (planetDesc.type === this.PlanetViewTypes.MINE) {
+        this.ctx.strokeStyle = 'blue';
+      }
+      if (planetDesc.type === this.PlanetViewTypes.ENEMY) {
+        this.ctx.strokeStyle = 'red';
+      }
+      this.ctx.strokeRect(
+        centerCanvasCoords.x - 1 / this.camera.scale / 2,
+        centerCanvasCoords.y - 1 / this.camera.scale / 2,
+        1 / this.camera.scale,
+        1 / this.camera.scale
+      );
+    }
+
+    // planet color depending on hash suffix
+    let planetColor = bigInt(planetDesc.hash).and(0xFFFFFF).toString(16);
+    planetColor = "#" + "0".repeat(6 - planetColor.length) + planetColor;
+    this.ctx.fillStyle = planetColor;
+
     const width = 0.6;
     const height = 0.6;
     this.ctx.fillRect(centerCanvasCoords.x - width / this.camera.scale / 2,
@@ -209,10 +223,12 @@ class ScrollableBoard extends Component {
     this.ctx.strokeStyle = "white";
     this.ctx.lineWidth = 4;
     const centerCanvasCoords = this.camera.worldToCanvasCoords(x, y);
-    this.ctx.strokeRect(centerCanvasCoords.x - 1 / this.camera.scale / 2,
+    this.ctx.strokeRect(
+      centerCanvasCoords.x - 1 / this.camera.scale / 2,
       centerCanvasCoords.y - 1 / this.camera.scale / 2,
       1 / this.camera.scale,
-      1 / this.camera.scale);
+      1 / this.camera.scale
+    );
   }
 
   drawSelectedRect(x, y) {
@@ -251,6 +267,7 @@ class ScrollableBoard extends Component {
               this.drawPlanet({
                 x: planetLoc.x,
                 y: planetLoc.y,
+                hash: planetLoc.hash,
                 type: this.PlanetViewTypes.UNOCCUPIED,
                 population: 0
               });
@@ -258,6 +275,7 @@ class ScrollableBoard extends Component {
               this.drawPlanet({
                 x: planetLoc.x,
                 y: planetLoc.y,
+                hash: planetLoc.hash,
                 type: this.PlanetViewTypes.MINE,
                 population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
               });
@@ -265,6 +283,7 @@ class ScrollableBoard extends Component {
               this.drawPlanet({
                 x: planetLoc.x,
                 y: planetLoc.y,
+                hash: planetLoc.hash,
                 type: this.PlanetViewTypes.ENEMY,
                 population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
               });
