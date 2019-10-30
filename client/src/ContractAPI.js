@@ -30,10 +30,12 @@ class ContractAPI extends EventEmitter {
   hasJoinedGame;
   inMemoryBoard;
   worker;
+  isExploring;
 
   constructor() {
     super();
     this.web3Loaded = false;
+    this.isExploring = false;
     this.initialize();
   }
 
@@ -204,6 +206,86 @@ class ContractAPI extends EventEmitter {
     }
   }
 
+  exploreRandomChunk() {
+    const chunk_x = Math.floor(Math.random() * 3);
+    const chunk_y = Math.floor(Math.random() * 3);
+    this.worker.postMessage(this.composeMessage('exploreChunk', [chunk_x, chunk_y]));
+  }
+
+  discover(chunk) {
+    if ((chunk.chunkX != null) && (chunk.chunkY != null) && (chunk.chunkData != null)) {
+      this.inMemoryBoard[chunk.chunkX][chunk.chunkY] = chunk.chunkData;
+      this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
+      this.emit('discover', this.inMemoryBoard);
+      if (this.isExploring) {
+        let nextChunk = this.nextChunkInExploreOrder(chunk);
+        while (!this.isValidExploreTarget(nextChunk)) {
+          nextChunk = this.nextChunkInExploreOrder(nextChunk);
+        }
+        this.worker.postMessage(this.composeMessage('exploreChunk', [nextChunk.chunkX, nextChunk.chunkY]));
+      }
+    }
+  }
+
+  startExploring() {
+    
+  }
+
+  stopExploring() {
+    this.isExploring = false;
+  }
+
+  isValidExploreTarget(chunk) {
+    const {chunkX, chunkY} = chunk;
+    const {xSize, ySize} = this.getConstantInts();
+    const xChunks = xSize / CHUNK_SIZE;
+    const yChunks = ySize / CHUNK_SIZE;
+    // should be inbounds, and unexplored
+    return (chunkX >= 0 && chunkX < xChunks && chunkY >= 0 && chunkY < yChunks && !this.inMemoryBoard[chunkX][chunkY])
+  }
+
+  nextChunkInExploreOrder(chunk) {
+    // spiral
+    // TODO getHomeChunk should be loaded into memory on init
+    const homeChunkXY = this.localStorageManager.getHomeChunk();
+    if (!homeChunkXY) {
+      return;
+    }
+    const [homeChunkX, homeChunkY] = homeChunkXY;
+    const currentChunkX = chunk.chunkX;
+    const currentChunkY = chunk.chunkY;
+    if (currentChunkX === homeChunkX && currentChunkY === homeChunkY) {
+      return {
+        chunkX: homeChunkX,
+        chunkY: homeChunkY + 1
+      };
+    }
+    if (currentChunkY - currentChunkX > homeChunkY - homeChunkX && currentChunkY + currentChunkX >= homeChunkX + homeChunkY) {
+      return {
+        chunkX: currentChunkX + 1,
+        chunkY: currentChunkY
+      };
+    }
+    if (currentChunkX + currentChunkY > homeChunkX + homeChunkY && currentChunkY - currentChunkX <= homeChunkY - homeChunkX) {
+      return {
+        chunkX: currentChunkX,
+        chunkY: currentChunkY - 1
+      };
+    }
+    if (currentChunkX + currentChunkY <= homeChunkX + homeChunkY && currentChunkY - currentChunkX < homeChunkY - homeChunkX) {
+      return {
+        chunkX: currentChunkX - 1,
+        chunkY: currentChunkY
+      };
+    }
+    if (currentChunkX + currentChunkY < homeChunkX + homeChunkY && currentChunkY - currentChunkX >= homeChunkY - homeChunkX) {
+      return {
+        chunkX: currentChunkX,
+        chunkY: currentChunkY + 1
+      };
+    }
+  }
+
   joinGame() {
     const {xSize, ySize} = this.getConstantInts();
     let validHomePlanet = false;
@@ -218,11 +300,13 @@ class ContractAPI extends EventEmitter {
         validHomePlanet = true;
       }
     }
-
+    const chunkX = Math.floor(x / CHUNK_SIZE);
+    const chunkY = Math.floor(y / CHUNK_SIZE);
     this.worker.postMessage(this.composeMessage(
       'exploreChunk',
-      [Math.floor(x / CHUNK_SIZE), Math.floor(y / CHUNK_SIZE)]
+      [chunkX, chunkY]
     ));
+    this.localStorageManager.setHomeChunk(chunkX, chunkY); // set this before getting the call result, in case user exits before tx confirmed
     this.initContractCall(x, y).then(contractCall => {
       this.emit('initializingPlayer');
       this.web3Manager.initializePlayer(...contractCall);
@@ -282,20 +366,6 @@ class ContractAPI extends EventEmitter {
     });
 
     return this;
-  }
-
-  exploreRandomChunk() {
-    const chunk_x = Math.floor(Math.random() * 3);
-    const chunk_y = Math.floor(Math.random() * 3);
-    this.worker.postMessage(this.composeMessage('exploreChunk', [chunk_x, chunk_y]));
-  }
-
-  discover(chunk) {
-    if ((chunk.chunkX != null) && (chunk.chunkY != null) && (chunk.chunkData != null)) {
-      this.inMemoryBoard[chunk.chunkX][chunk.chunkY] = chunk.chunkData;
-      this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
-      this.emit('discover', this.inMemoryBoard);
-    }
   }
 
   getConstantInts() {

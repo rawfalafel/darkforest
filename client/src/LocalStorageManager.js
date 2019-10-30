@@ -33,8 +33,8 @@ class LocalStorageManager {
           .fill(0)
           .map(() => Array(yChunks).fill(null));
       this.setKey('init', 'true');
-      this.setKey('hasLocation', 'false');
       this.setKey('knownBoard', stringify(emptyBoard));
+      // we also have a key "homeChunk" which is not set until player has initialized
     }
   }
 
@@ -60,8 +60,17 @@ class LocalStorageManager {
   }
 
   updateKnownBoard(board) {
-    if (!!this.account && !!this.contractAPI) {
-      this.setKey('knownBoard', stringify(board));
+    this.setKey('knownBoard', stringify(board));
+  }
+
+  setHomeChunk(chunkX, chunkY) {
+    this.setKey('homeChunk', stringify([chunkX, chunkY]));
+  }
+
+  getHomeChunk() {
+    const homeChunk = this.getKey('homeChunk');
+    if (homeChunk) {
+      return JSON.parse(homeChunk);
     }
   }
 
