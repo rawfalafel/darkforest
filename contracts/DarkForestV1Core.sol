@@ -10,10 +10,10 @@ contract DarkForestV1 is Verifier {
 
     uint public xSize = 1024;
     uint public ySize = 1024;
-    uint public difficulty = 32;
+    uint public difficulty = 2048;
     uint capacity = 100000; // in milliPopulation
     uint growth = 100; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second
-    uint moveDecayNumerator = 40;
+    uint moveDecayNumerator = 60;
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
