@@ -100,7 +100,7 @@ class Web3Manager extends EventEmitter {
 
   moveEnemy(...args) {
     this.contract.methods
-      .move(...args)
+      .moveEnemy(...args)
       .send({ from: this.account })
       .on("receipt", async receipt => {
         this.emit('moveEnemyComplete', receipt);
