@@ -30,7 +30,9 @@ class ContractAPI extends EventEmitter {
   hasJoinedGame;
   inMemoryBoard;
   worker;
-  isExploring;
+  isExploring = false;
+  homeChunk;
+  discoveringFromChunk; // the "center" of the spiral. defaults to homeChunk
 
   constructor() {
     super();
@@ -192,6 +194,14 @@ class ContractAPI extends EventEmitter {
     this.localStorageManager = LocalStorageManager.getInstance();
     this.localStorageManager.setContractAPI(this);
     this.inMemoryBoard = this.localStorageManager.getKnownBoard();
+    const homeChunkRaw = this.localStorageManager.getHomeChunk();
+    if (homeChunkRaw) {
+      this.homeChunk = {
+        chunkX: homeChunkRaw[0],
+        chunkY: homeChunkRaw[1]
+      };
+      this.discoveringFromChunk = this.homeChunk;
+    }
     this.emit('localStorageInit');
   }
 
@@ -199,40 +209,80 @@ class ContractAPI extends EventEmitter {
     this.worker = new Worker(workerUrl);
     this.worker.onmessage = (e) => {
       // worker explored some coords
-      console.log(e.data);
-      const {chunkX, chunkY} = e.data.id;
-      this.discover({chunkX, chunkY, chunkData: e.data});
-      console.log(this.inMemoryBoard);
+      const data = JSON.parse(e.data);
+      const {chunkX, chunkY} = data.id;
+      this.discover({chunkX, chunkY, chunkData: data});
     }
   }
 
   exploreRandomChunk() {
-    const chunk_x = Math.floor(Math.random() * this.xChunks);
-    const chunk_y = Math.floor(Math.random() * this.yChunks);
+    const chunk_x = Math.floor(Math.random() * this.constants.xChunks);
+    const chunk_y = Math.floor(Math.random() * this.constants.yChunks);
     this.worker.postMessage(this.composeMessage('exploreChunk', [chunk_x, chunk_y]));
   }
 
-  discover(chunk) {
+  async discover(chunk) {
     if ((chunk.chunkX != null) && (chunk.chunkY != null) && (chunk.chunkData != null)) {
       this.inMemoryBoard[chunk.chunkX][chunk.chunkY] = chunk.chunkData;
       this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
       this.emit('discover', this.inMemoryBoard);
       if (this.isExploring) {
-        let nextChunk = this.nextChunkInExploreOrder(chunk);
-        while (!this.isValidExploreTarget(nextChunk)) {
-          nextChunk = this.nextChunkInExploreOrder(nextChunk);
+        // if this.isExploring, move on to the next chunk
+        let nextChunk = await this.nextValidExploreTarget(chunk);
+        if (nextChunk) {
+          this.worker.postMessage(this.composeMessage('exploreChunk', [nextChunk.chunkX, nextChunk.chunkY]));
         }
-        this.worker.postMessage(this.composeMessage('exploreChunk', [nextChunk.chunkX, nextChunk.chunkY]));
       }
     }
   }
 
-  startExploring() {
-
+  async startExplore(centerChunk) {
+    if (!!centerChunk) {
+      this.discoveringFromChunk = centerChunk;
+    } else {
+      this.discoveringFromChunk = this.homeChunk;
+    }
+    if (!this.discoveringFromChunk) {
+      return;
+    }
+    this.isExploring = true;
+    const firstChunk = await this.nextValidExploreTarget(this.discoveringFromChunk);
+    if (firstChunk) {
+      this.worker.postMessage(this.composeMessage('exploreChunk', [firstChunk.chunkX, firstChunk.chunkY]));
+    }
   }
 
-  stopExploring() {
+  stopExplore() {
     this.isExploring = false;
+  }
+
+  async nextValidExploreTarget(chunk) {
+    // async because it may take indefinitely long to find the next target. this will block UI if done sync
+    // we use this trick to promisify:
+    // https://stackoverflow.com/questions/10344498/best-way-to-iterate-over-an-array-without-blocking-the-ui/10344560#10344560
+
+    // this function may return null if user chooses to stop exploring in the middle of its resolution
+    // so any function calling it should handle the null case appropriately
+    if (!this.isExploring) {
+      return null;
+    }
+    let nextChunk = this.nextChunkInExploreOrder(chunk, this.discoveringFromChunk);
+    let count = 100;
+    while (!this.isValidExploreTarget(nextChunk) && count > 0) {
+      nextChunk = this.nextChunkInExploreOrder(nextChunk, this.discoveringFromChunk);
+      count -= 1;
+    }
+    if (this.isValidExploreTarget(nextChunk)) {
+      return nextChunk;
+    }
+    console.log('tried 100');
+    return new Promise(resolve => {
+      setTimeout(async () => {
+        this.nextValidExploreTarget(nextChunk).then(validExploreChunk => {
+          resolve(validExploreChunk);
+        });
+      }, 1);
+    })
   }
 
   isValidExploreTarget(chunk) {
@@ -244,14 +294,10 @@ class ContractAPI extends EventEmitter {
     return (chunkX >= 0 && chunkX < xChunks && chunkY >= 0 && chunkY < yChunks && !this.inMemoryBoard[chunkX][chunkY])
   }
 
-  nextChunkInExploreOrder(chunk) {
+  nextChunkInExploreOrder(chunk, homeChunk) {
     // spiral
-    // TODO getHomeChunk should be loaded into memory on init
-    const homeChunkXY = this.localStorageManager.getHomeChunk();
-    if (!homeChunkXY) {
-      return;
-    }
-    const [homeChunkX, homeChunkY] = homeChunkXY;
+    const homeChunkX = homeChunk.chunkX;
+    const homeChunkY = homeChunk.chunkY;
     const currentChunkX = chunk.chunkX;
     const currentChunkY = chunk.chunkY;
     if (currentChunkX === homeChunkX && currentChunkY === homeChunkY) {
@@ -261,6 +307,13 @@ class ContractAPI extends EventEmitter {
       };
     }
     if (currentChunkY - currentChunkX > homeChunkY - homeChunkX && currentChunkY + currentChunkX >= homeChunkX + homeChunkY) {
+      if (currentChunkY + currentChunkX == homeChunkX + homeChunkY) {
+        // break the circle
+        return {
+          chunkX: currentChunkX,
+          chunkY: currentChunkY + 1
+        };
+      }
       return {
         chunkX: currentChunkX + 1,
         chunkY: currentChunkY
@@ -307,6 +360,8 @@ class ContractAPI extends EventEmitter {
       [chunkX, chunkY]
     ));
     this.localStorageManager.setHomeChunk(chunkX, chunkY); // set this before getting the call result, in case user exits before tx confirmed
+    this.homeChunk = {chunkX, chunkY};
+    this.discoveringFromChunk = this.homeChunk;
     this.initContractCall(x, y).then(contractCall => {
       this.emit('initializingPlayer');
       this.web3Manager.initializePlayer(...contractCall);
@@ -414,7 +469,7 @@ class ContractAPI extends EventEmitter {
   }
 
   composeMessage(type, payload) {
-    return [type].concat(payload);
+    return JSON.stringify([type].concat(payload));
   }
 
   static getInstance() {

@@ -14,11 +14,12 @@ exploreChunk = function(chunkX, chunkY) {
       }
     }
   }
-  postMessage({id: {chunkX, chunkY}, planets});
+  postMessage(JSON.stringify({id: {chunkX, chunkY}, planets}));
 };
 
 parseMessage = function (data) {
-  return {type: data[0], payload: data.slice(1)}
+  const dataObj = JSON.parse(data);
+  return {type: dataObj[0], payload: dataObj.slice(1)};
 };
 
 onmessage = function(e) {

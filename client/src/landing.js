@@ -76,6 +76,14 @@ class Landing extends Component {
     this.contractAPI.exploreRandomChunk();
   }
 
+  startExplore() {
+    this.contractAPI.startExplore();
+  }
+
+  stopExplore() {
+    this.contractAPI.stopExplore();
+  }
+
   render() {
     if (!this.state.loading) {
       return (
@@ -84,6 +92,8 @@ class Landing extends Component {
             <div>
               <p>have df account</p>
               <button onClick={this.exploreRandomChunk.bind(this)}>Explore Random Chunk</button>
+              <button onClick={this.startExplore.bind(this)}>Start explore</button>
+              <button onClick={this.stopExplore.bind(this)}>Stop explore</button>
               <ScrollableBoard
                 xSize={parseInt(this.contractAPI.constants.xSize)}
                 ySize={parseInt(this.contractAPI.constants.ySize)}
