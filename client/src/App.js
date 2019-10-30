@@ -1,8 +1,138 @@
-import React from "react";
-import Landing from "./landing";
+import React, {Component} from "react";
+import './App.css';
+import ContractAPI from "./ContractAPI";
+import ScrollableBoard from "./board/ScrollableBoard";
+import Landing from "./scenes/Landing";
+import Loading from "./scenes/Loading";
 
-function App() {
-  return <Landing />;
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      loading: true,
+      hasJoinedGame: false,
+      moving: false,
+      selectedCoords: null,
+      findingFirstPlanet: false
+    };
+    this.startApp();
+  }
+
+  async startApp() {
+    // window.localStorage.clear();
+    this.contractAPI = ContractAPI.getInstance();
+    this.contractAPI.on('initialized', contractAPI => {
+      this.setState({
+        loading: false,
+        hasJoinedGame: contractAPI.hasJoinedGame
+      });
+    }).on('discover', () => {
+      this.setState({});
+    }).on('locationsUpdate', () => {
+      this.setState({});
+    }).on('initializedPlayer', () => {
+      console.log('spawned on a home planet');
+      this.startExplore();
+      this.setState({});
+    }).on('error', console.error);
+  }
+
+  async initialize() {
+    this.setState({
+      findingFirstPlanet: true
+    }, () => {
+      this.contractAPI.joinGame().once('initializedPlayer', () => {
+        this.setState({
+          hasJoinedGame: true,
+          findingFirstPlanet: false
+        });
+      }).once('initializedPlayerError', () => {
+        this.setState({
+          findingFirstPlanet: false
+        });
+      });
+    });
+  }
+
+  move(fromLocation, toLocation) {
+    if (this.state.moving) {
+      window.alert('a move is already queued');
+      return;
+    }
+    this.setState({
+      moving: true
+    }, () => {
+      this.contractAPI.move(fromLocation, toLocation).once('moveComplete', () => {
+        this.setState({
+          moving: false
+        });
+      }).once('moveError', () => {
+        this.setState({
+          moving: false
+        });
+      });
+    });
+  }
+
+  toggleSelect(x, y) {
+    if (this.state.selectedCoords && this.state.selectedCoords.x === x && this.state.selectedCoords.y === y) {
+      this.setState({
+        selectedCoords: null
+      });
+    } else {
+      this.setState({
+        selectedCoords: {x, y}
+      });
+    }
+  }
+
+  startExplore() {
+    this.contractAPI.startExplore();
+  }
+
+  stopExplore() {
+    this.contractAPI.stopExplore();
+  }
+
+  render() {
+    if (!this.state.loading && !this.state.findingFirstPlanet) {
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '100%'
+          }}
+        >
+          {this.state.hasJoinedGame ? (
+            <div>
+              <div
+                style={{position: 'absolute', top: 0, left: 0}}
+              >
+                <button onClick={this.startExplore.bind(this)}>Start explore</button>
+                <button onClick={this.stopExplore.bind(this)}>Stop explore</button>
+              </div>
+              <ScrollableBoard
+                xSize={parseInt(this.contractAPI.constants.xSize)}
+                ySize={parseInt(this.contractAPI.constants.ySize)}
+                homeChunk={this.contractAPI.homeChunk}
+                knownBoard={this.contractAPI.inMemoryBoard}
+                planets={this.contractAPI.planets}
+                myAddress={this.contractAPI.account}
+                move={this.move.bind(this)}
+                toggleSelect={this.toggleSelect.bind(this)}
+                selected={this.state.selectedCoords}
+              />
+            </div>
+          ) : (
+            <Landing
+              onInitialize={this.initialize.bind(this)}
+            />
+          )}
+        </div>
+      );
+    }
+    return <Loading/>;
+  }
 }
 
 export default App;

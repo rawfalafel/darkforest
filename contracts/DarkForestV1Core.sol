@@ -8,8 +8,8 @@ contract DarkForestV1 is Verifier {
 
     uint8 constant VERSION = 1;
 
-    uint public xSize = 1024;
-    uint public ySize = 1024;
+    uint public xSize = 2048;
+    uint public ySize = 2048;
     uint public difficulty = 4096;
     uint capacity = 100000; // in milliPopulation
     uint growth = 100; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second
@@ -223,9 +223,6 @@ contract DarkForestV1 is Verifier {
         planets[oldLoc].population -= shipsMoved;
         uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
         planets[newLoc].population += shipsLanded;
-        if (planets[newLoc].population > planets[newLoc].capacity) {
-            planets[newLoc].population = planets[newLoc].capacity;
-        }
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
     }
 

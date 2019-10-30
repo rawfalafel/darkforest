@@ -23,8 +23,8 @@ class ScrollableBoard extends Component {
     super(props);
 
     this.state = {
-      width: 768,
-      height: 640,
+      width: window.innerWidth,
+      height: window.innerHeight,
       mouseDown: null, // world coords, rounded to int
       hoveringOver: null // world coords, rounded to int
     };
@@ -33,24 +33,24 @@ class ScrollableBoard extends Component {
       x: xSize/2 - 0.5,
       y: ySize - 0.7,
       width: xSize,
-      height: 0.2
+      height: 4
     };
     this.bottomBorder = {
       x: xSize/2 - 0.5,
       y: -0.3,
       width: xSize,
-      height: 0.2
+      height: 4
     };
     this.leftBorder = {
       x: -0.3,
       y: ySize/2 - 0.5,
-      width: 0.2,
+      width: 4,
       height: ySize
     };
     this.rightBorder = {
       x: xSize - 0.7,
       y: ySize/2 - 0.5,
-      width: 0.2,
+      width: 4,
       height: ySize
     };
   }
@@ -60,7 +60,7 @@ class ScrollableBoard extends Component {
     this.ctx = this.canvas.getContext("2d");
     // TODO: pull viewportwidth and height from page, set page size listener to update
     const {xSize, ySize} = this.props;
-    this.camera = new Camera(xSize/2 - 0.5, ySize/2 - 0.5, -0.5, -0.5, xSize-0.5, ySize-0.5, xSize/2, this.state.width, this.state.height);
+    this.camera = new Camera((this.props.homeChunk.chunkX + 0.5) * CHUNK_SIZE, (this.props.homeChunk.chunkY + 0.5) * CHUNK_SIZE, -0.5, -0.5, xSize-0.5, ySize-0.5, xSize/2, this.state.width, this.state.height);
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
@@ -166,6 +166,7 @@ class ScrollableBoard extends Component {
 
   drawGame() {
     this.drawBoard();
+    this.ctx.fillStyle = 'white';
     this.drawGameObject(this.topBorder);
     this.drawGameObject(this.bottomBorder);
     this.drawGameObject(this.leftBorder);
@@ -191,7 +192,7 @@ class ScrollableBoard extends Component {
       if (planetDesc.type === this.PlanetViewTypes.ENEMY) {
         this.ctx.strokeStyle = 'red';
       }
-      const ringWidth = 0.8;
+      const ringWidth = 4.8;
       this.ctx.beginPath();
       this.ctx.arc(
         centerCanvasCoords.x,
@@ -209,8 +210,8 @@ class ScrollableBoard extends Component {
     planetColor = "#" + "0".repeat(6 - planetColor.length) + planetColor;
     this.ctx.fillStyle = planetColor;
 
-    const width = 0.6;
-    const height = 0.6;
+    const width = 4;
+    const height = 4;
     this.ctx.beginPath();
     this.ctx.arc(
       centerCanvasCoords.x,
@@ -266,6 +267,7 @@ class ScrollableBoard extends Component {
     this.ctx.clearRect(0, 0, this.state.width, this.state.height);
     this.ctx.fillStyle = 'grey';
     this.ctx.fillRect(0, 0, this.state.width, this.state.height);
+    const planetLocs = [];
     for (let chunkX = 0; chunkX < this.props.knownBoard.length; chunkX += 1) {
       for (let chunkY = 0; chunkY < this.props.knownBoard[chunkX].length; chunkY += 1) {
         const chunk = this.props.knownBoard[chunkX][chunkY];
@@ -281,33 +283,36 @@ class ScrollableBoard extends Component {
             height: CHUNK_SIZE + 0.1
           });
           for (let planetLoc of chunk.planets) {
-            if (!this.props.planets[planetLoc.hash]) {
-              this.drawPlanet({
-                x: planetLoc.x,
-                y: planetLoc.y,
-                hash: planetLoc.hash,
-                type: this.PlanetViewTypes.UNOCCUPIED,
-                population: 0
-              });
-            } else if (this.props.planets[planetLoc.hash].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
-              this.drawPlanet({
-                x: planetLoc.x,
-                y: planetLoc.y,
-                hash: planetLoc.hash,
-                type: this.PlanetViewTypes.MINE,
-                population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
-              });
-            } else {
-              this.drawPlanet({
-                x: planetLoc.x,
-                y: planetLoc.y,
-                hash: planetLoc.hash,
-                type: this.PlanetViewTypes.ENEMY,
-                population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
-              });
-            }
+            planetLocs.push(planetLoc);
           }
         }
+      }
+    }
+    for (let planetLoc of planetLocs) {
+      if (!this.props.planets[planetLoc.hash]) {
+        this.drawPlanet({
+          x: planetLoc.x,
+          y: planetLoc.y,
+          hash: planetLoc.hash,
+          type: this.PlanetViewTypes.UNOCCUPIED,
+          population: 0
+        });
+      } else if (this.props.planets[planetLoc.hash].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
+        this.drawPlanet({
+          x: planetLoc.x,
+          y: planetLoc.y,
+          hash: planetLoc.hash,
+          type: this.PlanetViewTypes.MINE,
+          population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
+        });
+      } else {
+        this.drawPlanet({
+          x: planetLoc.x,
+          y: planetLoc.y,
+          hash: planetLoc.hash,
+          type: this.PlanetViewTypes.ENEMY,
+          population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
+        });
       }
     }
     if (this.state.hoveringOver && this.state.mouseDown) {
@@ -345,14 +350,16 @@ class ScrollableBoard extends Component {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          alignItems: "center"
+          alignItems: "center",
+          width: '100%',
+          height: '100%'
         }}
       >
         <canvas
           ref={this.canvasRef}
           width={this.state.width}
           height={this.state.height}
-          style={{ border: '1px solid black '}}
+          style={{ width: '100%', height: '100%'}}
         />
       </div>
     );

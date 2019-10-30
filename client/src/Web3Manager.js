@@ -66,6 +66,7 @@ class Web3Manager extends EventEmitter {
           this.emit('initializedPlayer', receipt);
         })
         .on("error", error => {
+          this.emit('initializedPlayerError');
           console.log(`error: ${error}`);
         });
     return this;

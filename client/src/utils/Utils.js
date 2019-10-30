@@ -53,6 +53,9 @@ export const isPlanet = locationId => {
 export const getPlanetLocationIfKnown = (x, y, knownBoard) => {
   const chunkX = Math.floor(x / CHUNK_SIZE);
   const chunkY = Math.floor(y / CHUNK_SIZE);
+  if (chunkX < 0 || chunkY < 0 || chunkX >= knownBoard.length || chunkY >= knownBoard[chunkX].length) {
+    return null;
+  }
   const chunk = knownBoard[chunkX][chunkY];
   if (!chunk) {
     return null;

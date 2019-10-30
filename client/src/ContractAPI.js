@@ -44,8 +44,8 @@ class ContractAPI extends EventEmitter {
   async initialize() {
     await this.getKeys();
     await this.getContractData();
-    await this.initLocalStorageManager();
     await this.initWorker();
+    await this.initLocalStorageManager();
     this.emit('initialized', this);
   }
 
@@ -201,6 +201,7 @@ class ContractAPI extends EventEmitter {
         chunkY: homeChunkRaw[1]
       };
       this.discoveringFromChunk = this.homeChunk;
+      this.startExplore();
     }
     this.emit('localStorageInit');
   }
@@ -240,7 +241,7 @@ class ContractAPI extends EventEmitter {
   async startExplore(centerChunk) {
     if (!!centerChunk) {
       this.discoveringFromChunk = centerChunk;
-    } else {
+    } else if (!this.discoveringFromChunk) {
       this.discoveringFromChunk = this.homeChunk;
     }
     if (!this.discoveringFromChunk) {
@@ -276,7 +277,6 @@ class ContractAPI extends EventEmitter {
     if (this.isValidExploreTarget(nextChunk)) {
       return nextChunk;
     }
-    console.log('tried 100');
     return new Promise(resolve => {
       setTimeout(async () => {
         this.nextValidExploreTarget(nextChunk).then(validExploreChunk => {
@@ -365,7 +365,9 @@ class ContractAPI extends EventEmitter {
     this.discoveringFromChunk = this.homeChunk;
     this.initContractCall(x, y).then(contractCall => {
       this.emit('initializingPlayer');
-      this.web3Manager.initializePlayer(...contractCall);
+      this.web3Manager.initializePlayer(...contractCall).on('initializedPlayerError', () => {
+        this.emit('initializedPlayerError');
+      });
     });
     return this;
   }

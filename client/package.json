@@ -7,6 +7,7 @@
     "buffer": "^5.4.3",
     "circomlib": "0.0.19",
     "events": "^3.0.0",
+    "firebase": "^7.2.2",
     "js-sha3": "^0.8.0",
     "json-stable-stringify": "^1.0.1",
     "md5": "^2.2.1",

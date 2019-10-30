@@ -62,10 +62,10 @@ class Camera {
   }
 
   onWheel(deltaY) {
-    let newWidth = this.width * (1.01 ** deltaY);
+    let newWidth = this.width * (1.001 ** deltaY);
     //clip
     newWidth = Math.max(6, newWidth);
-    newWidth = Math.min(newWidth, 2 * (this.x - this.minX), 2 * (this.y - this.minY), 2 * (this.maxX - this.x), 2 * (this.maxY - this.y))
+    // newWidth = Math.min(newWidth, 2 * (this.x - this.minX), 2 * (this.y - this.minY), 2 * (this.maxX - this.x), 2 * (this.maxY - this.y));
     this.setWidth(newWidth);
   }
 
@@ -75,8 +75,8 @@ class Camera {
     this.x -= dx * this.scale;
     this.y -= -1 * dy * this.scale;
     // clip
-    this.x = Math.max(this.minX + this.width/2, Math.min(this.maxX - this.width/2, this.x));
-    this.y = Math.max(this.minY + this.height/2, Math.min(this.maxY - this.height/2, this.y));
+    // this.x = Math.max(this.minX + this.width/2, Math.min(this.maxX - this.width/2, this.x));
+    // this.y = Math.max(this.minY + this.height/2, Math.min(this.maxY - this.height/2, this.y));
   }
 }
 
