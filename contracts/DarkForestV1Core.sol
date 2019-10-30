@@ -10,10 +10,10 @@ contract DarkForestV1 is Verifier {
 
     uint public xSize = 1024;
     uint public ySize = 1024;
-    uint public difficulty = 2048;
+    uint public difficulty = 16384;
     uint capacity = 100000; // in milliPopulation
     uint growth = 100; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second
-    uint moveDecayNumerator = 60;
+    uint moveDecayNumerator = 160;
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
@@ -254,7 +254,7 @@ contract DarkForestV1 is Verifier {
         // TODO: maybe want to implement additional defender's advantage.
         // Currently ships annihilate 1 to 1
         // (though attacking ships have already undergone decay)
-        if (planets[newLoc].population <= shipsLanded) {
+        if (planets[newLoc].population > shipsLanded) {
             // attack reduces target planet's garrison but doesn't conquer it
             planets[newLoc].population -= shipsLanded;
         } else {
