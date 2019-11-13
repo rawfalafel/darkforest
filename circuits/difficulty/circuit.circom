@@ -415,5 +415,3 @@ template DifficultyInvProb() {
 
     out <== floor.out;
 }
-
-component main = DifficultyInvProb();
