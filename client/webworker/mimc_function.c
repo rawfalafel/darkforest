@@ -26,7 +26,7 @@ int main() {
   scanf("%1023s" , inputStrY); /* NOTE: never every write a call scanf ("%s", inputStr);
                                   You are leaving a security hole in your code. */
   char * hash = mimcHash(inputStrX, inputStrY);
-  printf("%s", hash);
+  printf("%s\n", hash);
 
 	return 0;
 }
