@@ -24,3 +24,9 @@ yarn-error.log*
 
 # local deploy and testing
 local_contract_addr.js
+
+# built files
+native-mimc/mimc_function
+native-mimc/mimc_function.wasm
+native-mimc/mimc_function.js
+native-mimc/mimc_gmp

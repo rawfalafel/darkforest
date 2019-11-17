@@ -3,7 +3,3 @@ client/src/utils/.idea/*
 build/*
 .idea/*
 client/src/.idea/*
-client/native-mimc/mimc_function
-client/native-mimc/mimc_function.wasm
-client/native-mimc/mimc_function.js
-client/native-mimc/mimc_gmp
