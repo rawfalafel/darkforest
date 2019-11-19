@@ -1,11 +1,13 @@
-import React, {Component} from "react";
+import * as React from "react"
 import './App.css';
-import ContractAPI from "./ContractAPI";
-import ScrollableBoard from "./board/ScrollableBoard";
-import Landing from "./scenes/Landing";
-import Loading from "./scenes/Loading";
+import ContractAPI from "../ContractAPI";
+import ScrollableBoard from "../board/ScrollableBoard";
+import Landing from "../scenes/Landing";
+import Loading from "../scenes/Loading";
 
-class App extends Component {
+class App extends React.Component<any, any> {
+  contractAPI: any;
+
   constructor(props) {
     super(props);
     this.state = {

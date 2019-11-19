@@ -1,17 +1,18 @@
-import bigInt from "big-integer";
-import React, { Component } from "react";
+import * as bigInt from "big-integer";
+import * as React from "react"
 import {getCurrentPopulation, getPlanetLocationIfKnown, isPlanet} from "../utils/Utils";
 import Camera from "./Camera";
 import {CHUNK_SIZE} from "../constants";
 
-class ScrollableBoard extends Component {
-  canvasRef = React.createRef();
-  ctx;
-  camera;
-  topBorder;
-  bottomBorder;
-  leftBorder;
-  rightBorder;
+class ScrollableBoard extends React.Component<any, any> {
+  canvasRef: any = React.createRef();
+  canvas: any;
+  ctx: any;
+  camera: any;
+  topBorder: any;
+  bottomBorder: any;
+  leftBorder: any;
+  rightBorder: any;
 
   PlanetViewTypes = {
     UNOCCUPIED: 0,

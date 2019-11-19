@@ -1,10 +1,12 @@
-import React, {Component} from "react";
+import * as React from "react"
 import * as firebase from "firebase/app";
 import "firebase/analytics";
 import "firebase/auth";
 import "firebase/firestore";
 
-class Landing extends Component {
+class Landing extends React.Component<any, any> {
+  db: any;
+
   constructor(props) {
     super(props);
     const firebaseConfig = {

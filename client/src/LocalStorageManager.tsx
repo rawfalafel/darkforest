@@ -1,10 +1,10 @@
 import * as stringify from "json-stable-stringify";
 
 class LocalStorageManager {
-  static instance;
+  static instance: any;
 
-  account;
-  contractAPI;
+  account: any;
+  contractAPI: any;
 
   constructor() {}
 

@@ -2,17 +2,17 @@ import * as EventEmitter from 'events';
 import Web3 from "web3";
 import {contractAddress} from "./local_contract_addr"; // this is a gitignored file
 
-const ethereum = window.ethereum;
+const ethereum = (window as any).ethereum;
 
 const contractABI = require("./build/contracts/DarkForestV1.json").abi;
 
 class Web3Manager extends EventEmitter {
   static instancePromise;
 
-  web3;
-  account;
-  contract;
-  loadingError;
+  web3: any;
+  account: any;
+  contract: any;
+  loadingError: any;
 
   constructor(web3, account, contract, loadingError) {
     super();
@@ -45,13 +45,13 @@ class Web3Manager extends EventEmitter {
             }
             const account = accounts[0];
             const contract = new web3.eth.Contract(contractABI, contractAddress);
-            return new Web3Manager(web3, account, contract);
+            return new Web3Manager(web3, account, contract, null);
           })
           .catch(error => {
             return new Web3Manager(web3, null, null, error);
           });
       ethereum.on('accountsChanged', (accounts) => {
-        window.location.reload(true);
+          window.location.reload(true);
       });
     }
 

@@ -5,34 +5,34 @@ import {getCurrentPopulation, witnessObjToBuffer} from "./utils/Utils";
 import {CHUNK_SIZE, DIFFICULTY, LOCATION_ID_UB} from "./constants";
 
 const initCircuit = require("./circuits/init/circuit.json");
-const moveCircuit = require("./circuits/move/circuit");
+const moveCircuit = require("./circuits/move/circuit.json");
 
 const zkSnark = require("snarkjs");
 const {stringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
 
-const workerUrl = process.env.PUBLIC_URL + "/worker.js";
+const workerUrl = "/public/worker.js";
 
 class ContractAPI extends EventEmitter {
-  static instance;
+  static instance: any;
 
-  provingKeyMove;
-  provingKeyInit;
-  web3Manager; // keep a reference so we don't have to do an async call after the first time
-  web3Loaded; // a flag
-  account;
-  loadingError;
-  constants;
-  nPlayers;
-  nPlanets;
-  players;
-  planets;
-  localStorageManager;
-  hasJoinedGame;
-  inMemoryBoard;
-  worker;
-  isExploring = false;
-  homeChunk;
-  discoveringFromChunk; // the "center" of the spiral. defaults to homeChunk
+  provingKeyMove: any;
+  provingKeyInit: any;
+  web3Manager: any; // keep a reference so we don't have to do an async call after the first time
+  web3Loaded: any; // a flag
+  account: any;
+  loadingError: any;
+  constants: any;
+  nPlayers: any;
+  nPlanets: any;
+  players: any;
+  planets: any;
+  localStorageManager: any;
+  hasJoinedGame: any;
+  inMemoryBoard: any;
+  worker: any;
+  isExploring: any = false;
+  homeChunk: any;
+  discoveringFromChunk: any; // the "center" of the spiral. defaults to homeChunk
 
   constructor() {
     super();
@@ -50,9 +50,9 @@ class ContractAPI extends EventEmitter {
   }
 
   async getKeys() {
-    const provingKeyMoveRes = await fetch('./proving_key_move.bin'); // proving_keys needs to be in `public`
+    const provingKeyMoveRes = await fetch('./public/proving_key_move.bin'); // proving_keys needs to be in `public`
     this.provingKeyMove = await provingKeyMoveRes.arrayBuffer();
-    const provingKeyInitRes = await fetch('./proving_key_init.bin');
+    const provingKeyInitRes = await fetch('./public/proving_key_init.bin');
     this.provingKeyInit = await provingKeyInitRes.arrayBuffer();
     this.emit('proverKeys');
     return this;
@@ -174,7 +174,7 @@ class ContractAPI extends EventEmitter {
   }
 
   rawPlanetToObject(rawPlanet) {
-    let ret = {};
+    let ret: any = {};
     ret.capacity = parseInt(rawPlanet.capacity);
     ret.growth = parseInt(rawPlanet.growth);
     ret.coordinatesRevealed = rawPlanet.coordinatesRevealed;
@@ -201,7 +201,7 @@ class ContractAPI extends EventEmitter {
         chunkY: homeChunkRaw[1]
       };
       this.discoveringFromChunk = this.homeChunk;
-      this.startExplore();
+      this.startExplore(null);
     }
     this.emit('localStorageInit');
   }
@@ -217,9 +217,9 @@ class ContractAPI extends EventEmitter {
   }
 
   exploreRandomChunk() {
-    const {xChunks, yChunks} = this.getConstantInts();
-    const chunk_x = Math.floor(Math.random() * xChunks);
-    const chunk_y = Math.floor(Math.random() * yChunks);
+    const {xSize, ySize} = this.getConstantInts();
+    const chunk_x = Math.floor(Math.random() * xSize);
+    const chunk_y = Math.floor(Math.random() * ySize);
     this.worker.postMessage(this.composeMessage('exploreChunk', [chunk_x, chunk_y]));
   }
 
@@ -230,7 +230,7 @@ class ContractAPI extends EventEmitter {
       this.emit('discover', this.inMemoryBoard);
       if (this.isExploring) {
         // if this.isExploring, move on to the next chunk
-        let nextChunk = await this.nextValidExploreTarget(chunk);
+        let nextChunk: any = await this.nextValidExploreTarget(chunk);
         if (nextChunk) {
           this.worker.postMessage(this.composeMessage('exploreChunk', [nextChunk.chunkX, nextChunk.chunkY]));
         }
@@ -248,7 +248,7 @@ class ContractAPI extends EventEmitter {
       return;
     }
     this.isExploring = true;
-    const firstChunk = await this.nextValidExploreTarget(this.discoveringFromChunk);
+    const firstChunk: any = await this.nextValidExploreTarget(this.discoveringFromChunk);
     if (firstChunk) {
       this.worker.postMessage(this.composeMessage('exploreChunk', [firstChunk.chunkX, firstChunk.chunkY]));
     }
@@ -349,7 +349,7 @@ class ContractAPI extends EventEmitter {
       x = Math.floor(Math.random() * xSize);
       y = Math.floor(Math.random() * ySize);
 
-      hash = window.mimcHash(x, y);
+      hash = (window as any).mimcHash(x, y);
       if (hash.lesser(LOCATION_ID_UB.divide(DIFFICULTY))) {
         validHomePlanet = true;
       }
@@ -391,7 +391,7 @@ class ContractAPI extends EventEmitter {
       throw new Error('attempted to move from a planet not owned by player');
     }
 
-    const hash = window.mimcHash(newX, newY);
+    const hash = (window as any).mimcHash(newX, newY);
     this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(getCurrentPopulation(fromPlanet) / 2)).then(contractCall => {
       const loc = {
         x: newX.toString(),
@@ -438,8 +438,8 @@ class ContractAPI extends EventEmitter {
     const circuit = new zkSnark.Circuit(initCircuit);
     const input = {x: x.toString(), y: y.toString()};
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
-    const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
-    const publicSignals = [window.mimcHash(x, y)];
+    const snarkProof = await (window as any).genZKSnarkProof(witness, this.provingKeyInit);
+    const publicSignals = [(window as any).mimcHash(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
     return stringifyBigInts(callArgs);
   }
@@ -454,8 +454,8 @@ class ContractAPI extends EventEmitter {
       distMax: distMax.toString()
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
-    const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
-    const publicSignals = [window.mimcHash(x1, y1), window.mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
+    const snarkProof = await (window as any).genZKSnarkProof(witness, this.provingKeyMove);
+    const publicSignals = [(window as any).mimcHash(x1, y1), (window as any).mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
