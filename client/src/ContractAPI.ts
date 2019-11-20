@@ -3,14 +3,14 @@ import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import {getCurrentPopulation, witnessObjToBuffer} from "./utils/Utils";
 import {CHUNK_SIZE, DIFFICULTY, LOCATION_ID_UB} from "./constants";
+import Worker from 'worker-loader!./miner/miner.worker';
+import mimcHash from './miner/mimc';
 
 const initCircuit = require("./circuits/init/circuit.json");
 const moveCircuit = require("./circuits/move/circuit.json");
 
 const zkSnark = require("snarkjs");
 const {stringifyBigInts} = require("../node_modules/snarkjs/src/stringifybigint.js");
-
-const workerUrl = "/public/worker.js";
 
 class ContractAPI extends EventEmitter {
   static instance: any;
@@ -207,7 +207,7 @@ class ContractAPI extends EventEmitter {
   }
 
   async initWorker() {
-    this.worker = new Worker(workerUrl);
+    this.worker = new Worker();
     this.worker.onmessage = (e) => {
       // worker explored some coords
       const data = JSON.parse(e.data);
@@ -349,7 +349,7 @@ class ContractAPI extends EventEmitter {
       x = Math.floor(Math.random() * xSize);
       y = Math.floor(Math.random() * ySize);
 
-      hash = (window as any).mimcHash(x, y);
+      hash = mimcHash(x, y);
       if (hash.lesser(LOCATION_ID_UB.divide(DIFFICULTY))) {
         validHomePlanet = true;
       }
@@ -391,7 +391,7 @@ class ContractAPI extends EventEmitter {
       throw new Error('attempted to move from a planet not owned by player');
     }
 
-    const hash = (window as any).mimcHash(newX, newY);
+    const hash = mimcHash(newX, newY);
     this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(getCurrentPopulation(fromPlanet) / 2)).then(contractCall => {
       const loc = {
         x: newX.toString(),
@@ -439,7 +439,7 @@ class ContractAPI extends EventEmitter {
     const input = {x: x.toString(), y: y.toString()};
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await (window as any).genZKSnarkProof(witness, this.provingKeyInit);
-    const publicSignals = [(window as any).mimcHash(x, y)];
+    const publicSignals = [mimcHash(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
     return stringifyBigInts(callArgs);
   }
@@ -455,7 +455,7 @@ class ContractAPI extends EventEmitter {
     };
     const witness = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await (window as any).genZKSnarkProof(witness, this.provingKeyMove);
-    const publicSignals = [(window as any).mimcHash(x1, y1), (window as any).mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
+    const publicSignals = [mimcHash(x1, y1), mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
