@@ -1,9 +1,9 @@
 import * as React from "react"
 import './App.css';
-import ContractAPI from "../ContractAPI";
-import ScrollableBoard from "../board/ScrollableBoard";
-import Landing from "../scenes/Landing";
-import Loading from "../scenes/Loading";
+import ContractAPI from "../api/ContractAPI";
+import ScrollableBoard from "./board/ScrollableBoard";
+import Landing from "./scenes/Landing";
+import Loading from "./scenes/Loading";
 
 class App extends React.Component<any, any> {
   contractAPI: any;

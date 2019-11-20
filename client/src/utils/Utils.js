@@ -1,5 +1,5 @@
 import bigInt from "big-integer";
-import {CHUNK_SIZE} from "../constants";
+import {CHUNK_SIZE} from "./constants";
 
 // largely taken from websnark/tools/buildwitness.js
 

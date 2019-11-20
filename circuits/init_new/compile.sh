@@ -12,6 +12,9 @@ rm witness.bin
 echo "compiling circuit to snarkjs..." &&
 date &&
 circom circuit.circom &&
+rm -rf ../../client/src/circuits/init_new/ &&
+mkdir -p ../../client/src/circuits/init_new/ &&
+cp circuit.json ../../client/src/circuits/init_new/ &&
 echo "generating public and verification keys..." &&
 date &&
 snarkjs setup --protocol groth &&
@@ -30,8 +33,8 @@ snarkjs generateverifier &&
 echo "creating witness binary..." &&
 node ../../client/node_modules/websnark/tools/buildwitness.js &&
 echo "creating proving key binary..." &&
-rm ../../client/public/proving_key_init.bin
+rm ../../client/public/proving_key_init_new.bin
 node ../../client/node_modules/websnark/tools/buildpkey.js &&
-cp ./proving_key.bin ../../client/public/proving_key_init.bin &&
+cp ./proving_key.bin ../../client/public/proving_key_init_new.bin &&
 echo "done!" &&
 date

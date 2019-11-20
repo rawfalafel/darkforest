@@ -1,7 +1,8 @@
 import * as bigInt from "big-integer";
+import {LOCATION_ID_UB} from "../utils/constants";
 
 const ROUNDS = 220;
-const p = bigInt("21888242871839275222246405745257275088548364400416034343698204186575808495617");
+const p = LOCATION_ID_UB;
 
 const c = [
   "0",

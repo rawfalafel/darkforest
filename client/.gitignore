@@ -5,11 +5,8 @@
 /.pnp
 .pnp.js
 
-# testing
-/coverage
-
 # production
-/build
+/dist
 
 # misc
 .DS_Store
@@ -23,10 +20,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # local deploy and testing
-local_contract_addr.js
+/utils/local_contract_addr.js
 
-# built files
-native-mimc/mimc_function
-native-mimc/mimc_function.wasm
-native-mimc/mimc_function.js
-native-mimc/mimc_gmp
+# contracts compiled and copied to client/ with /local-deploy.sh
+/contracts
+
+#circuits compiled and copied to client/ with /circuits/*/compile.sh
+/circuits
+
+/public/proving_key_init_new.bin

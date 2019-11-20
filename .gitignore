@@ -3,3 +3,13 @@ client/src/utils/.idea/*
 build/*
 .idea/*
 client/src/.idea/*
+
+# built files
+native-mimc/mimc_function
+native-mimc/mimc_function.wasm
+native-mimc/mimc_function.js
+native-mimc/mimc_gmp
+
+circuits/init_new/proving_key.bin
+circuits/init_new/proving_key.json
+circuits/init_new/circuit.json

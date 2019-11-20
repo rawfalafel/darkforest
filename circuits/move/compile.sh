@@ -12,6 +12,9 @@ rm witness.bin
 echo "compiling circuit to snarkjs..." &&
 date &&
 circom circuit.circom &&
+rm -rf ../../client/src/circuits/move/ &&
+mkdir -p ../../client/src/circuits/move/ &&
+cp circuit.json ../../client/src/circuits/move/ &&
 echo "generating public and verification keys..." &&
 date &&
 snarkjs setup --protocol groth &&
