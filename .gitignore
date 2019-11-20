@@ -13,3 +13,5 @@ native-mimc/mimc_gmp
 circuits/init_new/proving_key.bin
 circuits/init_new/proving_key.json
 circuits/init_new/circuit.json
+
+.DS_Store

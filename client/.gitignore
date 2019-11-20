@@ -23,9 +23,9 @@ yarn-error.log*
 /utils/local_contract_addr.js
 
 # contracts compiled and copied to client/ with /local-deploy.sh
-/contracts
+/src/contracts
 
 #circuits compiled and copied to client/ with /circuits/*/compile.sh
-/circuits
+/src/circuits
 
 /public/proving_key_init_new.bin
