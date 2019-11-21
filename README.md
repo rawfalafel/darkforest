@@ -17,7 +17,7 @@ before the webapp works, you'll need to run `./compile.sh` in both `circuits/ini
 # client
 remember to `npm install` in `./client`.
 
-you should run `touch ./client/src/local_contract_addr.js` to create this gitignored file. this is a file that keeps the contract address of the DarkForestCore contract on your local blockchain. `./local-deploy` will automatically write to this file.
+you should run `touch ./client/src/utils/local_contract_addr.ts` to create this gitignored file. this is a file that keeps the contract address of the DarkForestCore contract on your local blockchain. `./local-deploy` will automatically write to this file.
 
 to interact with the webapp in browser, you need metamask. point metamask to `http://localhost:8545`, which is the port that `ganache-cli` defaults to when running the local blockchain.
 

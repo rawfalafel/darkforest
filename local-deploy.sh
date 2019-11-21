@@ -14,10 +14,10 @@ done
 # sleep 1 ensures this happens AFTER ganache-cli is run
 (
   sleep 1
-  rm client/src/utils/local_contract_addr.js
-  printf "const contractAddress = '" > client/src/utils/local_contract_addr.js
-  sudo truffle migrate --all | grep -m2 "contract address" | tail -n1 | cut -d'x' -f 2 | tr -d '\n' >> client/src/utils/local_contract_addr.js
-  printf "';\n\nexport { contractAddress }\n" >> client/src/utils/local_contract_addr.js
+  rm client/src/utils/local_contract_addr.ts
+  printf "const contractAddress = '" > client/src/utils/local_contract_addr.ts
+  sudo truffle migrate --all | grep -m2 "contract address" | tail -n1 | cut -d'x' -f 2 | tr -d '\n' >> client/src/utils/local_contract_addr.ts
+  printf "';\n\nexport { contractAddress }\n" >> client/src/utils/local_contract_addr.ts
 ) &
 
 # start up local blockchain with ganache-cli
