@@ -3,6 +3,8 @@ import * as React from "react"
 import {getCurrentPopulation, getPlanetLocationIfKnown, isPlanet} from "../../utils/Utils";
 import Camera from "./Camera";
 import {CHUNK_SIZE} from "../../utils/constants";
+import {locationIdFromDecStr, locationIdFromHexStr, locationIdToDecStr} from "../../utils/CheckedTypeUtils";
+import {LocationId} from "../../@types/global/global";
 
 class ScrollableBoard extends React.Component<any, any> {
   canvasRef: any = React.createRef();
@@ -207,7 +209,7 @@ class ScrollableBoard extends React.Component<any, any> {
     }
 
     // planet color depending on hash suffix
-    let planetColor = bigInt(planetDesc.hash).and(0xFFFFFF).toString(16);
+    let planetColor = bigInt(planetDesc.hash, 16).and(0xFFFFFF).toString(16);
     planetColor = "#" + "0".repeat(6 - planetColor.length) + planetColor;
     this.ctx.fillStyle = planetColor;
 
@@ -283,13 +285,14 @@ class ScrollableBoard extends React.Component<any, any> {
             width: CHUNK_SIZE + 0.1,
             height: CHUNK_SIZE + 0.1
           });
-          for (let planetLoc of chunk.planets) {
+          for (let planetLoc of chunk.planetLocations) {
             planetLocs.push(planetLoc);
           }
         }
       }
     }
     for (let planetLoc of planetLocs) {
+      // console.log(planetLoc);
       if (!this.props.planets[planetLoc.hash]) {
         this.drawPlanet({
           x: planetLoc.x,

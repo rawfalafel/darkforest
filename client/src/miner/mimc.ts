@@ -1,5 +1,6 @@
 import * as bigInt from "big-integer";
 import {LOCATION_ID_UB} from "../utils/constants";
+import {BigInteger} from "big-integer";
 
 const ROUNDS = 220;
 const p = LOCATION_ID_UB;
@@ -228,23 +229,23 @@ const c = [
 ].map(n => bigInt(n));
 
 class FeistelState {
-  l: any;
-  r: any;
-  rounds: any;
-  k: any;
+  l: BigInteger;
+  r: BigInteger;
+  rounds: number;
+  k: BigInteger;
 
-  constructor (rounds, k) {
+  constructor (rounds: number, k: BigInteger) {
     this.l = bigInt(0);
     this.r = bigInt(0);
     this.rounds = rounds;
     this.k = k;
   }
 
-  inject(elt) {
+  inject(elt: BigInteger): void {
     this.l = this.l.add(elt).mod(p);
   }
 
-  mix() {
+  mix(): void {
     for (let i=0; i<this.rounds-1; i++) {
       let t = this.k.add(this.l).add(c[i]).mod(p);
       let l_new = t.modPow(5, p).add(this.r).mod(p);
@@ -256,13 +257,13 @@ class FeistelState {
   }
 }
 
-function mimcSponge(inputs, n_outputs, rounds){
+function mimcSponge(inputs: BigInteger[], n_outputs: number, rounds: number): BigInteger[] {
   let state = new FeistelState(rounds, bigInt(0));
   for (let elt of inputs){
     state.inject(elt);
     state.mix();
   }
-  let outputs = [state.l];
+  let outputs: BigInteger[] = [state.l];
   for (let i=0; i<n_outputs-1; i++){
     state.mix();
     outputs.push(state.l);
@@ -270,7 +271,7 @@ function mimcSponge(inputs, n_outputs, rounds){
   return outputs;
 }
 
-const mimcHash = (...inputs) => {
+const mimcHash: (...inputs: number[]) => BigInteger = (...inputs: number[]) => {
   return mimcSponge(inputs.map(n => bigInt(n)), 1, ROUNDS)[0];
 };
 

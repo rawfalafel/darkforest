@@ -5,6 +5,10 @@ import {getCurrentPopulation, witnessObjToBuffer} from "../utils/Utils";
 import {CHUNK_SIZE, LOCATION_ID_UB} from "../utils/constants";
 import Worker from 'worker-loader!../miner/miner.worker';
 import mimcHash from '../miner/mimc';
+import {Circuit} from "snarkjs";
+import {WebsnarkProof} from "../@types/global/global";
+import * as bigInt from "big-integer";
+import {BigInteger} from "big-integer";
 
 const initCircuit = require("../circuits/init/circuit.json");
 const moveCircuit = require("../circuits/move/circuit.json");
@@ -15,8 +19,8 @@ const {stringifyBigInts} = require("snarkjs/src/stringifybigint.js");
 class ContractAPI extends EventEmitter {
   static instance: any;
 
-  provingKeyMove: any;
-  provingKeyInit: any;
+  provingKeyMove: ArrayBuffer;
+  provingKeyInit: ArrayBuffer;
   web3Manager: any; // keep a reference so we don't have to do an async call after the first time
   web3Loaded: any; // a flag
   account: any;
@@ -430,12 +434,14 @@ class ContractAPI extends EventEmitter {
   }
 
   async initContractCall(x, y) {
-    const circuit = new zkSnark.Circuit(initCircuit);
+    const circuit: Circuit = new zkSnark.Circuit(initCircuit);
     const input = {x: x.toString(), y: y.toString()};
-    const witness = witnessObjToBuffer(circuit.calculateWitness(input));
-    const snarkProof = await (window as any).genZKSnarkProof(witness, this.provingKeyInit);
-    const publicSignals = [mimcHash(x, y)];
+    const witness: ArrayBuffer = witnessObjToBuffer(circuit.calculateWitness(input));
+    const snarkProof: WebsnarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
+    console.log("snarkProof", snarkProof);
+    const publicSignals: BigInteger[] = [mimcHash(x, y)];
     const callArgs = this.genCall(snarkProof, publicSignals);
+    console.log(callArgs);
     return stringifyBigInts(callArgs);
   }
 
@@ -448,13 +454,13 @@ class ContractAPI extends EventEmitter {
       y2: y2.toString(),
       distMax: distMax.toString()
     };
-    const witness = witnessObjToBuffer(circuit.calculateWitness(input));
-    const snarkProof = await (window as any).genZKSnarkProof(witness, this.provingKeyMove);
+    const witness: ArrayBuffer = witnessObjToBuffer(circuit.calculateWitness(input));
+    const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
     const publicSignals = [mimcHash(x1, y1), mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
     return stringifyBigInts(this.genCall(snarkProof, publicSignals));
   }
 
-  genCall(snarkProof, publicSignals) {
+  genCall(snarkProof: WebsnarkProof, publicSignals: BigInteger[]) {
     // the object returned by genZKSnarkProof needs to be massaged into a set of parameters the verifying contract
     // will accept
     return [

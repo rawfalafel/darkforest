@@ -59,6 +59,7 @@ class Web3Manager extends EventEmitter {
   }
 
   initializePlayer(...args) {
+    console.log(args);
     this.contract.methods
         .initializePlayer(...args)
         .send({from: this.account})
