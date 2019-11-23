@@ -26,7 +26,7 @@ class App extends React.Component<any, any> {
     this.contractAPI.on('initialized', contractAPI => {
       this.setState({
         loading: false,
-        hasJoinedGame: contractAPI.hasJoinedGame
+        hasJoinedGame: contractAPI.hasJoinedGame()
       });
     }).on('discover', () => {
       this.setState({});

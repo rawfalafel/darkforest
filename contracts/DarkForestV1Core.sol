@@ -148,22 +148,23 @@ contract DarkForestV1 is Verifier {
         require(verifyMoveProof(_a, _b, _c, input012));
     }
 
-    function moveCommonChecks(
+    function move(
         uint[2] memory _a,
         uint[2][2] memory _b,
         uint[2] memory _c,
         uint[4] memory _input
-    ) private {
+    ) public {
         // check proof validity
         uint[3] memory moveCheckproofInput;
         for (uint i = 0; i < 3; i++) {
             moveCheckproofInput[i] = _input[i];
         }
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
-        // preliminary checks to ensure the move is not illegal
+
         address player = msg.sender;
         uint oldLoc = _input[0];
         uint newLoc = _input[1];
+        uint maxDist = _input[2];
         uint shipsMoved = _input[3];
 
         require(playerInitialized[player]); // player exists
@@ -172,94 +173,39 @@ contract DarkForestV1 is Verifier {
         updatePopulation(oldLoc);
         updatePopulation(newLoc);
         require(planets[oldLoc].population >= shipsMoved); // player can move at most as many ships as exist on oldLoc
-    }
 
-    function moveUninhabited(
-        uint[2] memory _a,
-        uint[2][2] memory _b,
-        uint[2] memory _c,
-        uint[4] memory _input
-    ) public {
-        moveCommonChecks(_a, _b, _c, _input);
-
-        address player = msg.sender;
-        uint oldLoc = _input[0];
-        uint newLoc = _input[1];
-        uint maxDist = _input[2];
-        uint shipsMoved = _input[3];
-
-        // planet at newLoc not occupied
-        require(!planetIsOccupied(newLoc));
-        if (!planetIsInitialized(newLoc)) {
-            initializePlanet(newLoc, player, 0);
-        }
-        planets[oldLoc].population -= shipsMoved;
-        uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
-        planets[newLoc].population += shipsLanded;
-        if (planets[newLoc].population > planets[newLoc].capacity) {
-            planets[newLoc].population = planets[newLoc].capacity;
-        }
-
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
-    }
-
-    function moveFriendly(
-        uint[2] memory _a,
-        uint[2][2] memory _b,
-        uint[2] memory _c,
-        uint[4] memory _input
-    ) public {
-        moveCommonChecks(_a, _b, _c, _input);
-
-        address player = msg.sender;
-        uint oldLoc = _input[0];
-        uint newLoc = _input[1];
-        uint maxDist = _input[2];
-        uint shipsMoved = _input[3];
-
-        // planet at newLoc is occupied by player
-        require(ownerIfOccupiedElseZero(newLoc) == player);
-
-        planets[oldLoc].population -= shipsMoved;
-        uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
-        planets[newLoc].population += shipsLanded;
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
-    }
-
-    // TODO: test this function
-    function moveEnemy(
-        uint[2] memory _a,
-        uint[2][2] memory _b,
-        uint[2] memory _c,
-        uint[4] memory _input
-    ) public {
-        moveCommonChecks(_a, _b, _c, _input);
-
-        address player = msg.sender;
-        uint oldLoc = _input[0];
-        uint newLoc = _input[1];
-        uint maxDist = _input[2];
-        uint shipsMoved = _input[3];
-
-        // planet at newLoc is owned by a player other than this one
-        address enemyOwner = ownerIfOccupiedElseZero(newLoc);
-        require (enemyOwner != address(0) && enemyOwner != player);
-
-        planets[oldLoc].population -= shipsMoved;
-        uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
-
-        // TODO: maybe want to implement additional defender's advantage.
-        // Currently ships annihilate 1 to 1
-        // (though attacking ships have already undergone decay)
-        if (planets[newLoc].population > shipsLanded) {
-            // attack reduces target planet's garrison but doesn't conquer it
-            planets[newLoc].population -= shipsLanded;
+        if (!planetIsOccupied(newLoc)) {
+            // colonizing an uninhabited planet
+            if (!planetIsInitialized(newLoc)) {
+                initializePlanet(newLoc, player, 0);
+            }
+            planets[oldLoc].population -= shipsMoved;
+            uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
+            planets[newLoc].population += shipsLanded;
+            if (planets[newLoc].population > planets[newLoc].capacity) {
+                planets[newLoc].population = planets[newLoc].capacity;
+            }
+        } else if (ownerIfOccupiedElseZero(newLoc) == player) {
+            // moving forces between my planets
+            planets[oldLoc].population -= shipsMoved;
+            uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
+            planets[newLoc].population += shipsLanded;
         } else {
-            planets[newLoc].owner = player;
-            planets[newLoc].population = shipsLanded - planets[newLoc].population;
-        }
+            // attacking enemy
+            address enemyOwner = ownerIfOccupiedElseZero(newLoc);
 
+            planets[oldLoc].population -= shipsMoved;
+            uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
+
+            if (planets[newLoc].population > shipsLanded) {
+                // attack reduces target planet's garrison but doesn't conquer it
+                planets[newLoc].population -= shipsLanded;
+            } else {
+                // conquers planet
+                planets[newLoc].owner = player;
+                planets[newLoc].population = shipsLanded - planets[newLoc].population;
+            }
+        }
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
     }
-
 }

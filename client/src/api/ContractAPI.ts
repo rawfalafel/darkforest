@@ -1,37 +1,31 @@
 import * as EventEmitter from 'events';
-import Web3Manager from "./Web3Manager";
 import LocalStorageManager from "./LocalStorageManager";
 import {getCurrentPopulation, witnessObjToBuffer} from "../utils/Utils";
 import {CHUNK_SIZE, LOCATION_ID_UB} from "../utils/constants";
 import Worker from 'worker-loader!../miner/miner.worker';
 import mimcHash from '../miner/mimc';
 import {Circuit} from "snarkjs";
-import {WebsnarkProof} from "../@types/global/global";
-import * as bigInt from "big-integer";
+import {EthAddress, Planet, PlanetMap, Player, PlayerMap, WebsnarkProof} from "../@types/global/global";
 import {BigInteger} from "big-integer";
+import EthereumAPI from "./EthereumAPI";
+import {InitializePlayerArgs, MoveArgs} from "../@types/darkforest/api/EthereumAPI";
 
 const initCircuit = require("../circuits/init/circuit.json");
 const moveCircuit = require("../circuits/move/circuit.json");
 
 const zkSnark = require("snarkjs");
-const {stringifyBigInts} = require("snarkjs/src/stringifybigint.js");
 
 class ContractAPI extends EventEmitter {
   static instance: any;
 
   provingKeyMove: ArrayBuffer;
   provingKeyInit: ArrayBuffer;
-  web3Manager: any; // keep a reference so we don't have to do an async call after the first time
-  web3Loaded: any; // a flag
-  account: any;
-  loadingError: any;
+  ethereumAPI: EthereumAPI;
+  account: EthAddress;
   constants: any;
-  nPlayers: any;
-  nPlanets: any;
-  players: any;
-  planets: any;
+  players: PlayerMap;
+  planets: PlanetMap;
   localStorageManager: any;
-  hasJoinedGame: any;
   inMemoryBoard: any;
   worker: any;
   isExploring: any = false;
@@ -40,14 +34,13 @@ class ContractAPI extends EventEmitter {
 
   constructor() {
     super();
-    this.web3Loaded = false;
     this.isExploring = false;
     this.initialize();
   }
 
   async initialize() {
     await this.getKeys();
-    await this.getContractData();
+    await this.linkEthereumAPI();
     await this.initWorker();
     await this.initLocalStorageManager();
     this.emit('initialized', this);
@@ -64,136 +57,47 @@ class ContractAPI extends EventEmitter {
     return this;
   }
 
+  async linkEthereumAPI() {
+    await this.initEthereumAPI();
+    await this.getContractData();
+    this.setupEthEventListeners();
+  }
+
+  async initEthereumAPI() {
+    try {
+      const ethereumAPI = await EthereumAPI.initialize();
+      this.ethereumAPI = ethereumAPI;
+      this.account = ethereumAPI.account;
+      return this;
+    } catch (e) {
+      console.log("ethereumAPI init error", e);
+      this.emit('ethereumAPI init error');
+    }
+  }
+
   async getContractData() {
-    await this.getWeb3Manager();
-    await this.getContractConstants();
-    await this.getPlayerData();
-    this.setupEventListeners();
-    this.web3Loaded = true;
-    this.emit('contractData', this);
-    return this;
-  }
-
-  setupEventListeners() {
-    this.web3Manager.contract.events.allEvents()
-    .on("data", (event) => {
-      if (event.event === "PlayerInitialized") { this.handlePlayerInitialized(event) }
-      else if (event.event === "PlayerMoved") { this.handlePlayerMoved(event) }
-      else { throw new Error('Invalid event.')}
-    }).on("error", console.error);
-
-    // TODO: this logic should work but somehow executes twice
-    // this.web3Manager.contract.events.PlayerInitialized()
-    // .on("data", this.handlePlayerInitialized).on("error", console.error);
-    // this.web3Manager.contract.events.PlayerMoved()
-    // .on("data", this.handlePlayerMoved).on("error", console.error);
-  }
-
-  handlePlayerInitialized(event) {
-    const {player, loc, planet} = event.returnValues;
-    this.updateRawPlanetInMemory(planet);
-    if (player.toLowerCase() !== this.account.toLowerCase()) {
-      this.emit('locationsUpdate');
-    } else {
-      this.hasJoinedGame = true;
-      this.emit('initializedPlayer');
-    }
-  }
-
-  handlePlayerMoved(event) {
-    const {player, oldLoc, newLoc, fromPlanet, toPlanet} = event.returnValues;
-    this.updateRawPlanetInMemory(fromPlanet);
-    this.updateRawPlanetInMemory(toPlanet);
-    this.emit('locationsUpdate');
-  }
-
-  async getWeb3Manager() {
-    const web3Manager = await Web3Manager.getInstance();
-    if (web3Manager.loadingError) {
-      this.web3Loaded = true;
-      this.loadingError = web3Manager.loadingError;
-      this.emit('error');
-      return;
-    }
-    this.web3Manager = web3Manager;
-    this.account = web3Manager.account;
-    this.emit('web3manager', this);
-    return this;
-  }
-
-  // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
-  async getContractConstants() {
-    const [xSize, ySize, difficulty] = await Promise.all([
-      this.web3Manager.contract.methods.xSize().call(),
-      this.web3Manager.contract.methods.ySize().call(),
-      this.web3Manager.contract.methods.difficulty().call()
-    ]).catch((err) => {
-      this.emit('error', err);
-      return [null, null];
-    });
-    // TODO: xSize should be a multiple of CHUNK_SIZE
+    // get constants and player data
+    const {xSize, ySize, difficulty} = await this.ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
     this.constants = {xSize, ySize, difficulty, xChunks, yChunks};
-  }
-
-  // generally we want all call()s and send()s to only happen in web3Manager, so this is bad
-  async getPlayerData() {
-    // get nPlayers
-    const nPlayers = parseInt(await this.web3Manager.contract.methods.getNPlayers().call());
-    this.nPlayers = nPlayers;
-
-    // get nPlanets
-    const nPlanets = parseInt(await this.web3Manager.contract.methods.getNPlanets().call());
-    this.nPlanets = nPlanets;
-
     // get players
-    let playerPromises = [];
-    for (let i = 0; i < nPlayers; i += 1) {
-      playerPromises.push(this.web3Manager.contract.methods.playerIds(i).call().catch(() => null));
-    }
-    let playerAddrs = await Promise.all(playerPromises);
-    for (let player of playerAddrs) {
-      if (player.toLowerCase() === this.account.toLowerCase()) {
-        this.hasJoinedGame = true;
-      }
-    }
-    this.players = playerAddrs.filter(addr => !!addr);
-
+    this.players = await this.ethereumAPI.getPlayers();
     // get planets
-    let planetPromises = [];
-    for (let i = 0; i < nPlanets; i += 1) {
-      planetPromises.push(this.web3Manager.contract.methods.planetIds(i).call().then(planetId => {
-        return this.web3Manager.contract.methods.planets(planetId).call()
-      }).catch(() => null));
-    }
-    let rawPlanets = await Promise.all(planetPromises);
-    this.planets = {};
-    for (let rawPlanet of rawPlanets) {
-      this.updateRawPlanetInMemory(rawPlanet);
-    }
+    this.planets = await this.ethereumAPI.getPlanets();
   }
 
-  updateRawPlanetInMemory(rawPlanet) {
-    const planet = this.rawPlanetToObject(rawPlanet);
-    this.planets[planet.locationId] = planet;
+  setupEthEventListeners() {
+    this.ethereumAPI
+      .on('playerUpdate', (player: Player) => {
+        this.players[<string>player.address] = player;
+      }).on('planetUpdate', (planet: Planet) => {
+      this.planets[<string>planet.locationId] = planet;
+    });
   }
 
-  rawPlanetToObject(rawPlanet) {
-    let ret: any = {};
-    ret.capacity = parseInt(rawPlanet.capacity);
-    ret.growth = parseInt(rawPlanet.growth);
-    ret.coordinatesRevealed = rawPlanet.coordinatesRevealed;
-    ret.lastUpdated = parseInt(rawPlanet.lastUpdated);
-    ret.locationId = rawPlanet.locationId;
-    ret.owner = rawPlanet.owner.toLowerCase();
-    ret.population = parseInt(rawPlanet.population);
-    ret.version = parseInt(rawPlanet.version);
-    if (ret.coordinatesRevealed) {
-      ret.x = parseInt(rawPlanet.x);
-      ret.y = parseInt(rawPlanet.y);
-    }
-    return ret;
+  hasJoinedGame() {
+    return this.account in this.players;
   }
 
   async initLocalStorageManager() {
@@ -287,7 +191,7 @@ class ContractAPI extends EventEmitter {
 
   isValidExploreTarget(chunk) {
     const {chunkX, chunkY} = chunk;
-    const {xSize, ySize} = this.getConstantInts();
+    const {xSize, ySize} = this.constants;
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
     // should be inbounds, and unexplored
@@ -340,7 +244,7 @@ class ContractAPI extends EventEmitter {
   }
 
   joinGame() {
-    const {xSize, ySize} = this.getConstantInts();
+    const {xSize, ySize} = this.constants;
     let validHomePlanet = false;
     let x, y, hash;
     // search for a valid home planet
@@ -364,9 +268,7 @@ class ContractAPI extends EventEmitter {
     this.discoveringFromChunk = this.homeChunk;
     this.initContractCall(x, y).then(contractCall => {
       this.emit('initializingPlayer');
-      this.web3Manager.initializePlayer(...contractCall).on('initializedPlayerError', () => {
-        this.emit('initializedPlayerError');
-      });
+      this.ethereumAPI.initializePlayer(contractCall).then(() => {this.emit("initializedPlayer")});
     });
     return this;
   }
@@ -382,7 +284,7 @@ class ContractAPI extends EventEmitter {
     const dy = newY - oldY;
     const distMax = Math.abs(dx) + Math.abs(dy);
 
-    const { xSize, ySize } = this.getConstantInts();
+    const { xSize, ySize } = this.constants;
     if (0 > newX || 0 > newY || xSize <= newX || ySize <= newY) {
       throw new Error('attempted to move out of bounds');
     }
@@ -398,39 +300,14 @@ class ContractAPI extends EventEmitter {
         hash: hash.toString()
       };
       this.emit('moveSend');
-      if (!toPlanet) {
-        // colonizing uninhabited planet
-        this.web3Manager.moveUninhabited(...contractCall).once('moveUninhabitedComplete', receipt => {
-          this.emit('moveComplete');
-        }).once('moveError', () => {
-          this.emit('moveError');
-        });
-      } else if (toPlanet.owner.toLowerCase() !== this.account.toLowerCase()) {
-        // attacking enemy
-        this.web3Manager.moveEnemy(...contractCall).once('moveEnemyComplete', receipt => {
-          this.emit('moveComplete');
-        }).once('moveError', () => {
-          this.emit('moveError');
-        });
-      } else {
-        // friendly move
-        this.web3Manager.moveFriendly(...contractCall).once('moveFriendlyComplete', receipt => {
-          this.emit('moveComplete');
-        }).once('moveError', () => {
-          this.emit('moveError');
-        });
-      }
+      this.ethereumAPI.move(contractCall).then(() => {
+        this.emit('moveComplete');
+      }).catch(() => {
+        this.emit('moveError');
+      });
     });
 
     return this;
-  }
-
-  getConstantInts() {
-    return {
-      xSize: parseInt(this.constants.xSize),
-      ySize: parseInt(this.constants.ySize),
-      difficulty: parseInt(this.constants.difficulty)
-    };
   }
 
   async initContractCall(x, y) {
@@ -440,9 +317,7 @@ class ContractAPI extends EventEmitter {
     const snarkProof: WebsnarkProof = await window.genZKSnarkProof(witness, this.provingKeyInit);
     console.log("snarkProof", snarkProof);
     const publicSignals: BigInteger[] = [mimcHash(x, y)];
-    const callArgs = this.genCall(snarkProof, publicSignals);
-    console.log(callArgs);
-    return stringifyBigInts(callArgs);
+    return this.genInitCall(snarkProof, publicSignals);
   }
 
   async moveContractCall(x1, y1, x2, y2, distMax, shipsMoved) {
@@ -457,10 +332,10 @@ class ContractAPI extends EventEmitter {
     const witness: ArrayBuffer = witnessObjToBuffer(circuit.calculateWitness(input));
     const snarkProof = await window.genZKSnarkProof(witness, this.provingKeyMove);
     const publicSignals = [mimcHash(x1, y1), mimcHash(x2, y2), distMax.toString(), shipsMoved.toString()];
-    return stringifyBigInts(this.genCall(snarkProof, publicSignals));
+    return this.genMoveCall(snarkProof, publicSignals);
   }
 
-  genCall(snarkProof: WebsnarkProof, publicSignals: BigInteger[]) {
+  genInitCall(snarkProof: WebsnarkProof, publicSignals: BigInteger[]): InitializePlayerArgs {
     // the object returned by genZKSnarkProof needs to be massaged into a set of parameters the verifying contract
     // will accept
     return [
@@ -468,7 +343,19 @@ class ContractAPI extends EventEmitter {
       // genZKSnarkProof reverses values in the inner arrays of pi_b
       [snarkProof.pi_b[0].reverse(), snarkProof.pi_b[1].reverse()], // pi_b
       snarkProof.pi_c.slice(0, 2), // pi_c
-      publicSignals // input
+      publicSignals.map(signal => signal.toString(10)) // input
+    ]
+  }
+
+  genMoveCall(snarkProof: WebsnarkProof, publicSignals: BigInteger[]): MoveArgs {
+    // the object returned by genZKSnarkProof needs to be massaged into a set of parameters the verifying contract
+    // will accept
+    return [
+      snarkProof.pi_a.slice(0, 2), // pi_a
+      // genZKSnarkProof reverses values in the inner arrays of pi_b
+      [snarkProof.pi_b[0].reverse(), snarkProof.pi_b[1].reverse()], // pi_b
+      snarkProof.pi_c.slice(0, 2), // pi_c
+      publicSignals.map(signal => signal.toString(10)) // input
     ]
   }
 

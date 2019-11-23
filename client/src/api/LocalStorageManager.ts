@@ -19,16 +19,13 @@ class LocalStorageManager {
 
   setContractAPI(contractAPI) {
     // this should only be called once the contractAPI object has web3Loaded === true
-    if (!contractAPI.web3Loaded) {
-      throw new Error('contractAPI has not finished loading contract');
-    }
     this.contractAPI = contractAPI;
-    this.account = contractAPI.web3Manager.account;
+    this.account = contractAPI.account;
 
     // also initializes keys if they haven't already been
     if (!this.getKey('init')) {
-      const xChunks = parseInt(contractAPI.constants.xChunks);
-      const yChunks = parseInt(contractAPI.constants.yChunks);
+      const xChunks = contractAPI.constants.xChunks;
+      const yChunks = contractAPI.constants.yChunks;
       const emptyBoard = Array(xChunks)
           .fill(0)
           .map(() => Array(yChunks).fill(null));

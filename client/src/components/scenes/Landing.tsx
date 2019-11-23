@@ -27,7 +27,7 @@ class Landing extends React.Component<any, any> {
     this.db = firebase.firestore();
     this.state = {
       email: '',
-      emailSubmitted: false
+      emailSubmitted: true
     };
   }
 

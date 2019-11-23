@@ -1,12 +1,14 @@
-import {Witness} from "snarkjs";
+// web3 injected types, from metamask
+interface Web3ProviderObject { }
 
 interface Web3Object {
+  currentProvider: Web3ProviderObject;
 }
 
 declare global {
   interface Window {
-    web3: any;
-    ethereum: any;
+    web3: Web3Object;
+    // from websnark's function injected into window
     genZKSnarkProof: (witness: ArrayBuffer, provingKey: ArrayBuffer) => Promise<WebsnarkProof>;
   }
 }
@@ -21,7 +23,7 @@ export type LocationId = string & {
   __value__: never;
 }; // this is expected to be 64 chars, lowercase hex. see src/utils/CheckedTypeUtils.ts for constructor
 
-export type Address = string & {
+export type EthAddress = string & {
   __value__: never;
 }; // this is expected to be 40 chars, lowercase hex. see src/utils/CheckedTypeUtils.ts for constructor
 
@@ -31,17 +33,29 @@ export interface Location {
   hash: LocationId;
 }
 
-export class Planet {
+export interface Planet {
   capacity: number;
   growth: number;
   lastUpdated: number;
   locationId: LocationId;
-  owner: Address;
+  owner: EthAddress;
   population: number;
   version: number;
   coordinatesRevealed: boolean;
   x?: number;
   y?: number;
+}
+
+export interface PlanetMap {
+  [planetId: string]: Planet;
+}
+
+export interface Player {
+  address: EthAddress;
+}
+
+export class PlayerMap {
+  [playerId: string]: Player;
 }
 
 export interface ExploredChunkData {

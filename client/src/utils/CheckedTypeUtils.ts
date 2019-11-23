@@ -1,4 +1,4 @@
-import {Address, LocationId} from "../@types/global/global";
+import {EthAddress, LocationId} from "../@types/global/global";
 import * as bigInt from "big-integer";
 import {LOCATION_ID_UB} from "./constants";
 import {BigInteger} from "big-integer";
@@ -39,12 +39,14 @@ export const locationIdToHexStr: (locationId: LocationId) => string = locationId
   return bigInt(locationId, 16).toString(16);
 };
 
-export const address: (str: string) => Address = str => {
+export const address: (str: string) => EthAddress = str => {
   let ret = str.toLowerCase();
-  for (let c of str) {
+  if (ret.slice(0, 2) === '0x') {
+    ret = ret.slice(2);
+  }
+  for (let c of ret) {
     if ('0123456789abcdef'.indexOf(c) === -1) throw new Error("not a valid address");
   }
-  if (ret.length > 40) throw new Error("not a valid address");
-  while (ret.length < 40) ret = '0' + ret;
-  return <Address>ret;
+  if (ret.length !== 40) throw new Error("not a valid address");
+  return <EthAddress>ret;
 };
