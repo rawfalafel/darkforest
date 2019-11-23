@@ -8,7 +8,8 @@ import {Contract, Signer, providers} from "ethers";
 
 import {contractAddress} from "../utils/local_contract_addr";
 import {address, locationIdFromDecStr} from "../utils/CheckedTypeUtils";
-import {ContractConstants, InitializePlayerArgs, MoveArgs, RawPlanetData} from "../@types/darkforest/api/EthereumAPI"; // this is a gitignored file and must be generated
+import {ContractConstants, InitializePlayerArgs, MoveArgs, RawPlanetData} from "../@types/darkforest/api/EthereumAPI";
+import {TransactionRequest} from "ethers/providers"; // this is a gitignored file and must be generated
 const contractABI = require("../contracts/DarkForestV1.json").abi; // this is also gitignored and must be compiled
 
 // singleton class for managing all ethereum network calls
@@ -74,7 +75,10 @@ class EthereumAPI extends EventEmitter {
   }
 
   async move(args: MoveArgs): Promise<providers.TransactionReceipt> {
-    const tx: providers.TransactionResponse = await this.contract.move(...args);
+    let overrides: TransactionRequest = {
+      gasLimit: 1000000
+    };
+    const tx: providers.TransactionResponse = await this.contract.move(...args, overrides);
     return tx.wait();
   }
 

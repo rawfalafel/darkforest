@@ -294,11 +294,6 @@ class ContractAPI extends EventEmitter {
 
     const hash = mimcHash(newX, newY);
     this.moveContractCall(oldX, oldY, newX, newY, distMax, Math.floor(getCurrentPopulation(fromPlanet) / 2)).then(contractCall => {
-      const loc = {
-        x: newX.toString(),
-        y: newY.toString(),
-        hash: hash.toString()
-      };
       this.emit('moveSend');
       this.ethereumAPI.move(contractCall).then(() => {
         this.emit('moveComplete');
