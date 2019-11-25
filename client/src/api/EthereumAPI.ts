@@ -60,13 +60,11 @@ class EthereumAPI extends EventEmitter {
   setupEventListeners() {
     this.contract
       .on("PlayerInitialized", (player, loc, planet, event) => {
-        console.log("player initialized");
         const newPlayer: Player = {address: address(player)};
         this.emit('playerUpdate', newPlayer);
         const newPlanet: Planet = this.rawPlanetToObject(planet);
         this.emit('planetUpdate', newPlanet);
       }).on("PlayerMoved", (player, oldLoc, newLoc, maxDist, shipsMoved, fromPlanet, toPlanet, event) => {
-      console.log("player moved");
       this.emit('planetUpdate', this.rawPlanetToObject(fromPlanet));
       this.emit('planetUpdate', this.rawPlanetToObject(toPlanet));
     });
@@ -122,7 +120,6 @@ class EthereumAPI extends EventEmitter {
     let rawPlanets = await Promise.all(planetPromises);
     let planets: PlanetMap = {};
     for (let rawPlanet of rawPlanets) {
-      console.log("rawPlanet", rawPlanet);
       const planet = this.rawPlanetToObject(rawPlanet);
       planets[<string>planet.locationId] = planet;
     }

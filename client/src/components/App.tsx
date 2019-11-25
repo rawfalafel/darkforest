@@ -1,12 +1,12 @@
 import * as React from "react"
 import './App.css';
-import ContractAPI from "../api/ContractAPI";
 import ScrollableBoard from "./board/ScrollableBoard";
 import Landing from "./scenes/Landing";
 import Loading from "./scenes/Loading";
+import GameManager from "../api/GameManager";
 
 class App extends React.Component<any, any> {
-  contractAPI: ContractAPI;
+  gameManager: GameManager;
 
   constructor(props) {
     super(props);
@@ -19,30 +19,27 @@ class App extends React.Component<any, any> {
     this.startApp();
   }
 
+  rerender(): void {
+    this.setState({});
+  }
+
   async startApp() {
     // window.localStorage.clear();
-    this.contractAPI = ContractAPI.getInstance();
-    this.contractAPI.on('initialized', contractAPI => {
-      this.setState({
-        loading: false,
-        hasJoinedGame: contractAPI.hasJoinedGame()
-      });
-    }).on('discover', () => {
-      this.setState({});
-    }).on('locationsUpdate', () => {
-      this.setState({});
-    }).on('initializedPlayer', () => {
-      console.log('spawned on a home planet');
-      this.startExplore();
-      this.setState({});
-    }).on('error', console.error);
+    this.gameManager = await GameManager.initialize();
+    this.setState({
+      loading: false,
+      hasJoinedGame: this.gameManager.hasJoinedGame()
+    });
+    this.gameManager
+      .on("discoveredNewChunk", this.rerender.bind(this))
+      .on("planetUpdate", this.rerender.bind(this));
   }
 
   async initialize() {
     this.setState({
       findingFirstPlanet: true
     }, () => {
-      this.contractAPI.joinGame().once('initializedPlayer', () => {
+      this.gameManager.joinGame().once('initializedPlayer', () => {
         this.setState({
           hasJoinedGame: true,
           findingFirstPlanet: false
@@ -56,7 +53,7 @@ class App extends React.Component<any, any> {
   }
 
   move(fromLocation, toLocation) {
-    this.contractAPI.move(fromLocation, toLocation);
+    this.gameManager.move(fromLocation, toLocation);
   }
 
   toggleSelect(x, y) {
@@ -72,11 +69,11 @@ class App extends React.Component<any, any> {
   }
 
   startExplore() {
-    this.contractAPI.startExplore();
+    this.gameManager.startExplore();
   }
 
   stopExplore() {
-    this.contractAPI.stopExplore();
+    this.gameManager.stopExplore();
   }
 
   render() {
@@ -97,12 +94,12 @@ class App extends React.Component<any, any> {
                 <button onClick={this.stopExplore.bind(this)}>Stop explore</button>
               </div>
               <ScrollableBoard
-                xSize={this.contractAPI.xSize}
-                ySize={this.contractAPI.ySize}
-                homeChunk={this.contractAPI.localStorageManager.getHomeChunk()}
-                knownBoard={this.contractAPI.inMemoryBoard}
-                planets={this.contractAPI.planets}
-                myAddress={this.contractAPI.account}
+                xSize={this.gameManager.xSize}
+                ySize={this.gameManager.ySize}
+                homeChunk={this.gameManager.localStorageManager.getHomeChunk()}
+                knownBoard={this.gameManager.inMemoryBoard}
+                planets={this.gameManager.planets}
+                myAddress={this.gameManager.account}
                 move={this.move.bind(this)}
                 toggleSelect={this.toggleSelect.bind(this)}
                 selected={this.state.selectedCoords}
