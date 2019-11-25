@@ -4,8 +4,8 @@
     - MiMCSponge(x,y) = pub
 */
 
-include "../../client/node_modules/circomlib/circuits/mimcsponge.circom"
-include "../../client/node_modules/circomlib/circuits/comparators.circom"
+include "../../node_modules/circomlib/circuits/mimcsponge.circom"
+include "../../node_modules/circomlib/circuits/comparators.circom"
 include "../difficulty/circuit.circom"
 
 template Main() {

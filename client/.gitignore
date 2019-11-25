@@ -20,7 +20,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local deploy and testing
-/utils/local_contract_addr.js
+/utils/local_contract_addr.ts
 
 # contracts compiled and copied to client/ with /local-deploy.sh
 /src/contracts
