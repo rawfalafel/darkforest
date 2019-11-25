@@ -24,7 +24,7 @@ class App extends React.Component<any, any> {
   }
 
   async startApp() {
-    // window.localStorage.clear();
+    window.localStorage.clear();
     this.gameManager = await GameManager.initialize();
     this.setState({
       loading: false,

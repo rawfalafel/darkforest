@@ -15,7 +15,7 @@ circom circuit.circom &&
 rm -rf ../../client/src/circuits/move/ &&
 mkdir -p ../../client/src/circuits/move/ &&
 cp circuit.json ../../client/src/circuits/move/ &&
-echo "generating public and verification keys..." &&
+echo "generating prover and verification keys..." &&
 date &&
 snarkjs setup --protocol groth &&
 echo "calculating witness..." &&
