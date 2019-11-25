@@ -16,11 +16,10 @@ const contractABI = require("../contracts/DarkForestV1.json").abi; // this is al
 class EthereumAPI extends EventEmitter {
   static instance;
 
-  provider: providers.Provider;
-  signer: Signer;
-  account: EthAddress;
-  contract: Contract;
-  eventListenersSetup: boolean = false;
+  readonly account: EthAddress;
+  private readonly provider: providers.Provider;
+  private readonly signer: Signer;
+  private readonly contract: Contract;
 
   private constructor(provider: providers.Provider, signer: Signer, account: EthAddress, contract: Contract) {
     super();
@@ -57,7 +56,7 @@ class EthereumAPI extends EventEmitter {
     return EthereumAPI.instance;
   }
 
-  setupEventListeners() {
+  private setupEventListeners() {
     this.contract
       .on("PlayerInitialized", (player, loc, planet, event) => {
         const newPlayer: Player = {address: address(player)};
@@ -68,7 +67,6 @@ class EthereumAPI extends EventEmitter {
       this.emit('planetUpdate', this.rawPlanetToObject(fromPlanet));
       this.emit('planetUpdate', this.rawPlanetToObject(toPlanet));
     });
-    this.eventListenersSetup = true;
   }
 
   async initializePlayer(args: InitializePlayerArgs): Promise<providers.TransactionReceipt> {
@@ -126,7 +124,7 @@ class EthereumAPI extends EventEmitter {
     return planets;
   }
 
-  rawPlanetToObject(rawPlanet: RawPlanetData): Planet {
+  private rawPlanetToObject(rawPlanet: RawPlanetData): Planet {
     const rawCapacity = rawPlanet.capacity || rawPlanet[2];
     const rawGrowth = rawPlanet.growth || rawPlanet[3];
     const rawCoordinatesRevealed = rawPlanet.coordinatesRevealed || rawPlanet[6];

@@ -4,7 +4,7 @@ import {BoardData, ChunkCoordinates, EthAddress} from "../@types/global/global";
 class LocalStorageManager {
   static instance: LocalStorageManager;
 
-  account: EthAddress;
+  private readonly account: EthAddress;
 
   constructor(account: EthAddress) {
     this.account = account
@@ -38,11 +38,11 @@ class LocalStorageManager {
     return localStorageManager;
   }
 
-  getKey(key: string): string | null | undefined {
+  private getKey(key: string): string | null | undefined {
     return window.localStorage[this.account.concat(key)];
   }
 
-  setKey(key: string, value: string): void {
+  private setKey(key: string, value: string): void {
     window.localStorage.setItem(this.account.concat(key), value);
   }
 

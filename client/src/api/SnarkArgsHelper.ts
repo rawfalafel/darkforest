@@ -11,12 +11,12 @@ const zkSnark = require("snarkjs");
 class SnarkArgsHelper {
   static instance: SnarkArgsHelper;
 
-  initCircuit: Circuit;
-  moveCircuit: Circuit;
-  provingKeyInit: ArrayBuffer;
-  provingKeyMove: ArrayBuffer;
+  private readonly initCircuit: Circuit;
+  private readonly moveCircuit: Circuit;
+  private readonly provingKeyInit: ArrayBuffer;
+  private readonly provingKeyMove: ArrayBuffer;
 
-  constructor(provingKeyInit: ArrayBuffer, provingKeyMove: ArrayBuffer) {
+  private constructor(provingKeyInit: ArrayBuffer, provingKeyMove: ArrayBuffer) {
     const initCircuit: CircuitDef = require("../circuits/init/circuit.json");
     const moveCircuit: CircuitDef = require("../circuits/move/circuit.json");
 
@@ -75,7 +75,7 @@ class SnarkArgsHelper {
     return this.callArgsFromProofAndSignals(snarkProof, publicSignals) as MoveArgs;
   }
 
-  callArgsFromProofAndSignals(snarkProof: WebsnarkProof, publicSignals: BigInteger[]): ContractCallArgs {
+  private callArgsFromProofAndSignals(snarkProof: WebsnarkProof, publicSignals: BigInteger[]): ContractCallArgs {
     // the object returned by genZKSnarkProof needs to be massaged into a set of parameters the verifying contract
     // will accept
     return [

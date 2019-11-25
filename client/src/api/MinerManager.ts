@@ -4,17 +4,17 @@ import Worker from 'worker-loader!../miner/miner.worker';
 import {EventEmitter} from "events";
 
 class MinerManager extends EventEmitter {
-  inMemoryBoard: BoardData;
-  isExploring: boolean = false;
-  discoveringFromChunk: ChunkCoordinates; // the "center" of the spiral. defaults to homeChunk
-  worker: Worker;
-  maxX: number;
-  maxY: number;
-  difficulty: number;
+  private readonly inMemoryBoard: BoardData;
+  private isExploring: boolean = false;
+  private discoveringFromChunk: ChunkCoordinates; // the "center" of the spiral. defaults to homeChunk
+  private worker: Worker;
+  private readonly maxX: number;
+  private readonly maxY: number;
+  private readonly difficulty: number;
 
   static instance: MinerManager;
 
-  constructor(inMemoryBoard: BoardData, discoveringFromChunk: ChunkCoordinates, maxX: number, maxY: number, difficulty: number) {
+  private constructor(inMemoryBoard: BoardData, discoveringFromChunk: ChunkCoordinates, maxX: number, maxY: number, difficulty: number) {
     super();
 
     this.inMemoryBoard = inMemoryBoard;
@@ -44,7 +44,7 @@ class MinerManager extends EventEmitter {
     return minerManager;
   }
 
-  initWorker(): void {
+  private initWorker(): void {
     this.worker = new Worker();
     this.worker.onmessage = (e: MessageEvent) => {
       // worker explored some coords
@@ -53,7 +53,7 @@ class MinerManager extends EventEmitter {
     }
   }
 
-  async discovered(chunk: ExploredChunkData): Promise<void> {
+  private async discovered(chunk: ExploredChunkData): Promise<void> {
     this.inMemoryBoard[chunk.id.chunkX][chunk.id.chunkY] = chunk;
     this.emit('discoveredNewChunk');
     if (this.isExploring) {
@@ -85,7 +85,7 @@ class MinerManager extends EventEmitter {
     this.isExploring = false;
   }
 
-  async nextValidExploreTarget(chunk: ChunkCoordinates): Promise<ChunkCoordinates | null> {
+  private async nextValidExploreTarget(chunk: ChunkCoordinates): Promise<ChunkCoordinates | null> {
     // async because it may take indefinitely long to find the next target. this will block UI if done sync
     // we use this trick to promisify:
     // https://stackoverflow.com/questions/10344498/best-way-to-iterate-over-an-array-without-blocking-the-ui/10344560#10344560
@@ -112,7 +112,7 @@ class MinerManager extends EventEmitter {
     })
   }
 
-  isValidExploreTarget(chunk: ChunkCoordinates): boolean {
+  private isValidExploreTarget(chunk: ChunkCoordinates): boolean {
     const {chunkX, chunkY} = chunk;
     const xChunks = this.maxX / CHUNK_SIZE;
     const yChunks = this.maxY / CHUNK_SIZE;
@@ -120,7 +120,7 @@ class MinerManager extends EventEmitter {
     return (chunkX >= 0 && chunkX < xChunks && chunkY >= 0 && chunkY < yChunks && !this.inMemoryBoard[chunkX][chunkY])
   }
 
-  nextChunkInExploreOrder(chunk: ChunkCoordinates, homeChunk: ChunkCoordinates): ChunkCoordinates {
+  private nextChunkInExploreOrder(chunk: ChunkCoordinates, homeChunk: ChunkCoordinates): ChunkCoordinates {
     // spiral
     const homeChunkX = homeChunk.chunkX;
     const homeChunkY = homeChunk.chunkY;
@@ -165,7 +165,7 @@ class MinerManager extends EventEmitter {
     }
   }
 
-  sendMessageToWorker(chunkToExplore: ChunkCoordinates) {
+  private sendMessageToWorker(chunkToExplore: ChunkCoordinates) {
     this.worker.postMessage(JSON.stringify({chunkX: chunkToExplore.chunkX, chunkY: chunkToExplore.chunkY, difficulty: this.difficulty}));
   }
 }

@@ -19,23 +19,24 @@ import SnarkArgsHelper from "./SnarkArgsHelper";
 class GameManager extends EventEmitter {
   static instance: any;
 
-  account: EthAddress;
-  players: PlayerMap;
-  planets: PlanetMap;
-  inMemoryBoard: BoardData;
+  readonly account: EthAddress;
+  readonly players: PlayerMap;
+  readonly planets: PlanetMap;
+  readonly inMemoryBoard: BoardData;
 
-  ethereumAPI: EthereumAPI;
-  localStorageManager: LocalStorageManager;
-  snarkHelper: SnarkArgsHelper;
-  minerManager?: MinerManager;
+  private readonly ethereumAPI: EthereumAPI;
+  // TODO be able to make this private
+  readonly localStorageManager: LocalStorageManager;
+  private readonly snarkHelper: SnarkArgsHelper;
+  private minerManager?: MinerManager;
 
-  xSize: number;
-  ySize: number;
-  xChunks: number;
-  yChunks: number;
-  difficulty: number;
+  readonly xSize: number;
+  readonly ySize: number;
+  private readonly xChunks: number;
+  private readonly yChunks: number;
+  private readonly difficulty: number;
 
-  constructor(account: EthAddress,
+  private constructor(account: EthAddress,
               players: PlayerMap,
               planets: PlanetMap,
               inMemoryBoard: BoardData,
@@ -98,7 +99,7 @@ class GameManager extends EventEmitter {
     // we only want to initialize the mining manager if the player has already joined the game
     // if they haven't, we'll do this once the player has joined the game
     if (!!localStorageManager.getHomeChunk() && (account in players)) {
-      gameManager._initMiningManager();
+      gameManager.initMiningManager();
     }
 
     // set up listeners: whenever EthereumAPI reports some game state update, do some logic
@@ -114,7 +115,7 @@ class GameManager extends EventEmitter {
     return gameManager;
   }
 
-  _initMiningManager(): void {
+  private initMiningManager(): void {
     this.minerManager = MinerManager.initialize(this.inMemoryBoard, this.localStorageManager.getHomeChunk(), this.xSize, this.ySize, this.difficulty);
     this.minerManager.on("discoveredNewChunk", () => {
       this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
@@ -160,7 +161,7 @@ class GameManager extends EventEmitter {
         return this.ethereumAPI.initializePlayer(callArgs)
       })
       .then(() => {
-        this._initMiningManager();
+        this.initMiningManager();
         this.emit("initializedPlayer");
       });
     return this;
