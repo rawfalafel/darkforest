@@ -13,7 +13,6 @@ class App extends React.Component<any, any> {
     this.state = {
       loading: true,
       hasJoinedGame: false,
-      moving: false,
       selectedCoords: null,
       findingFirstPlanet: false
     };
@@ -57,23 +56,7 @@ class App extends React.Component<any, any> {
   }
 
   move(fromLocation, toLocation) {
-    if (this.state.moving) {
-      window.alert('a move is already queued');
-      return;
-    }
-    this.setState({
-      moving: true
-    }, () => {
-      this.contractAPI.move(fromLocation, toLocation).once('moveComplete', () => {
-        this.setState({
-          moving: false
-        });
-      }).once('moveError', () => {
-        this.setState({
-          moving: false
-        });
-      });
-    });
+    this.contractAPI.move(fromLocation, toLocation);
   }
 
   toggleSelect(x, y) {

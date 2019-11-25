@@ -34,6 +34,7 @@ class LocalStorageManager {
       localStorageManager.setKey('knownBoard', stringify(emptyBoard));
       // we also have a key "homeChunk" which is not set until player has initialized
     }
+    LocalStorageManager.instance = localStorageManager;
     return localStorageManager;
   }
 

@@ -39,6 +39,7 @@ class MinerManager extends EventEmitter {
 
     const minerManager = new MinerManager(inMemoryBoard, discoveringFromChunk, xSize, ySize, difficulty);
     minerManager.initWorker();
+    MinerManager.instance = minerManager;
 
     return minerManager;
   }

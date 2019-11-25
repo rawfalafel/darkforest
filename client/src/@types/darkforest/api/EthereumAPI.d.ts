@@ -1,8 +1,10 @@
 import {BigNumber} from "ethers/utils";
 
-export interface InitializePlayerArgs extends Array<any> {}
+export interface ContractCallArgs extends Array<any> {}
 
-export interface MoveArgs extends Array<any> {}
+export interface InitializePlayerArgs extends ContractCallArgs {}
+
+export interface MoveArgs extends ContractCallArgs {}
 
 export interface ContractConstants {
   xSize: number;

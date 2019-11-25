@@ -44,8 +44,8 @@ class EthereumAPI extends EventEmitter {
     const account: EthAddress = address(await signer.getAddress());
     const contract: Contract = new Contract(contractAddress, contractABI, signer);
     const ethereumAPI: EthereumAPI = new EthereumAPI(provider, signer, account, contract);
-    EthereumAPI.instance = ethereumAPI;
     ethereumAPI.setupEventListeners();
+    EthereumAPI.instance = ethereumAPI;
     return ethereumAPI;
   }
 
