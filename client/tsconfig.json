@@ -8,6 +8,6 @@
     "target": "es5",            // specify ECMAScript target version
     "allowJs": true,            // allow a partial TypeScript and JavaScript codebase
     "moduleResolution": "node",
-    "lib": ["es2015", "dom"]
+    "lib": ["es2015", "dom", "webworker"]
   }
 }

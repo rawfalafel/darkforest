@@ -2,17 +2,12 @@ import mimcHash from './mimc';
 import * as bigInt from 'big-integer';
 import {CHUNK_SIZE, LOCATION_ID_UB} from "../utils/constants";
 import {BigInteger} from "big-integer";
-import {ExploredChunkData, Location} from "../@types/global/global";
+import {ExploredChunkData, Location, MinerWorkerMessage} from "../@types/global/global";
 import {locationIdFromBigInt} from "../utils/CheckedTypeUtils";
-
-interface Message {
-  type: string;
-  payload: [number, number, string];
-}
 
 const ctx: Worker = self as any;
 
-const exploreChunk: (chunkX: number, chunkY: number, difficulty: string) => void = (chunkX, chunkY, difficulty) => {
+const exploreChunk: (chunkX: number, chunkY: number, difficulty: number) => void = (chunkX, chunkY, difficulty) => {
   let planetLocations: Location[] = [];
   let difficultyBI: BigInteger = bigInt(difficulty);
   for (let x=CHUNK_SIZE*chunkX; x<CHUNK_SIZE*(chunkX+1); x++) {
@@ -27,14 +22,7 @@ const exploreChunk: (chunkX: number, chunkY: number, difficulty: string) => void
   ctx.postMessage(JSON.stringify(chunkData));
 };
 
-const parseMessage: (data: string) => Message = (data) => {
-  const dataObj: any = JSON.parse(data);
-  return {type: dataObj[0], payload: dataObj.slice(1)};
-};
-
-ctx.addEventListener("message", (e) => {
-  const {type, payload} = parseMessage(e.data);
-  if (type === 'exploreChunk') {
-    exploreChunk(payload[0], payload[1], payload[2]);
-  }
+ctx.addEventListener("message", (e: MessageEvent) => {
+  const exploreMessage: MinerWorkerMessage = JSON.parse(e.data) as MinerWorkerMessage;
+  exploreChunk(exploreMessage.chunkX, exploreMessage.chunkY, exploreMessage.difficulty);
 });

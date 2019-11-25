@@ -1,74 +1,71 @@
 import * as stringify from "json-stable-stringify";
+import {BoardData, ChunkCoordinates, EthAddress} from "../@types/global/global";
 
 class LocalStorageManager {
-  static instance: any;
+  static instance: LocalStorageManager;
 
-  account: any;
-  contractAPI: any;
+  account: EthAddress;
 
-  constructor() {}
+  constructor(account: EthAddress) {
+    this.account = account
+  }
 
-  static getInstance() {
+  static getInstance(): LocalStorageManager {
     if (!LocalStorageManager.instance) {
-      const localStorageManager = new LocalStorageManager();
-      LocalStorageManager.instance = localStorageManager;
+      throw new Error("LocalStorageManager object has not been initialized yet");
     }
 
     return LocalStorageManager.instance;
   }
 
-  setContractAPI(contractAPI) {
-    // this should only be called once the contractAPI object has web3Loaded === true
-    this.contractAPI = contractAPI;
-    this.account = contractAPI.account;
+  static async initialize(account: EthAddress, xChunks: number, yChunks: number): Promise<LocalStorageManager> {
+    if (!!LocalStorageManager.instance) {
+      throw new Error("LocalStorageManager has already been initialized");
+    }
+
+    const localStorageManager = new LocalStorageManager(account);
 
     // also initializes keys if they haven't already been
-    if (!this.getKey('init')) {
-      const xChunks = contractAPI.constants.xChunks;
-      const yChunks = contractAPI.constants.yChunks;
+    if (!localStorageManager.getKey('init')) {
       const emptyBoard = Array(xChunks)
-          .fill(0)
-          .map(() => Array(yChunks).fill(null));
-      this.setKey('init', 'true');
-      this.setKey('knownBoard', stringify(emptyBoard));
+        .fill(0)
+        .map(() => Array(yChunks).fill(null));
+      localStorageManager.setKey('init', 'true');
+      localStorageManager.setKey('knownBoard', stringify(emptyBoard));
       // we also have a key "homeChunk" which is not set until player has initialized
     }
+    return localStorageManager;
   }
 
-  getKey(key) {
-    if (this.account && this.contractAPI) {
-      return window.localStorage[this.account.concat(key)];
+  getKey(key: string): string | null | undefined {
+    return window.localStorage[this.account.concat(key)];
+  }
+
+  setKey(key: string, value: string): void {
+    window.localStorage.setItem(this.account.concat(key), value);
+  }
+
+  getKnownBoard(): BoardData {
+    const knownBoard = this.getKey('knownBoard');
+    if (knownBoard) {
+      return JSON.parse(knownBoard) as BoardData;
     }
   }
 
-  setKey(key, value) {
-    if (this.account && this.contractAPI) {
-      window.localStorage.setItem(this.account.concat(key), value);
-    }
-  }
-
-  getKnownBoard() {
-    if (this.account && this.contractAPI) {
-      const knownBoard = this.getKey('knownBoard');
-      if (knownBoard) {
-        return JSON.parse(knownBoard);
-      }
-    }
-  }
-
-  updateKnownBoard(board) {
+  updateKnownBoard(board: BoardData): void {
     this.setKey('knownBoard', stringify(board));
   }
 
-  setHomeChunk(chunkX, chunkY) {
-    this.setKey('homeChunk', stringify([chunkX, chunkY]));
-  }
-
-  getHomeChunk() {
+  getHomeChunk(): ChunkCoordinates | null {
     const homeChunk = this.getKey('homeChunk');
     if (homeChunk) {
-      return JSON.parse(homeChunk);
+      return JSON.parse(homeChunk) as ChunkCoordinates;
     }
+    return null;
+  }
+
+  setHomeChunk(chunk: ChunkCoordinates): void {
+    this.setKey('homeChunk', stringify(chunk));
   }
 
 }

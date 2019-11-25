@@ -6,7 +6,7 @@ import Landing from "./scenes/Landing";
 import Loading from "./scenes/Loading";
 
 class App extends React.Component<any, any> {
-  contractAPI: any;
+  contractAPI: ContractAPI;
 
   constructor(props) {
     super(props);
@@ -114,9 +114,9 @@ class App extends React.Component<any, any> {
                 <button onClick={this.stopExplore.bind(this)}>Stop explore</button>
               </div>
               <ScrollableBoard
-                xSize={parseInt(this.contractAPI.constants.xSize)}
-                ySize={parseInt(this.contractAPI.constants.ySize)}
-                homeChunk={this.contractAPI.homeChunk}
+                xSize={this.contractAPI.xSize}
+                ySize={this.contractAPI.ySize}
+                homeChunk={this.contractAPI.localStorageManager.getHomeChunk()}
                 knownBoard={this.contractAPI.inMemoryBoard}
                 planets={this.contractAPI.planets}
                 myAddress={this.contractAPI.account}

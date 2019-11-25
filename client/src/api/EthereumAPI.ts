@@ -14,7 +14,7 @@ const contractABI = require("../contracts/DarkForestV1.json").abi; // this is al
 
 // singleton class for managing all ethereum network calls
 class EthereumAPI extends EventEmitter {
-  static instancePromise;
+  static instance;
 
   provider: providers.Provider;
   signer: Signer;
@@ -31,6 +31,10 @@ class EthereumAPI extends EventEmitter {
   }
 
   static async initialize(): Promise<EthereumAPI> {
+    if (!!EthereumAPI.instance) {
+      throw new Error("EthereumAPI has already been initialized");
+    }
+
     const web3: Web3Object = window.web3;
     if (typeof web3 === 'undefined') {
       throw new Error('No web3 object detected');
@@ -40,17 +44,17 @@ class EthereumAPI extends EventEmitter {
     const account: EthAddress = address(await signer.getAddress());
     const contract: Contract = new Contract(contractAddress, contractABI, signer);
     const ethereumAPI: EthereumAPI = new EthereumAPI(provider, signer, account, contract);
-    EthereumAPI.instancePromise = ethereumAPI;
+    EthereumAPI.instance = ethereumAPI;
     ethereumAPI.setupEventListeners();
     return ethereumAPI;
   }
 
   static getInstance(): EthereumAPI {
-    if (!EthereumAPI.instancePromise) {
+    if (!EthereumAPI.instance) {
       throw new Error("EthereumAPI object has not been initialized yet");
     }
 
-    return EthereumAPI.instancePromise;
+    return EthereumAPI.instance;
   }
 
   setupEventListeners() {
@@ -126,7 +130,6 @@ class EthereumAPI extends EventEmitter {
   }
 
   rawPlanetToObject(rawPlanet: RawPlanetData): Planet {
-    console.log(rawPlanet);
     const rawCapacity = rawPlanet.capacity || rawPlanet[2];
     const rawGrowth = rawPlanet.growth || rawPlanet[3];
     const rawCoordinatesRevealed = rawPlanet.coordinatesRevealed || rawPlanet[6];
@@ -151,7 +154,6 @@ class EthereumAPI extends EventEmitter {
       planet.x = rawX.toNumber();
       planet.y = rawY.toNumber();
     }
-    console.log(planet);
     return planet;
   }
 

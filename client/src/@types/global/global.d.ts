@@ -58,6 +58,11 @@ export class PlayerMap {
   [playerId: string]: Player;
 }
 
+export interface ChunkCoordinates {
+  chunkX: number;
+  chunkY: number;
+}
+
 export interface ExploredChunkData {
   id: {
     chunkX: number;
@@ -66,5 +71,10 @@ export interface ExploredChunkData {
   planetLocations: Location[];
 }
 
-export interface BoardData extends Array<Array<(ExploredChunkData | null | undefined)>> {
+export interface BoardData extends Array<Array<(ExploredChunkData | null | undefined)>> {}
+
+export interface MinerWorkerMessage {
+  chunkX: number;
+  chunkY: number;
+  difficulty: number;
 }

@@ -192,8 +192,6 @@ contract DarkForestV1 is Verifier {
             planets[newLoc].population += shipsLanded;
         } else {
             // attacking enemy
-            address enemyOwner = ownerIfOccupiedElseZero(newLoc);
-
             planets[oldLoc].population -= shipsMoved;
             uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
 
