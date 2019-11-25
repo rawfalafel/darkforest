@@ -165,7 +165,7 @@ class MinerManager extends EventEmitter {
     }
   }
 
-  private sendMessageToWorker(chunkToExplore: ChunkCoordinates) {
+  private sendMessageToWorker(chunkToExplore: ChunkCoordinates): void {
     this.worker.postMessage(JSON.stringify({chunkX: chunkToExplore.chunkX, chunkY: chunkToExplore.chunkY, difficulty: this.difficulty}));
   }
 }
