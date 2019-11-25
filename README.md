@@ -15,19 +15,13 @@ several of our compile scripts also use tools from the `websnark` and `circomlib
 before the webapp works, you'll need to run `./compile.sh` in both `circuits/init` and `circuits/move`. This generates proving keys and puts them in the appropriate places in the project.
 
 # client
-remember to `npm install` in `./client`.
-
-you should run `touch ./client/src/utils/local_contract_addr.ts` to create this gitignored file. this is a file that keeps the contract address of the DarkForestCore contract on your local blockchain. `./local-deploy` will automatically write to this file.
+remember to `npm install` in `./client`. 
 
 to interact with the webapp in browser, you need metamask. point metamask to `http://localhost:8545`, which is the port that `ganache-cli` defaults to when running the local blockchain.
 
+make sure that you've run `./local-deploy` at least once before trying to run the webapp. this builds some necessary files.
+
 whenever you run `./local-deploy` again, you'll need to `Reset Account` in MetaMask to clear old/stale transaction data.
-
-you may want to create symlinks to the `build` (created by truffle) and `circuits` (holds circom circuits) folders, because files in `client/src` can only see files in `client/src` (i.e. a JS file in this directory cannot import from outside `client/src`). run:
-
-`ln -sf ../../build .`
-
-`ln -sf ../../circuits .`
 
 # circom and snarkjs
 if you are modifying anything SNARK-related, you may be interested in rebuilding circuits / redoing setup.
