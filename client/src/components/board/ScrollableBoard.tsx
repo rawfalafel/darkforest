@@ -1,16 +1,15 @@
 import * as bigInt from "big-integer";
 import * as React from "react"
-import {getCurrentPopulation, getPlanetLocationIfKnown, isPlanet} from "../../utils/Utils";
+import {getCurrentPopulation, getPlanetLocationIfKnown} from "../../utils/Utils";
 import Camera from "./Camera";
 import {CHUNK_SIZE} from "../../utils/constants";
-import {locationIdFromDecStr, locationIdFromHexStr, locationIdToDecStr} from "../../utils/CheckedTypeUtils";
-import {LocationId} from "../../@types/global/global";
+import {RefObject} from "react";
 
 class ScrollableBoard extends React.Component<any, any> {
-  canvasRef: any = React.createRef();
+  canvasRef: RefObject<HTMLCanvasElement> = React.createRef<HTMLCanvasElement>();
   canvas: any;
   ctx: any;
-  camera: any;
+  camera: Camera;
   topBorder: any;
   bottomBorder: any;
   leftBorder: any;
@@ -63,7 +62,11 @@ class ScrollableBoard extends React.Component<any, any> {
     this.ctx = this.canvas.getContext("2d");
     // TODO: pull viewportwidth and height from page, set page size listener to update
     const {xSize, ySize} = this.props;
-    this.camera = new Camera((this.props.homeChunk.chunkX + 0.5) * CHUNK_SIZE, (this.props.homeChunk.chunkY + 0.5) * CHUNK_SIZE, -0.5, -0.5, xSize-0.5, ySize-0.5, xSize/2, this.state.width, this.state.height);
+    const centerWorldCoords = {
+      x: (this.props.homeChunk.chunkX + 0.5) * CHUNK_SIZE,
+      y: (this.props.homeChunk.chunkY + 0.5) * CHUNK_SIZE
+    };
+    this.camera = new Camera(centerWorldCoords, xSize/2, this.state.width, this.state.height);
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
@@ -78,18 +81,18 @@ class ScrollableBoard extends React.Component<any, any> {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords = this.camera.canvasToWorldCoords(canvasX, canvasY);
+    const worldCoords = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
     this.setState({
       mouseDown: {x: Math.round(worldCoords.x), y: Math.round(worldCoords.y)}
     });
-    this.camera.onMouseDown(canvasX, canvasY);
+    this.camera.startPan({x: canvasX, y: canvasY});
   }
 
   onMouseMove(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords = this.camera.canvasToWorldCoords(canvasX, canvasY);
+    const worldCoords = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
     const worldX = Math.round(worldCoords.x);
     const worldY = Math.round(worldCoords.y);
     this.setState({
@@ -101,7 +104,7 @@ class ScrollableBoard extends React.Component<any, any> {
       const mouseDownPlanet = startLocation ? this.props.planets[startLocation.hash] : null;
       if (!mouseDownPlanet || mouseDownPlanet.owner.toLowerCase() !== this.props.myAddress.toLowerCase()) {
         // move camera if not holding down on a planet
-        this.camera.onMouseMove(canvasX, canvasY);
+        this.camera.onPanCursorMove({x: canvasX, y: canvasY});
       }
     }
   }
@@ -110,7 +113,7 @@ class ScrollableBoard extends React.Component<any, any> {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords = this.camera.canvasToWorldCoords(canvasX, canvasY);
+    const worldCoords = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
     const worldX = Math.round(worldCoords.x);
     const worldY = Math.round(worldCoords.y);
     if (!this.state.mouseDown) {
@@ -145,7 +148,7 @@ class ScrollableBoard extends React.Component<any, any> {
     });
     if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
       // move if not holding down on a planet
-      this.camera.onMouseUp(canvasX, canvasY);
+      this.camera.stopPan();
     }
   }
 
@@ -154,7 +157,7 @@ class ScrollableBoard extends React.Component<any, any> {
     this.setState({hoveringOver: null, mouseDown: null});
     if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
       // move if not holding down on a planet
-      this.camera.onMouseUp(e.clientX - rect.left, e.clientY - rect.top);
+      this.camera.stopPan();
     }
   }
 
@@ -177,15 +180,15 @@ class ScrollableBoard extends React.Component<any, any> {
   }
 
   drawGameObject(gameObject) {
-    const centerCanvasCoords = this.camera.worldToCanvasCoords(gameObject.x, gameObject.y);
-    this.ctx.fillRect(centerCanvasCoords.x - gameObject.width / this.camera.scale / 2,
-      centerCanvasCoords.y - gameObject.height / this.camera.scale / 2,
-      gameObject.width / this.camera.scale,
-      gameObject.height / this.camera.scale);
+    const centerCanvasCoords = this.camera.worldToCanvasCoords(gameObject);
+    this.ctx.fillRect(centerCanvasCoords.x - gameObject.width / this.camera.scale() / 2,
+      centerCanvasCoords.y - gameObject.height / this.camera.scale() / 2,
+      gameObject.width / this.camera.scale(),
+      gameObject.height / this.camera.scale());
   }
 
   drawPlanet(planetDesc) {
-    const centerCanvasCoords = this.camera.worldToCanvasCoords(planetDesc.x, planetDesc.y);
+    const centerCanvasCoords = this.camera.worldToCanvasCoords(planetDesc);
 
     // border around planet indicating planet allegiance, if planet occupied
     if (planetDesc.type !== this.PlanetViewTypes.UNOCCUPIED) {
@@ -200,7 +203,7 @@ class ScrollableBoard extends React.Component<any, any> {
       this.ctx.arc(
         centerCanvasCoords.x,
         centerCanvasCoords.y,
-        ringWidth / this.camera.scale / 2,
+        ringWidth / this.camera.scale() / 2,
         0,
         2*Math.PI,
         0
@@ -219,17 +222,17 @@ class ScrollableBoard extends React.Component<any, any> {
     this.ctx.arc(
       centerCanvasCoords.x,
       centerCanvasCoords.y,
-      width / this.camera.scale / 2,
+      width / this.camera.scale() / 2,
       0,
       2*Math.PI,
       0
     );
     this.ctx.fill();
 
-    // this.ctx.fillRect(centerCanvasCoords.x - width / this.camera.scale / 2,
-    //   centerCanvasCoords.y - height / this.camera.scale / 2,
-    //   width / this.camera.scale,
-    //   height / this.camera.scale);
+    // this.ctx.fillRect(centerCanvasCoords.x - width / this.camera.scale() / 2,
+    //   centerCanvasCoords.y - height / this.camera.scale() / 2,
+    //   width / this.camera.scale(),
+    //   height / this.camera.scale());
     // draw text
     this.ctx.font = '15px sans-serif';
     this.ctx.textBaseline = 'top';
@@ -238,7 +241,7 @@ class ScrollableBoard extends React.Component<any, any> {
     this.ctx.fillText(
       planetDesc.population.toString(),
       centerCanvasCoords.x,
-      centerCanvasCoords.y + (planetDesc.type === this.PlanetViewTypes.UNOCCUPIED ? 0.5 : 0.8) * height / this.camera.scale
+      centerCanvasCoords.y + (planetDesc.type === this.PlanetViewTypes.UNOCCUPIED ? 0.5 : 0.8) * height / this.camera.scale()
     );
   }
 
@@ -246,12 +249,12 @@ class ScrollableBoard extends React.Component<any, any> {
     this.ctx.fillStyle = "rgba(0, 0, 255, 0.2)";
     this.ctx.strokeStyle = "white";
     this.ctx.lineWidth = 4;
-    const centerCanvasCoords = this.camera.worldToCanvasCoords(x, y);
+    const centerCanvasCoords = this.camera.worldToCanvasCoords({x, y});
     this.ctx.strokeRect(
-      centerCanvasCoords.x - 1 / this.camera.scale / 2,
-      centerCanvasCoords.y - 1 / this.camera.scale / 2,
-      1 / this.camera.scale,
-      1 / this.camera.scale
+      centerCanvasCoords.x - 1 / this.camera.scale() / 2,
+      centerCanvasCoords.y - 1 / this.camera.scale() / 2,
+      1 / this.camera.scale(),
+      1 / this.camera.scale()
     );
   }
 
@@ -259,11 +262,11 @@ class ScrollableBoard extends React.Component<any, any> {
     this.ctx.fillStyle = "rgba(0, 0, 255, 0.2)";
     this.ctx.strokeStyle = "red";
     this.ctx.lineWidth = 4;
-    const centerCanvasCoords = this.camera.worldToCanvasCoords(x, y);
-    this.ctx.strokeRect(centerCanvasCoords.x - 1 / this.camera.scale / 2,
-      centerCanvasCoords.y - 1 / this.camera.scale / 2,
-      1 / this.camera.scale,
-      1 / this.camera.scale);
+    const centerCanvasCoords = this.camera.worldToCanvasCoords({x, y});
+    this.ctx.strokeRect(centerCanvasCoords.x - 1 / this.camera.scale() / 2,
+      centerCanvasCoords.y - 1 / this.camera.scale() / 2,
+      1 / this.camera.scale(),
+      1 / this.camera.scale());
   }
 
   drawBoard() {
@@ -327,9 +330,9 @@ class ScrollableBoard extends React.Component<any, any> {
         this.ctx.beginPath();
         this.ctx.lineWidth = 4;
         this.ctx.strokeStyle = 'white';
-        const startCoords = this.camera.worldToCanvasCoords(this.state.mouseDown.x, this.state.mouseDown.y);
+        const startCoords = this.camera.worldToCanvasCoords(this.state.mouseDown);
         this.ctx.moveTo(startCoords.x, startCoords.y);
-        const endCoords = this.camera.worldToCanvasCoords(this.state.hoveringOver.x, this.state.hoveringOver.y);
+        const endCoords = this.camera.worldToCanvasCoords(this.state.hoveringOver);
         this.ctx.lineTo(endCoords.x, endCoords.y);
         this.ctx.stroke();
       }
