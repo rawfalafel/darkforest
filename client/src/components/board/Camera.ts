@@ -26,23 +26,16 @@ class Camera {
     return this.widthInWorldUnits / this.viewportWidth;
   }
 
-  canvasToWorldCoords(canvasCoords: CanvasCoords): WorldCoords {
+  canvasToWorldCoords(canvasCoords: CanvasCoords): Coordinates {
     const worldX = (canvasCoords.x - this.viewportWidth / 2) * this.scale() + this.centerWorldCoords.x;
     const worldY = -1 * (canvasCoords.y - this.viewportHeight / 2) * this.scale() + this.centerWorldCoords.y;
-    return {x: worldX, y: worldY};
+    return {x: Math.round(worldX), y: Math.round(worldY)};
   }
 
-  worldToCanvasCoords(worldCoords: WorldCoords): CanvasCoords {
+  worldToCanvasCoords(worldCoords: Coordinates): CanvasCoords {
     const canvasX = (worldCoords.x - this.centerWorldCoords.x) / this.scale() + this.viewportWidth / 2;
     const canvasY = -1 * (worldCoords.y - this.centerWorldCoords.y) / this.scale() + this.viewportHeight / 2;
     return {x: canvasX, y: canvasY};
-  }
-
-  roundWorldCoords(worldCoords: WorldCoords): Coordinates {
-    return {
-      x: Math.round(worldCoords.x),
-      y: Math.round(worldCoords.y)
-    };
   }
 
   startPan(coords: CanvasCoords): void {

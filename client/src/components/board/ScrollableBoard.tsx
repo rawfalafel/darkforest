@@ -106,7 +106,7 @@ class ScrollableBoard extends React.Component<ScrollableBoardProps, ScrollableBo
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords = this.camera.roundWorldCoords(this.camera.canvasToWorldCoords({x: canvasX, y: canvasY}));
+    const worldCoords = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
     this.props.onMouseDownOverCoords(worldCoords);
     this.camera.startPan({x: canvasX, y: canvasY});
   }
@@ -115,7 +115,7 @@ class ScrollableBoard extends React.Component<ScrollableBoardProps, ScrollableBo
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords: Coordinates = this.camera.roundWorldCoords(this.camera.canvasToWorldCoords({x: canvasX, y: canvasY}));
+    const worldCoords: Coordinates = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
     this.props.onMouseMoveOverCoords(worldCoords);
     if (!!this.props.mouseDown) {
       // user is hold-dragging
@@ -133,7 +133,7 @@ class ScrollableBoard extends React.Component<ScrollableBoardProps, ScrollableBo
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords: Coordinates = this.camera.roundWorldCoords(this.camera.canvasToWorldCoords({x: canvasX, y: canvasY}));
+    const worldCoords: Coordinates = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
     this.props.onMouseUpOverCoords(worldCoords);
     this.camera.stopPan();
   }
