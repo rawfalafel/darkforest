@@ -1,5 +1,4 @@
 import * as React from "react"
-import '../App.css';
 import ScrollableBoard from "../board/ScrollableBoard";
 import GameManager from "../../api/GameManager";
 import {Coordinates, Planet} from "../../@types/global/global";
