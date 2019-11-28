@@ -14,7 +14,7 @@ const exploreChunk: (chunkX: number, chunkY: number, difficulty: number) => void
     for (let y=CHUNK_SIZE*chunkY; y<CHUNK_SIZE*(chunkY+1); y++) {
       const hash: BigInteger = mimcHash(x, y);
       if (hash.lesser(LOCATION_ID_UB.divide(difficultyBI))) {
-        planetLocations.push({x, y, hash: locationIdFromBigInt(hash)});
+        planetLocations.push({coords: {x, y}, hash: locationIdFromBigInt(hash)});
       }
     }
   }

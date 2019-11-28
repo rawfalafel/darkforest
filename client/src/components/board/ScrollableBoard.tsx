@@ -1,14 +1,40 @@
 import * as bigInt from "big-integer";
 import * as React from "react"
-import {getCurrentPopulation, getPlanetLocationIfKnown} from "../../utils/Utils";
+import {getCurrentPopulation, isOwnedPlanet} from "../../utils/Utils";
 import Camera from "./Camera";
 import {CHUNK_SIZE} from "../../utils/constants";
 import {RefObject} from "react";
+import {BoardData, ChunkCoordinates, Coordinates, EthAddress, Planet, PlanetMap} from "../../@types/global/global";
 
-class ScrollableBoard extends React.Component<any, any> {
+interface ScrollableBoardProps {
+  xSize: number;
+  ySize: number;
+  homeChunk: ChunkCoordinates;
+  knownBoard: BoardData;
+  planets: PlanetMap;
+  myAddress: EthAddress;
+  selected: Coordinates | null;
+  hoveringOver: Coordinates | null;
+  mouseDown: Coordinates | null;
+  mouseDownPlanet: Planet | null;
+  onMouseDownOverCoords: (coords: Coordinates) => void;
+  onMouseMoveOverCoords: (coords: Coordinates) => void;
+  onMouseUpOverCoords: (coords: Coordinates) => void;
+  onMouseOut: () => void;
+}
+
+interface ScrollableBoardState {
+  width: number;
+  height: number;
+}
+
+class ScrollableBoard extends React.Component<ScrollableBoardProps, ScrollableBoardState> {
+  // this component doesn't know about GameManager
+
+  frameRate: number = 30;
   canvasRef: RefObject<HTMLCanvasElement> = React.createRef<HTMLCanvasElement>();
-  canvas: any;
-  ctx: any;
+  canvas: HTMLCanvasElement | null;
+  ctx: CanvasRenderingContext2D | null;
   camera: Camera;
   topBorder: any;
   bottomBorder: any;
@@ -26,11 +52,16 @@ class ScrollableBoard extends React.Component<any, any> {
 
     this.state = {
       width: window.innerWidth,
-      height: window.innerHeight,
-      mouseDown: null, // world coords, rounded to int
-      hoveringOver: null // world coords, rounded to int
+      height: window.innerHeight
     };
-    const {xSize, ySize} = props;
+
+    const {xSize, ySize} = this.props;
+    const centerWorldCoords = {
+      x: (this.props.homeChunk.chunkX + 0.5) * CHUNK_SIZE,
+      y: (this.props.homeChunk.chunkY + 0.5) * CHUNK_SIZE
+    };
+    this.camera = new Camera(centerWorldCoords, xSize/2, this.state.width, this.state.height);
+
     this.topBorder = {
       x: xSize/2 - 0.5,
       y: ySize - 0.7,
@@ -61,12 +92,6 @@ class ScrollableBoard extends React.Component<any, any> {
     this.canvas = this.canvasRef.current;
     this.ctx = this.canvas.getContext("2d");
     // TODO: pull viewportwidth and height from page, set page size listener to update
-    const {xSize, ySize} = this.props;
-    const centerWorldCoords = {
-      x: (this.props.homeChunk.chunkX + 0.5) * CHUNK_SIZE,
-      y: (this.props.homeChunk.chunkY + 0.5) * CHUNK_SIZE
-    };
-    this.camera = new Camera(centerWorldCoords, xSize/2, this.state.width, this.state.height);
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
@@ -74,17 +99,15 @@ class ScrollableBoard extends React.Component<any, any> {
     this.canvas.addEventListener('mousewheel', this.onScroll.bind(this));
     this.canvas.addEventListener('DOMMouseScroll', this.onScroll.bind(this));
 
-    setInterval(() => this.frame(), 1000 / 30);
+    setInterval(() => this.frame(), 1000 / this.frameRate);
   }
 
   onMouseDown(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
-    this.setState({
-      mouseDown: {x: Math.round(worldCoords.x), y: Math.round(worldCoords.y)}
-    });
+    const worldCoords = this.camera.roundWorldCoords(this.camera.canvasToWorldCoords({x: canvasX, y: canvasY}));
+    this.props.onMouseDownOverCoords(worldCoords);
     this.camera.startPan({x: canvasX, y: canvasY});
   }
 
@@ -92,17 +115,14 @@ class ScrollableBoard extends React.Component<any, any> {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
-    const worldX = Math.round(worldCoords.x);
-    const worldY = Math.round(worldCoords.y);
-    this.setState({
-      hoveringOver: {x: worldX, y: worldY}
-    });
-    if (!!this.state.mouseDown) {
+    const worldCoords: Coordinates = this.camera.roundWorldCoords(this.camera.canvasToWorldCoords({x: canvasX, y: canvasY}));
+    this.props.onMouseMoveOverCoords(worldCoords);
+    if (!!this.props.mouseDown) {
       // user is hold-dragging
-      const startLocation = getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard);
-      const mouseDownPlanet = startLocation ? this.props.planets[startLocation.hash] : null;
-      if (!mouseDownPlanet || mouseDownPlanet.owner.toLowerCase() !== this.props.myAddress.toLowerCase()) {
+      // if the hold-drag started from a planet user owns, then don't pan
+      // if the hold-dragging started from anywhere else, then pan camera
+      const mouseDownPlanet: Planet | null = this.props.mouseDownPlanet;
+      if (!mouseDownPlanet || !isOwnedPlanet(mouseDownPlanet) || mouseDownPlanet.owner !== this.props.myAddress) {
         // move camera if not holding down on a planet
         this.camera.onPanCursorMove({x: canvasX, y: canvasY});
       }
@@ -113,61 +133,19 @@ class ScrollableBoard extends React.Component<any, any> {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    const worldCoords = this.camera.canvasToWorldCoords({x: canvasX, y: canvasY});
-    const worldX = Math.round(worldCoords.x);
-    const worldY = Math.round(worldCoords.y);
-    if (!this.state.mouseDown) {
-      return;
-    }
-    if (worldX === this.state.mouseDown.x && worldY === this.state.mouseDown.y && !!getPlanetLocationIfKnown(worldX, worldY, this.props.knownBoard)) {
-      // if clicked on a planet, select it
-      this.props.toggleSelect(worldX, worldY);
-    } else {
-      const endPlanetLocation = getPlanetLocationIfKnown(worldX, worldY, this.props.knownBoard);
-      if (!!endPlanetLocation) {
-        // if dragged between two planets, initiate a move if legal
-        const startX = this.state.mouseDown.x;
-        const startY = this.state.mouseDown.y;
-        const startPlanetLocation = getPlanetLocationIfKnown(startX, startY, this.props.knownBoard);
-        const mouseDownPlanet = startPlanetLocation ? this.props.planets[startPlanetLocation.hash] : null;
-        if (!!mouseDownPlanet && mouseDownPlanet.owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
-          this.props.move({
-            x: startX,
-            y: startY,
-            hash: startPlanetLocation.hash
-          }, {
-            x: worldX,
-            y: worldY,
-            hash: endPlanetLocation.hash
-          });
-        }
-      }
-    }
-    this.setState({
-      mouseDown: null
-    });
-    if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
-      // move if not holding down on a planet
-      this.camera.stopPan();
-    }
+    const worldCoords: Coordinates = this.camera.roundWorldCoords(this.camera.canvasToWorldCoords({x: canvasX, y: canvasY}));
+    this.props.onMouseUpOverCoords(worldCoords);
+    this.camera.stopPan();
   }
 
-  onMouseOut(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    this.setState({hoveringOver: null, mouseDown: null});
-    if (!!this.state.mouseDown && !getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard)) {
-      // move if not holding down on a planet
-      this.camera.stopPan();
-    }
+  onMouseOut() {
+    this.props.onMouseOut();
+    this.camera.stopPan();
   }
 
   onScroll(e) {
     e.preventDefault();
     this.camera.onWheel(e.deltaY);
-  }
-
-  updateGame() {
-    // no-op
   }
 
   drawGame() {
@@ -206,7 +184,7 @@ class ScrollableBoard extends React.Component<any, any> {
         ringWidth / this.camera.scale() / 2,
         0,
         2*Math.PI,
-        0
+        false
       );
       this.ctx.stroke();
     }
@@ -225,7 +203,7 @@ class ScrollableBoard extends React.Component<any, any> {
       width / this.camera.scale() / 2,
       0,
       2*Math.PI,
-      0
+      false
     );
     this.ctx.fill();
 
@@ -295,50 +273,46 @@ class ScrollableBoard extends React.Component<any, any> {
       }
     }
     for (let planetLoc of planetLocs) {
-      // console.log(planetLoc);
       if (!this.props.planets[planetLoc.hash]) {
         this.drawPlanet({
-          x: planetLoc.x,
-          y: planetLoc.y,
+          x: planetLoc.coords.x,
+          y: planetLoc.coords.y,
           hash: planetLoc.hash,
           type: this.PlanetViewTypes.UNOCCUPIED,
           population: 0
         });
       } else if (this.props.planets[planetLoc.hash].owner.toLowerCase() === this.props.myAddress.toLowerCase()) {
         this.drawPlanet({
-          x: planetLoc.x,
-          y: planetLoc.y,
+          x: planetLoc.coords.x,
+          y: planetLoc.coords.y,
           hash: planetLoc.hash,
           type: this.PlanetViewTypes.MINE,
           population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
         });
       } else {
         this.drawPlanet({
-          x: planetLoc.x,
-          y: planetLoc.y,
+          x: planetLoc.coords.x,
+          y: planetLoc.coords.y,
           hash: planetLoc.hash,
           type: this.PlanetViewTypes.ENEMY,
           population: Math.floor(getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100)
         });
       }
     }
-    if (this.state.hoveringOver && this.state.mouseDown) {
-      const startPlanetLocation = getPlanetLocationIfKnown(this.state.mouseDown.x, this.state.mouseDown.y, this.props.knownBoard);
-      const startPlanet = startPlanetLocation ? this.props.planets[startPlanetLocation.hash] : null;
-      if (startPlanet && startPlanet.owner.toLowerCase() === this.props.myAddress.toLowerCase()
-        && (this.state.hoveringOver.x !== this.state.mouseDown.x || this.state.hoveringOver.y !== this.state.mouseDown.y)) {
+    if (this.props.hoveringOver && this.props.mouseDownPlanet) {
+      if (isOwnedPlanet(this.props.mouseDownPlanet) && this.props.mouseDownPlanet.owner === this.props.myAddress) {
         this.ctx.beginPath();
         this.ctx.lineWidth = 4;
         this.ctx.strokeStyle = 'white';
-        const startCoords = this.camera.worldToCanvasCoords(this.state.mouseDown);
+        const startCoords: Coordinates = this.camera.worldToCanvasCoords(this.props.mouseDown);
         this.ctx.moveTo(startCoords.x, startCoords.y);
-        const endCoords = this.camera.worldToCanvasCoords(this.state.hoveringOver);
+        const endCoords: Coordinates = this.camera.worldToCanvasCoords(this.props.hoveringOver);
         this.ctx.lineTo(endCoords.x, endCoords.y);
         this.ctx.stroke();
       }
     }
-    if (this.state.hoveringOver) {
-      this.drawHoveringRect(this.state.hoveringOver.x, this.state.hoveringOver.y);
+    if (this.props.hoveringOver) {
+      this.drawHoveringRect(this.props.hoveringOver.x, this.props.hoveringOver.y);
     }
     if (this.props.selected) {
       this.drawSelectedRect(this.props.selected.x, this.props.selected.y);
@@ -346,7 +320,6 @@ class ScrollableBoard extends React.Component<any, any> {
   }
 
   frame() {
-    this.updateGame();
     this.drawGame();
   }
 

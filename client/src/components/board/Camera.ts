@@ -1,4 +1,5 @@
 import {CanvasCoords, WorldCoords} from "../../@types/darkforest/components/board/Camera";
+import {Coordinates} from "../../@types/global/global";
 
 class Camera {
   centerWorldCoords: WorldCoords;
@@ -35,6 +36,13 @@ class Camera {
     const canvasX = (worldCoords.x - this.centerWorldCoords.x) / this.scale() + this.viewportWidth / 2;
     const canvasY = -1 * (worldCoords.y - this.centerWorldCoords.y) / this.scale() + this.viewportHeight / 2;
     return {x: canvasX, y: canvasY};
+  }
+
+  roundWorldCoords(worldCoords: WorldCoords): Coordinates {
+    return {
+      x: Math.round(worldCoords.x),
+      y: Math.round(worldCoords.y)
+    };
   }
 
   startPan(coords: CanvasCoords): void {

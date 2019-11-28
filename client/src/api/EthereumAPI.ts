@@ -1,5 +1,5 @@
 import * as EventEmitter from 'events';
-import {EthAddress, Planet, PlanetMap, Player, PlayerMap, Web3Object} from "../@types/global/global";
+import {EthAddress, OwnedPlanet, PlanetMap, Player, PlayerMap, Web3Object} from "../@types/global/global";
 import {Contract, Signer, providers} from "ethers";
 
 // NOTE: DO NOT IMPORT FROM ETHERS SUBPATHS. see https://github.com/ethers-io/ethers.js/issues/349 (these imports trip up webpack)
@@ -61,7 +61,7 @@ class EthereumAPI extends EventEmitter {
       .on("PlayerInitialized", (player, loc, planet, event) => {
         const newPlayer: Player = {address: address(player)};
         this.emit('playerUpdate', newPlayer);
-        const newPlanet: Planet = this.rawPlanetToObject(planet);
+        const newPlanet: OwnedPlanet = this.rawPlanetToObject(planet);
         this.emit('planetUpdate', newPlanet);
       }).on("PlayerMoved", (player, oldLoc, newLoc, maxDist, shipsMoved, fromPlanet, toPlanet, event) => {
       this.emit('planetUpdate', this.rawPlanetToObject(fromPlanet));
@@ -124,7 +124,7 @@ class EthereumAPI extends EventEmitter {
     return planets;
   }
 
-  private rawPlanetToObject(rawPlanet: RawPlanetData): Planet {
+  private rawPlanetToObject(rawPlanet: RawPlanetData): OwnedPlanet {
     const rawCapacity = rawPlanet.capacity || rawPlanet[2];
     const rawGrowth = rawPlanet.growth || rawPlanet[3];
     const rawCoordinatesRevealed = rawPlanet.coordinatesRevealed || rawPlanet[6];
@@ -135,7 +135,7 @@ class EthereumAPI extends EventEmitter {
     const rawVersion = rawPlanet.version || rawPlanet[9];
     const rawX = rawPlanet.x || rawPlanet[7];
     const rawY = rawPlanet.y || rawPlanet[8];
-    const planet: Planet = {
+    const planet: OwnedPlanet = {
       capacity: rawCapacity.toNumber(),
       growth: rawGrowth.toNumber(),
       coordinatesRevealed: rawCoordinatesRevealed,

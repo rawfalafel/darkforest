@@ -2,7 +2,7 @@ import * as bigInt from "big-integer";
 import {CHUNK_SIZE} from "./constants";
 import {BigInteger} from "big-integer";
 import {Witness} from "snarkjs";
-import {BoardData, Location, LocationId, Planet} from "../@types/global/global";
+import {BoardData, Location, LocationId, OwnedPlanet, Planet} from "../@types/global/global";
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
 
@@ -50,33 +50,12 @@ export const witnessObjToBuffer: (witness: Witness) => ArrayBuffer = (witness) =
   return buff;
 };
 
-// is this address a habitable planet?
+// type guard
+export function isOwnedPlanet(planet: Planet): planet is OwnedPlanet {
+  return (planet as OwnedPlanet).owner !== undefined;
+}
 
-export const isPlanet: (locationId: LocationId) => boolean = locationId => {
-  if (!locationId) return false;
-  return bigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')
-    .divide(32).geq(bigInt(locationId));
-};
-
-export const getPlanetLocationIfKnown: (x: number, y: number, knownBoard: BoardData) => (Location | null) = (x, y, knownBoard) => {
-  const chunkX = Math.floor(x / CHUNK_SIZE);
-  const chunkY = Math.floor(y / CHUNK_SIZE);
-  if (chunkX < 0 || chunkY < 0 || chunkX >= knownBoard.length || chunkY >= knownBoard[chunkX].length) {
-    return null;
-  }
-  const chunk = knownBoard[chunkX][chunkY];
-  if (!chunk) {
-    return null;
-  }
-  for (let location of chunk.planetLocations) {
-    if (location.x === x && location.y === y) {
-      return location;
-    }
-  }
-  return null;
-};
-
-export const getCurrentPopulation: (planet: Planet) => number = planet => {
+export const getCurrentPopulation: (planet: OwnedPlanet) => number = planet => {
   if (planet.population === 0) {
     return 0;
   }

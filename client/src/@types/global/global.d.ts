@@ -27,9 +27,14 @@ export type EthAddress = string & {
   __value__: never;
 }; // this is expected to be 40 chars, lowercase hex. see src/utils/CheckedTypeUtils.ts for constructor
 
-export interface Location {
+export interface Coordinates {
+  // integers
   x: number;
   y: number;
+}
+
+export interface Location {
+  coords: Coordinates
   hash: LocationId;
 }
 
@@ -38,16 +43,19 @@ export interface Planet {
   growth: number;
   lastUpdated: number;
   locationId: LocationId;
-  owner: EthAddress;
   population: number;
-  version: number;
   coordinatesRevealed: boolean;
   x?: number;
   y?: number;
 }
 
+export interface OwnedPlanet extends Planet {
+  owner: EthAddress;
+  version: number;
+}
+
 export interface PlanetMap {
-  [planetId: string]: Planet;
+  [planetId: string]: OwnedPlanet;
 }
 
 export interface Player {

@@ -4,6 +4,7 @@ import ScrollableBoard from "./board/ScrollableBoard";
 import Landing from "./scenes/Landing";
 import Loading from "./scenes/Loading";
 import GameManager from "../api/GameManager";
+import MainUI from "./scenes/MainUI";
 
 class App extends React.Component<any, any> {
   gameManager: GameManager;
@@ -24,7 +25,7 @@ class App extends React.Component<any, any> {
   }
 
   async startApp() {
-    window.localStorage.clear();
+    // window.localStorage.clear();
     this.gameManager = await GameManager.initialize();
     this.setState({
       loading: false,
@@ -86,25 +87,7 @@ class App extends React.Component<any, any> {
           }}
         >
           {this.state.hasJoinedGame ? (
-            <div>
-              <div
-                style={{position: 'absolute', top: 0, left: 0}}
-              >
-                <button onClick={this.startExplore.bind(this)}>Start explore</button>
-                <button onClick={this.stopExplore.bind(this)}>Stop explore</button>
-              </div>
-              <ScrollableBoard
-                xSize={this.gameManager.xSize}
-                ySize={this.gameManager.ySize}
-                homeChunk={this.gameManager.localStorageManager.getHomeChunk()}
-                knownBoard={this.gameManager.inMemoryBoard}
-                planets={this.gameManager.planets}
-                myAddress={this.gameManager.account}
-                move={this.move.bind(this)}
-                toggleSelect={this.toggleSelect.bind(this)}
-                selected={this.state.selectedCoords}
-              />
-            </div>
+            <MainUI/>
           ) : (
             <Landing
               onInitialize={this.initialize.bind(this)}

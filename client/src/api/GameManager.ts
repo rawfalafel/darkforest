@@ -4,10 +4,10 @@ import {getCurrentPopulation} from "../utils/Utils";
 import {CHUNK_SIZE, LOCATION_ID_UB} from "../utils/constants";
 import mimcHash from '../miner/mimc';
 import {
-  BoardData,
+  BoardData, Coordinates,
   EthAddress,
-  Location,
-  Planet,
+  Location, LocationId,
+  OwnedPlanet, Planet,
   PlanetMap,
   Player,
   PlayerMap
@@ -107,11 +107,12 @@ class GameManager extends EventEmitter {
       .on('playerUpdate', (player: Player) => {
         gameManager.players[<string>player.address] = player;
       })
-      .on('planetUpdate', (planet: Planet) => {
+      .on('planetUpdate', (planet: OwnedPlanet) => {
         gameManager.planets[<string>planet.locationId] = planet;
         gameManager.emit("planetUpdate");
       });
 
+    GameManager.instance = gameManager;
     return gameManager;
   }
 
@@ -126,6 +127,43 @@ class GameManager extends EventEmitter {
 
   hasJoinedGame(): boolean {
     return <string>this.account in this.players;
+  }
+
+  getPlanetIfExists(coords: Coordinates): Planet | null {
+    const {x, y} = coords;
+    const knownBoard: BoardData = this.inMemoryBoard;
+    const chunkX = Math.floor(x / CHUNK_SIZE);
+    const chunkY = Math.floor(y / CHUNK_SIZE);
+    if (chunkX < 0 || chunkY < 0 || chunkX >= knownBoard.length || chunkY >= knownBoard[chunkX].length) {
+      return null;
+    }
+    const chunk = knownBoard[chunkX][chunkY];
+    if (!chunk) {
+      return null;
+    }
+    for (let location of chunk.planetLocations) {
+      if (location.coords.x === x && location.coords.y === y) {
+        const locationId = location.hash;
+        return this.getPlanetWithId(locationId);
+      }
+    }
+    return null;
+  };
+
+  getPlanetWithId(locationId: LocationId): Planet {
+    if (!!this.planets[locationId]) {
+      return this.planets[locationId];
+    }
+    // return a default unowned planet
+    // TODO the default constants for capacity and growth should be pulled from contract
+    return {
+      capacity: 100000,
+      growth: 100,
+      lastUpdated: Date.now(),
+      locationId,
+      population: 0,
+      coordinatesRevealed: false
+    };
   }
 
   startExplore(): void {
@@ -168,11 +206,11 @@ class GameManager extends EventEmitter {
   }
 
   move(from: Location, to: Location): GameManager {
-    const oldX = from.x;
-    const oldY = from.y;
+    const oldX = from.coords.x;
+    const oldY = from.coords.y;
     const fromPlanet = this.planets[<string>from.hash];
-    const newX = to.x;
-    const newY = to.y;
+    const newX = to.coords.x;
+    const newY = to.coords.y;
     const distMax = Math.abs(newX - oldX) + Math.abs(newY - oldY);
     const shipsMoved = Math.floor(getCurrentPopulation(fromPlanet) / 2);
 
