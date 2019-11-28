@@ -1,8 +1,7 @@
 import * as bigInt from "big-integer";
-import {CHUNK_SIZE} from "./constants";
 import {BigInteger} from "big-integer";
 import {Witness} from "snarkjs";
-import {BoardData, Location, LocationId, OwnedPlanet, Planet} from "../@types/global/global";
+import {OwnedPlanet, Planet} from "../@types/global/global";
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
 

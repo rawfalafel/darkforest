@@ -1,6 +1,5 @@
 import * as React from "react"
 import './App.css';
-import ScrollableBoard from "./board/ScrollableBoard";
 import Landing from "./scenes/Landing";
 import Loading from "./scenes/Loading";
 import GameManager from "../api/GameManager";
@@ -20,20 +19,13 @@ class App extends React.Component<any, any> {
     this.startApp();
   }
 
-  rerender(): void {
-    this.setState({});
-  }
-
   async startApp() {
     // window.localStorage.clear();
     this.gameManager = await GameManager.initialize();
     this.setState({
       loading: false,
       hasJoinedGame: this.gameManager.hasJoinedGame()
-    });
-    this.gameManager
-      .on("discoveredNewChunk", this.rerender.bind(this))
-      .on("planetUpdate", this.rerender.bind(this));
+    })
   }
 
   async initialize() {
@@ -51,30 +43,6 @@ class App extends React.Component<any, any> {
         });
       });
     });
-  }
-
-  move(fromLocation, toLocation) {
-    this.gameManager.move(fromLocation, toLocation);
-  }
-
-  toggleSelect(x, y) {
-    if (this.state.selectedCoords && this.state.selectedCoords.x === x && this.state.selectedCoords.y === y) {
-      this.setState({
-        selectedCoords: null
-      });
-    } else {
-      this.setState({
-        selectedCoords: {x, y}
-      });
-    }
-  }
-
-  startExplore() {
-    this.gameManager.startExplore();
-  }
-
-  stopExplore() {
-    this.gameManager.stopExplore();
   }
 
   render() {
