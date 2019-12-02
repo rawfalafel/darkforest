@@ -10,6 +10,14 @@ do
   cp "$f" ./client/src/contracts
 done
 
+# copy circuits into client/src/circuits
+rm -rf ./client/src/circuits/move/ &&
+mkdir -p ./client/src/circuits/move/ &&
+cp ./circuits/move/circuit.json ./client/src/circuits/move/ &&
+rm -rf ./client/src/circuits/init/ &&
+mkdir -p ./client/src/circuits/init/ &&
+cp ./circuits/init/circuit.json ./client/src/circuits/init/ &&
+
 # deploy core contract, and get its address, and write to a js file accessible in client/src.
 # sleep 1 ensures this happens AFTER ganache-cli is run
 (
