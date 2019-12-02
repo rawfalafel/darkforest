@@ -71,7 +71,7 @@ class EthereumAPI extends EventEmitter {
 
   async initializePlayer(args: InitializePlayerArgs): Promise<providers.TransactionReceipt> {
     let overrides: TransactionRequest = {
-      gasLimit: 1000000
+      gasLimit: 5000000
     };
     const tx: providers.TransactionResponse = await this.contract.initializePlayer(...args, overrides);
     return tx.wait();
@@ -79,7 +79,7 @@ class EthereumAPI extends EventEmitter {
 
   async move(args: MoveArgs): Promise<providers.TransactionReceipt> {
     let overrides: TransactionRequest = {
-      gasLimit: 1000000
+      gasLimit: 5000000
     };
     const tx: providers.TransactionResponse = await this.contract.move(...args, overrides);
     return tx.wait();
