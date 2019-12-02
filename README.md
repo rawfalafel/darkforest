@@ -9,7 +9,7 @@ then run `./local-deploy`. this compiles the solidity contracts with truffle, st
 # client
 remember to `npm install` in `./client` before trying to run the webapp!
 
-to interact with the webapp in browser, you need metamask. point metamask to `http://localhost:8545`, which is the port that `ganache-cli` defaults to when running the local blockchain.
+to interact with the webapp in browser, you need metamask. point metamask to `http://localhost:8545`, which is the port that `ganache-cli` defaults to when running the local blockchain. Also import the following private key as an account in your metamask: `0xD44C7963E9A89D4F8B64AB23E02E97B2E00DD57FCB60F316AC69B77135003AEF`. Our `ganache` blockchain which is started up by `local-deploy.sh` automatically puts in 100eth into this account.
 
 make sure that you've run `./local-deploy` at least once before trying to run the webapp. this builds some necessary files.
 
