@@ -1,3 +1,10 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]
+  then echo "Please run with sudo privileges"
+  exit
+fi
+
 # compile all contracts
 truffle compile --all
 
@@ -29,4 +36,4 @@ cp ./circuits/init/circuit.json ./client/src/circuits/init/ &&
 ) &
 
 # start up local blockchain with ganache-cli
-sudo ganache-cli --account="0xD44C7963E9A89D4F8B64AB23E02E97B2E00DD57FCB60F316AC69B77135003AEF, 100000000000000000000"
+ganache-cli --account="0xD44C7963E9A89D4F8B64AB23E02E97B2E00DD57FCB60F316AC69B77135003AEF, 100000000000000000000"
