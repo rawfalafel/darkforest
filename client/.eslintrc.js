@@ -1,6 +1,12 @@
 module.exports = {
-  extends: ['prettier', 'eslint:recommended', 'plugin:react/recommended'],
-  plugins: ['react', 'react-hooks'],
+  parser: '@typescript-eslint/parser',
+  extends: [
+    'plugin:@typescript-eslint/recommended',
+    'prettier',
+    'eslint:recommended',
+    'plugin:react/recommended',
+  ],
+  plugins: ['@typescript-eslint', 'react', 'react-hooks'],
   env: {
     browser: true,
     node: true,
@@ -9,32 +15,9 @@ module.exports = {
   globals: {
     // add as needed
   },
-  parser: 'babel-eslint',
   rules: {
-    'no-var': 'error',
     eqeqeq: 'error',
-    'no-unused-vars': [
-      'error',
-      {
-        args: 'none',
-        ignoreRestSiblings: true,
-        argsIgnorePattern: '(^_)',
-        varsIgnorePattern: '(^_)',
-      },
-    ],
-    'prefer-const': [
-      'warn',
-      {
-        destructuring: 'all',
-        ignoreReadBeforeAssign: true,
-      },
-    ],
-
     'react/jsx-no-undef': ['error', { allowGlobals: true }],
-    'react/prop-types': 'off',
-    'react/no-unescaped-entities': 'off',
-    'react/display-name': 'off',
-
     'react-hooks/rules-of-hooks': 'error',
   },
   settings: {
@@ -44,7 +27,9 @@ module.exports = {
   },
   parserOptions: {
     ecmaFeatures: {
+      modules: true,
       legacyDecorators: true,
     },
+    sourceType: 'module',
   },
 };
