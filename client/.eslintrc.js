@@ -3,7 +3,6 @@ module.exports = {
   extends: [
     'plugin:@typescript-eslint/recommended',
     'prettier',
-    'eslint:recommended',
     'plugin:react/recommended',
   ],
   plugins: ['@typescript-eslint', 'react', 'react-hooks'],
@@ -17,6 +16,13 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        varsIgnorePattern: '(^_)',
+        argsIgnorePattern: '(^_)',
+      },
+    ],
 
     eqeqeq: 'error',
     'react/jsx-no-undef': ['error', { allowGlobals: true }],

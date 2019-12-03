@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { FirebaseProvider } from '../integrations/firebase';
 import LandingPage from './LandingPage';
 import LoadingPage from './LoadingPage';
 import GameManager from '../api/GameManager';
-import MainUI from './scenes/MainUI';
+import MainUI from './MainUI';
 
-const App: React.FC<{}> = () => {
+const App = () => {
   const [loading, setLoading] = useState(true);
   const [joinedGame, setJoinedGame] = useState(false);
   const [findingFirstPlanet, setFindingFirstPlanet] = useState(false);
-  const [gameManager, setGameManager] = useState<GameManager | null>(null);
+  const gameManagerRef = useRef(null);
 
   // Start app
   useEffect(() => {
     (async (): Promise<void> => {
       const newGameManager = await GameManager.initialize();
-      setGameManager(newGameManager);
+      gameManagerRef.current = newGameManager;
       setLoading(false);
       setJoinedGame(newGameManager.hasJoinedGame());
     })();
@@ -24,7 +24,7 @@ const App: React.FC<{}> = () => {
 
   const initialize = () => {
     setFindingFirstPlanet(true);
-    gameManager
+    gameManagerRef.current
       .joinGame()
       .once('initializedPlayer', () => {
         setJoinedGame(true);
@@ -40,13 +40,13 @@ const App: React.FC<{}> = () => {
   }
 
   if (joinedGame) {
-    return <MainUI />;
+    return <MainUI gameManager={gameManagerRef.current} />;
   } else {
     return <LandingPage onInitialize={initialize} />;
   }
 };
 
-const _App: React.FC<{}> = () => {
+const _App = () => {
   return (
     <div className="h-full w-full font-mono text-white bg-black">
       <FirebaseProvider>
