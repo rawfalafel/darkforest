@@ -1,71 +1,56 @@
-import * as React from "react"
-import './App.css';
-import Landing from "./scenes/Landing";
-import Loading from "./scenes/Loading";
-import GameManager from "../api/GameManager";
-import MainUI from "./scenes/MainUI";
+import React, { useState, useEffect } from 'react';
 
-class App extends React.Component<any, any> {
-  gameManager: GameManager;
+import Landing from './scenes/Landing';
+import Loading from './scenes/Loading';
+import GameManager from '../api/GameManager';
+import MainUI from './scenes/MainUI';
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      loading: true,
-      hasJoinedGame: false,
-      selectedCoords: null,
-      findingFirstPlanet: false
-    };
-    this.startApp();
-  }
+const App: React.FC<{}> = () => {
+  const [loading, setLoading] = useState(true);
+  const [joinedGame, setJoinedGame] = useState(false);
+  const [findingFirstPlanet, setFindingFirstPlanet] = useState(false);
+  const [gameManager, setGameManager] = useState<GameManager | null>(null);
 
-  async startApp() {
-    // window.localStorage.clear();
-    this.gameManager = await GameManager.initialize();
-    this.setState({
-      loading: false,
-      hasJoinedGame: this.gameManager.hasJoinedGame()
-    })
-  }
+  // Start app
+  useEffect(() => {
+    (async (): Promise<void> => {
+      const newGameManager = await GameManager.initialize();
+      setGameManager(newGameManager);
+      setLoading(false);
+      setJoinedGame(newGameManager.hasJoinedGame());
+    })();
+  }, []);
 
-  async initialize() {
-    this.setState({
-      findingFirstPlanet: true
-    }, () => {
-      this.gameManager.joinGame().once('initializedPlayer', () => {
-        this.setState({
-          hasJoinedGame: true,
-          findingFirstPlanet: false
-        });
-      }).once('initializedPlayerError', () => {
-        this.setState({
-          findingFirstPlanet: false
-        });
+  const initialize = (): void => {
+    setFindingFirstPlanet(true);
+    gameManager
+      .joinGame()
+      .once('initializedPlayer', () => {
+        setJoinedGame(true);
+        setFindingFirstPlanet(false);
+      })
+      .once('initializedPlayerError', () => {
+        setFindingFirstPlanet(false);
       });
-    });
+  };
+
+  if (loading || findingFirstPlanet) {
+    return <Loading />;
   }
 
-  render() {
-    if (!this.state.loading && !this.state.findingFirstPlanet) {
-      return (
-        <div
-          style={{
-            width: '100%',
-            height: '100%'
-          }}
-        >
-          {this.state.hasJoinedGame ? (
-            <MainUI/>
-          ) : (
-            <Landing
-              onInitialize={this.initialize.bind(this)}
-            />
-          )}
-        </div>
-      );
-    }
-    return <Loading/>;
+  if (joinedGame) {
+    return <MainUI />;
+  } else {
+    return <Landing onInitialize={initialize} />;
   }
-}
+};
 
-export default App;
+const _App: React.FC<{}> = () => {
+  return (
+    <div className="h-full w-full font-mono text-white">
+      <App />
+    </div>
+  );
+};
+
+export default _App;
