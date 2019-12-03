@@ -16,6 +16,8 @@ module.exports = {
     // add as needed
   },
   rules: {
+    '@typescript-eslint/explicit-function-return-type': 'off',
+
     eqeqeq: 'error',
     'react/jsx-no-undef': ['error', { allowGlobals: true }],
     'react-hooks/rules-of-hooks': 'error',

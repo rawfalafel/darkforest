@@ -1,9 +1,9 @@
-import {Location, LocationId} from "../../../global/global";
+import { Location, LocationId } from '../../../global/global';
 
 export enum PlanetType {
   Unoccupied,
   Mine,
-  Enemy
+  Enemy,
 }
 
 export interface PlanetViewDescription {
