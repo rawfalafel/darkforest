@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
+import Spinner from 'react-spinkit';
 import ScrollableBoard from './board/ScrollableBoard';
 import GameManager from '../api/GameManager';
 import { Coordinates, Planet } from '../@types/global/global';
@@ -23,6 +24,7 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
   const [hoveringOver, setHoveringOver] = useState(null);
   const [mouseDown, setMouseDown] = useState(null);
   const [mouseDownPlanet, setMouseDownPlanet] = useState(null);
+  const [exploring, setExploring] = useState(true);
 
   function rerender(): void {
     forceRerender({});
@@ -96,20 +98,22 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
   }
 
   return (
-    <div>
-      <div className="absolute top-0 left-0">
+    <React.Fragment>
+      <div className="absolute top-0 left-0 flex flex-row items-center">
         <Button
           className="bg-gray-900 border border-white rounded-sm p-2 m-2"
-          onClick={() => gameManager.startExplore()}
+          onClick={() => {
+            exploring ? gameManager.stopExplore() : gameManager.startExplore();
+            setExploring(!exploring);
+          }}
         >
-          Start explore
+          {exploring ? 'Stop' : 'Start'} exploring
         </Button>
-        <Button
-          className="bg-gray-900 border border-white rounded-sm p-2 m-2"
-          onClick={() => gameManager.stopExplore()}
-        >
-          Stop explore
-        </Button>
+        {exploring && (
+          <div className="ml-6 mt-2">
+            <Spinner name="ball-clip-rotate-multiple" fadeIn="none" />
+          </div>
+        )}
       </div>
       <ScrollableBoard
         xSize={gameManager.xSize}
@@ -127,7 +131,7 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
         onMouseUpOverCoords={onMouseUpOverCoords}
         onMouseOut={onMouseOut}
       />
-    </div>
+    </React.Fragment>
   );
 };
 
