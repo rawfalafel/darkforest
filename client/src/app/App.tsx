@@ -4,7 +4,7 @@ import { FirebaseProvider } from '../integrations/firebase';
 import LandingPage from './LandingPage';
 import LoadingPage from './LoadingPage';
 import GameManager from '../api/GameManager';
-import MainUI from './MainUI';
+import GameScene from './GameScene';
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ const App = () => {
   }
 
   if (joinedGame) {
-    return <MainUI gameManager={gameManagerRef.current} />;
+    return <GameScene gameManager={gameManagerRef.current} />;
   } else {
     return <LandingPage onInitialize={initialize} />;
   }

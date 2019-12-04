@@ -6,18 +6,18 @@ import { Coordinates, Planet } from '../@types/global/global';
 import {getPlanetTypeForLocationId, isOwnedPlanet} from '../utils/Utils';
 import Button from '../components/Button';
 
-interface MainUIProps {
+interface GameSceneProps {
   gameManager: GameManager; // GameManager object, expect not null
 }
 
-interface MainUIState {
+interface GameSceneState {
   selected: Coordinates | null; // the currently selected square
   hoveringOver: Coordinates | null; // this is the current coordinate the cursor is over
   mouseDown: Coordinates | null; // if the user is holding, this is where they started
   mouseDownPlanet: Planet | null; // if mouseDown coords is a planet, this is the planet
 }
 
-const MainUI = ({ gameManager }: MainUIProps) => {
+const GameScene = ({ gameManager }: GameSceneProps) => {
   const [_, forceRerender] = useState({});
   const [selected, setSelected] = useState(null);
   const [hoveringOver, setHoveringOver] = useState(null);
@@ -131,4 +131,4 @@ const MainUI = ({ gameManager }: MainUIProps) => {
   );
 };
 
-export default MainUI;
+export default GameScene;
