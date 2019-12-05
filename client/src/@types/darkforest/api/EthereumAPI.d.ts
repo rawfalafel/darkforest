@@ -1,28 +1,34 @@
-import {BigNumber} from "ethers/utils";
+import { BigNumber } from 'ethers/utils';
 
-export interface ContractCallArgs extends Array<any> {}
+// TODO write these types
+export type ContractCallArgs = Array<any>;
 
-export interface InitializePlayerArgs extends ContractCallArgs {}
+export type InitializePlayerArgs = ContractCallArgs;
 
-export interface MoveArgs extends ContractCallArgs {}
+export type MoveArgs = ContractCallArgs;
 
 export interface ContractConstants {
   xSize: number;
   ySize: number;
-  difficulty: number;
+  planetRarity: number;
+  defaultCapacity: number[];
+  defaultGrowth: number[];
 }
 
-export interface RawPlanetData extends Array<string | boolean | number | BigNumber> {
+export interface RawPlanetData
+  extends Array<string | boolean | number | BigNumber> {
   0: BigNumber;
   1: string;
-  2: BigNumber;
+  2: number;
   3: BigNumber;
   4: BigNumber;
   5: BigNumber;
-  6: boolean;
-  7: BigNumber;
+  6: BigNumber;
+  7: boolean;
   8: BigNumber;
-  9: number;
+  9: BigNumber;
+  10: number;
+  planetType: number;
   capacity: BigNumber;
   growth: BigNumber;
   coordinatesRevealed: boolean;

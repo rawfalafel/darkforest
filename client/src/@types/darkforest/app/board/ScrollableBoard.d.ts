@@ -1,6 +1,6 @@
-import { Location, LocationId } from '../../../global/global';
+import { Location } from '../../../global/global';
 
-export enum PlanetType {
+export enum PlanetViewType {
   Unoccupied,
   Mine,
   Enemy,
@@ -8,6 +8,6 @@ export enum PlanetType {
 
 export interface PlanetViewDescription {
   location: Location;
-  type: PlanetType;
+  type: PlanetViewType;
   population: number;
 }

@@ -10,17 +10,36 @@ contract DarkForestV1 is Verifier {
 
     uint public xSize = 2048;
     uint public ySize = 2048;
-    uint public difficulty = 4096;
-    uint capacity = 100000; // in milliPopulation
-    uint growth = 100; // maximum growth rate, achieved at milliPops = 50000, in milliPopulation per second
+    uint public planetRarity = 4096;
+    uint public nPlanetTypes = 12;
+    uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
+    uint[12] public defaultGrowth = [167, 250, 333, 500, 667, 833, 1000, 1167, 1333, 1500, 1667]; // max growth rate, achieved at 50% population, in milliPop per second
+    uint[12] public defaultStalwartness = [50, 100, 200, 400, 800, 1600, 3200, 5000, 7200, 10000, 12000];
+    uint[12] public defaultHardiness = [900, 800, 700, 600, 500, 400, 300, 200, 100, 75, 50];
     uint moveDecayNumerator = 80;
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
+    enum PlanetType {
+        None,
+        LittleAsteroid,
+        BigAsteroid,
+        BrownDwarf,
+        RedDwarf,
+        WhiteDwarf,
+        YellowStar,
+        BlueStar,
+        SubGiant,
+        Giant,
+        SuperGiant,
+        HyperGiant
+    }
 
     struct Planet {
         uint locationId;
         address owner;
 
+        PlanetType planetType;
         uint capacity;
         uint growth;
         uint population;
@@ -41,6 +60,43 @@ contract DarkForestV1 is Verifier {
     address[] public playerIds;
     mapping (address => bool) public playerInitialized;
     // TODO: how to query all planets owned by player?
+
+    function toBytes(uint256 x) private pure returns (bytes memory b) {
+        b = new bytes(32);
+        assembly { mstore(add(b, 32), x) }
+    }
+
+    function getPlanetType(uint _loc) private pure returns (PlanetType) {
+        bytes memory b = toBytes(_loc);
+        uint planetTypeUInt;
+        for (uint i = 4; i < 7; i++) {
+            planetTypeUInt = planetTypeUInt + uint(uint8(b[i])) * (2**(8 * (6 - i)));
+        }
+        if (planetTypeUInt < 8) {
+            return PlanetType.HyperGiant;
+        } else if (planetTypeUInt < 64) {
+            return PlanetType.SuperGiant;
+        } else if (planetTypeUInt < 512) {
+            return PlanetType.Giant;
+        } else if (planetTypeUInt < 2048) {
+            return PlanetType.SubGiant;
+        } else if (planetTypeUInt < 8192) {
+            return PlanetType.BlueStar;
+        } else if (planetTypeUInt < 32768) {
+            return PlanetType.YellowStar;
+        } else if (planetTypeUInt < 131072) {
+            return PlanetType.WhiteDwarf;
+        } else if (planetTypeUInt < 524288) {
+            return PlanetType.RedDwarf;
+        } else if (planetTypeUInt < 2097152) {
+            return PlanetType.BrownDwarf;
+        } else if (planetTypeUInt < 8388608) {
+            return PlanetType.BigAsteroid;
+        } else if (planetTypeUInt < 16777216) {
+            return PlanetType.LittleAsteroid;
+        }
+        return PlanetType.None;
+    }
 
     function planetIsInitialized(uint _loc) private view returns (bool) {
         return !(planets[_loc].locationId == 0);
@@ -63,12 +119,13 @@ contract DarkForestV1 is Verifier {
     }
 
     function locationIdValid(uint _loc) private view returns (bool) {
-        return (_loc < (LOCATION_ID_UB / difficulty));
+        return (_loc < (LOCATION_ID_UB / planetRarity));
     }
 
     function initializePlanet(uint _loc, address _player, uint _population) private {
         require (locationIdValid(_loc));
-        planets[_loc] = Planet(_loc, _player, capacity, growth, _population, now, false, 0, 0, 1);
+        PlanetType planetType = PlanetType.LittleAsteroid;
+        planets[_loc] = Planet(_loc, _player, planetType, defaultCapacity[uint(planetType)], defaultGrowth[uint(planetType)], _population, now, false, 0, 0, 1);
         planetIds.push(_loc);
     }
 

@@ -1,7 +1,12 @@
-import * as bigInt from "big-integer";
-import {BigInteger} from "big-integer";
-import {Witness} from "snarkjs";
-import {OwnedPlanet, Planet} from "../@types/global/global";
+import * as bigInt from 'big-integer';
+import { BigInteger } from 'big-integer';
+import { Witness } from 'snarkjs';
+import {
+  LocationId,
+  OwnedPlanet,
+  Planet,
+  PlanetType,
+} from '../@types/global/global';
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
 
@@ -15,10 +20,12 @@ function _writeUint32(h: DataViewWithOffset, val: number): void {
   h.offset += 4;
 }
 
-
 function _writeBigInt(h: DataViewWithOffset, bi: BigInteger): void {
-  for (let i=0; i<8; i++) {
-    const v = bigInt(bi).shiftRight(i*32).and(0xFFFFFFFF).toJSNumber();
+  for (let i = 0; i < 8; i++) {
+    const v = bigInt(bi)
+      .shiftRight(i * 32)
+      .and(0xffffffff)
+      .toJSNumber();
     _writeUint32(h, v);
   }
 }
@@ -32,17 +39,19 @@ function _calculateBuffLen(witness: Witness): number {
   return size;
 }
 
-export const witnessObjToBuffer: (witness: Witness) => ArrayBuffer = (witness) => {
+export const witnessObjToBuffer: (
+  witness: Witness
+) => ArrayBuffer = witness => {
   const buffLen: number = _calculateBuffLen(witness);
 
   const buff = new ArrayBuffer(buffLen);
 
   const h: DataViewWithOffset = {
     dataView: new DataView(buff),
-    offset: 0
+    offset: 0,
   };
 
-  for (let i=0; i<witness.length; i++) {
+  for (let i = 0; i < witness.length; i++) {
     _writeBigInt(h, witness[i]);
   }
 
@@ -58,7 +67,41 @@ export const getCurrentPopulation: (planet: OwnedPlanet) => number = planet => {
   if (planet.population === 0) {
     return 0;
   }
-  const timeElapsed = (Date.now() / 1000) - planet.lastUpdated;
-  const denominator = Math.exp(-4 * planet.growth * timeElapsed / planet.capacity) * ((planet.capacity / planet.population) - 1) + 1;
+  const timeElapsed = Date.now() / 1000 - planet.lastUpdated;
+  const denominator =
+    Math.exp((-4 * planet.growth * timeElapsed) / planet.capacity) *
+      (planet.capacity / planet.population - 1) +
+    1;
   return planet.capacity / denominator;
+};
+
+export const getPlanetTypeForLocationId: (
+  locationId: LocationId
+) => PlanetType = locationId => {
+  const typeString = (<string>locationId).substring(8, 14);
+  const typeBigInt = bigInt(typeString, 16);
+  if (typeBigInt.lt(bigInt(8))) {
+    return PlanetType.HyperGiant;
+  } else if (typeBigInt.lt(bigInt(64))) {
+    return PlanetType.SuperGiant;
+  } else if (typeBigInt.lt(bigInt(512))) {
+    return PlanetType.Giant;
+  } else if (typeBigInt.lt(bigInt(2048))) {
+    return PlanetType.SubGiant;
+  } else if (typeBigInt.lt(bigInt(8192))) {
+    return PlanetType.BlueStar;
+  } else if (typeBigInt.lt(bigInt(32768))) {
+    return PlanetType.YellowStar;
+  } else if (typeBigInt.lt(bigInt(131072))) {
+    return PlanetType.WhiteDwarf;
+  } else if (typeBigInt.lt(bigInt(524288))) {
+    return PlanetType.RedDwarf;
+  } else if (typeBigInt.lt(bigInt(2097152))) {
+    return PlanetType.BrownDwarf;
+  } else if (typeBigInt.lt(bigInt(8388608))) {
+    return PlanetType.BigAsteroid;
+  } else if (typeBigInt.lt(bigInt(16777216))) {
+    return PlanetType.LittleAsteroid;
+  }
+  return PlanetType.None;
 };

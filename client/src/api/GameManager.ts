@@ -1,20 +1,26 @@
 import * as EventEmitter from 'events';
-import LocalStorageManager from "./LocalStorageManager";
-import {getCurrentPopulation} from "../utils/Utils";
-import {CHUNK_SIZE, LOCATION_ID_UB} from "../utils/constants";
+import LocalStorageManager from './LocalStorageManager';
+import {
+  getCurrentPopulation,
+  getPlanetTypeForLocationId,
+} from '../utils/Utils';
+import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
 import {
-  BoardData, Coordinates,
+  BoardData,
+  Coordinates,
   EthAddress,
-  Location, LocationId,
-  OwnedPlanet, Planet,
+  Location,
+  LocationId,
+  OwnedPlanet,
+  Planet,
   PlanetMap,
   Player,
-  PlayerMap
-} from "../@types/global/global";
-import EthereumAPI from "./EthereumAPI";
-import MinerManager from "./MinerManager";
-import SnarkArgsHelper from "./SnarkArgsHelper";
+  PlayerMap,
+} from '../@types/global/global';
+import EthereumAPI from './EthereumAPI';
+import MinerManager from './MinerManager';
+import SnarkArgsHelper from './SnarkArgsHelper';
 
 class GameManager extends EventEmitter {
   static instance: any;
@@ -34,20 +40,26 @@ class GameManager extends EventEmitter {
   readonly ySize: number;
   private readonly xChunks: number;
   private readonly yChunks: number;
-  private readonly difficulty: number;
+  private readonly planetRarity: number;
+  private readonly defaultGrowth: number[];
+  private readonly defaultCapacity: number[];
 
-  private constructor(account: EthAddress,
-              players: PlayerMap,
-              planets: PlanetMap,
-              inMemoryBoard: BoardData,
-              xSize: number,
-              ySize: number,
-              xChunks: number,
-              yChunks: number,
-              difficulty: number,
-              ethereumAPI: EthereumAPI,
-              localStorageManager: LocalStorageManager,
-              snarkHelper: SnarkArgsHelper) {
+  private constructor(
+    account: EthAddress,
+    players: PlayerMap,
+    planets: PlanetMap,
+    inMemoryBoard: BoardData,
+    xSize: number,
+    ySize: number,
+    xChunks: number,
+    yChunks: number,
+    planetRarity: number,
+    defaultGrowth: number[],
+    defaultCapacity: number[],
+    ethereumAPI: EthereumAPI,
+    localStorageManager: LocalStorageManager,
+    snarkHelper: SnarkArgsHelper
+  ) {
     super();
 
     this.account = account;
@@ -59,7 +71,9 @@ class GameManager extends EventEmitter {
     this.ySize = ySize;
     this.xChunks = xChunks;
     this.yChunks = yChunks;
-    this.difficulty = difficulty;
+    this.planetRarity = planetRarity;
+    this.defaultGrowth = defaultGrowth;
+    this.defaultCapacity = defaultCapacity;
 
     this.ethereumAPI = ethereumAPI;
     this.localStorageManager = localStorageManager;
@@ -68,7 +82,7 @@ class GameManager extends EventEmitter {
 
   static getInstance(): GameManager {
     if (!GameManager.instance) {
-      throw new Error("GameManager object has not been initialized yet");
+      throw new Error('GameManager object has not been initialized yet');
     }
 
     return GameManager.instance;
@@ -80,25 +94,49 @@ class GameManager extends EventEmitter {
     // first we initialize the EthereumAPI and get the user's eth account, and load contract constants + state
     const ethereumAPI = await EthereumAPI.initialize();
     const account = ethereumAPI.account;
-    const {xSize, ySize, difficulty} = await ethereumAPI.getConstants();
+    const {
+      xSize,
+      ySize,
+      planetRarity,
+      defaultGrowth,
+      defaultCapacity,
+    } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
     const players = await ethereumAPI.getPlayers();
     const planets = await ethereumAPI.getPlanets();
 
     // then we initialize the local storage manager, which may depend on some of the contract constants
-    const localStorageManager = await LocalStorageManager.initialize(account, xChunks, yChunks);
+    const localStorageManager = await LocalStorageManager.initialize(
+      account,
+      xChunks,
+      yChunks
+    );
     const inMemoryBoard = localStorageManager.getKnownBoard();
 
     // finally we initialize the snark helper; this doesn't actually have any dependencies
     const snarkHelper = await SnarkArgsHelper.initialize();
 
-    const gameManager = new GameManager(account, players, planets, inMemoryBoard, xSize, ySize, xChunks, yChunks,
-      difficulty, ethereumAPI, localStorageManager, snarkHelper);
+    const gameManager = new GameManager(
+      account,
+      players,
+      planets,
+      inMemoryBoard,
+      xSize,
+      ySize,
+      xChunks,
+      yChunks,
+      planetRarity,
+      defaultGrowth,
+      defaultCapacity,
+      ethereumAPI,
+      localStorageManager,
+      snarkHelper
+    );
 
     // we only want to initialize the mining manager if the player has already joined the game
     // if they haven't, we'll do this once the player has joined the game
-    if (!!localStorageManager.getHomeChunk() && (account in players)) {
+    if (!!localStorageManager.getHomeChunk() && account in players) {
       gameManager.initMiningManager();
     }
 
@@ -109,7 +147,7 @@ class GameManager extends EventEmitter {
       })
       .on('planetUpdate', (planet: OwnedPlanet) => {
         gameManager.planets[<string>planet.locationId] = planet;
-        gameManager.emit("planetUpdate");
+        gameManager.emit('planetUpdate');
       });
 
     GameManager.instance = gameManager;
@@ -117,10 +155,16 @@ class GameManager extends EventEmitter {
   }
 
   private initMiningManager(): void {
-    this.minerManager = MinerManager.initialize(this.inMemoryBoard, this.localStorageManager.getHomeChunk(), this.xSize, this.ySize, this.difficulty);
-    this.minerManager.on("discoveredNewChunk", () => {
+    this.minerManager = MinerManager.initialize(
+      this.inMemoryBoard,
+      this.localStorageManager.getHomeChunk(),
+      this.xSize,
+      this.ySize,
+      this.planetRarity
+    );
+    this.minerManager.on('discoveredNewChunk', () => {
       this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
-      this.emit("discoveredNewChunk");
+      this.emit('discoveredNewChunk');
     });
     this.minerManager.startExplore();
   }
@@ -130,25 +174,30 @@ class GameManager extends EventEmitter {
   }
 
   getPlanetIfExists(coords: Coordinates): Planet | null {
-    const {x, y} = coords;
+    const { x, y } = coords;
     const knownBoard: BoardData = this.inMemoryBoard;
     const chunkX = Math.floor(x / CHUNK_SIZE);
     const chunkY = Math.floor(y / CHUNK_SIZE);
-    if (chunkX < 0 || chunkY < 0 || chunkX >= knownBoard.length || chunkY >= knownBoard[chunkX].length) {
+    if (
+      chunkX < 0 ||
+      chunkY < 0 ||
+      chunkX >= knownBoard.length ||
+      chunkY >= knownBoard[chunkX].length
+    ) {
       return null;
     }
     const chunk = knownBoard[chunkX][chunkY];
     if (!chunk) {
       return null;
     }
-    for (let location of chunk.planetLocations) {
+    for (const location of chunk.planetLocations) {
       if (location.coords.x === x && location.coords.y === y) {
         const locationId = location.hash;
         return this.getPlanetWithId(locationId);
       }
     }
     return null;
-  };
+  }
 
   getPlanetWithId(locationId: LocationId): Planet {
     if (!!this.planets[locationId]) {
@@ -156,13 +205,15 @@ class GameManager extends EventEmitter {
     }
     // return a default unowned planet
     // TODO the default constants for capacity and growth should be pulled from contract
+    const planetType = getPlanetTypeForLocationId(locationId);
     return {
-      capacity: 100000,
-      growth: 100,
+      planetType,
+      capacity: this.defaultCapacity[planetType],
+      growth: this.defaultGrowth[planetType],
       lastUpdated: Date.now(),
       locationId,
       population: 0,
-      coordinatesRevealed: false
+      coordinatesRevealed: false,
     };
   }
 
@@ -187,20 +238,21 @@ class GameManager extends EventEmitter {
       y = Math.floor(Math.random() * this.ySize);
 
       hash = mimcHash(x, y);
-      if (hash.lesser(LOCATION_ID_UB.divide(this.difficulty))) {
+      if (hash.lesser(LOCATION_ID_UB.divide(this.planetRarity))) {
         validHomePlanet = true;
       }
     }
     const chunkX = Math.floor(x / CHUNK_SIZE);
     const chunkY = Math.floor(y / CHUNK_SIZE);
-    this.localStorageManager.setHomeChunk({chunkX, chunkY}); // set this before getting the call result, in case user exits before tx confirmed
-    this.snarkHelper.getInitArgs(x, y)
+    this.localStorageManager.setHomeChunk({ chunkX, chunkY }); // set this before getting the call result, in case user exits before tx confirmed
+    this.snarkHelper
+      .getInitArgs(x, y)
       .then(callArgs => {
-        return this.ethereumAPI.initializePlayer(callArgs)
+        return this.ethereumAPI.initializePlayer(callArgs);
       })
       .then(() => {
         this.initMiningManager();
-        this.emit("initializedPlayer");
+        this.emit('initializedPlayer');
       });
     return this;
   }
@@ -218,13 +270,17 @@ class GameManager extends EventEmitter {
       throw new Error('attempted to move out of bounds');
     }
 
-    if (!fromPlanet || fromPlanet.owner.toLowerCase() !== this.account.toLowerCase()) {
+    if (
+      !fromPlanet ||
+      fromPlanet.owner.toLowerCase() !== this.account.toLowerCase()
+    ) {
       throw new Error('attempted to move from a planet not owned by player');
     }
 
-    this.snarkHelper.getMoveArgs(oldX, oldY, newX, newY, distMax, shipsMoved)
+    this.snarkHelper
+      .getMoveArgs(oldX, oldY, newX, newY, distMax, shipsMoved)
       .then(callArgs => {
-        return this.ethereumAPI.move(callArgs)
+        return this.ethereumAPI.move(callArgs);
       })
       .then(() => {
         this.emit('moved');
