@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import ScrollableBoard from './board/ScrollableBoard';
 import GameManager from '../api/GameManager';
 import { Coordinates, Planet } from '../@types/global/global';
-import { isOwnedPlanet } from '../utils/Utils';
+import {getPlanetTypeForLocationId, isOwnedPlanet} from '../utils/Utils';
 import Button from '../components/Button';
 
 interface MainUIProps {
@@ -37,6 +37,8 @@ const MainUI = ({ gameManager }: MainUIProps) => {
       setSelected(null);
     } else if (gameManager.getPlanetIfExists(coords)) {
       setSelected(coords);
+      const planet = gameManager.getPlanetIfExists(coords);
+      console.log(planet);
     }
   }
 

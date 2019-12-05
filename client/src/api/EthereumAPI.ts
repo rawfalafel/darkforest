@@ -1,29 +1,17 @@
 import * as EventEmitter from 'events';
-import {
-  EthAddress,
-  OwnedPlanet,
-  PlanetMap,
-  PlanetType,
-  Player,
-  PlayerMap,
-  Web3Object,
-} from '../@types/global/global';
-import { Contract, Signer, providers } from 'ethers';
+import {EthAddress, OwnedPlanet, PlanetMap, Player, PlayerMap, Web3Object} from "../@types/global/global";
+import {Contract, Signer, providers} from "ethers";
 
 // NOTE: DO NOT IMPORT FROM ETHERS SUBPATHS. see https://github.com/ethers-io/ethers.js/issues/349 (these imports trip up webpack)
 // in particular, the below is bad!
 // import {TransactionReceipt, Provider, TransactionResponse, Web3Provider} from "ethers/providers";
 
-import { contractAddress } from '../utils/local_contract_addr';
-import { address, locationIdFromDecStr } from '../utils/CheckedTypeUtils';
-import {
-  ContractConstants,
-  InitializePlayerArgs,
-  MoveArgs,
-  RawPlanetData,
-} from '../@types/darkforest/api/EthereumAPI';
-import { TransactionRequest } from 'ethers/providers'; // this is a gitignored file and must be generated
-const contractABI = require('../contracts/DarkForestV1.json').abi; // this is also gitignored and must be compiled
+import {contractAddress} from "../utils/local_contract_addr";
+import {address, locationIdFromDecStr} from "../utils/CheckedTypeUtils";
+import {ContractConstants, InitializePlayerArgs, MoveArgs, RawPlanetData} from "../@types/darkforest/api/EthereumAPI";
+import {TransactionRequest} from "ethers/providers";
+import {PlanetType} from "../@types/global/enums"; // this is a gitignored file and must be generated
+const contractABI = require("../contracts/DarkForestV1.json").abi; // this is also gitignored and must be compiled
 
 // singleton class for managing all ethereum network calls
 class EthereumAPI extends EventEmitter {
@@ -147,12 +135,12 @@ class EthereumAPI extends EventEmitter {
     const ySize = parseInt(res[1]);
     const planetRarity = parseInt(res[2]);
     const nPlanetTypes = parseInt(res[3]);
-    const defaultCapacity = await Promise.all([
-      ...[Array(nPlanetTypes).keys()].map(i => contract.defaultCapacity(i)),
-    ]);
-    const defaultGrowth = await Promise.all([
-      ...[Array(nPlanetTypes).keys()].map(i => contract.defaultGrowth(i)),
-    ]);
+    const defaultCapacity = (await Promise.all([
+      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultCapacity(i)),
+    ])).map(cap => parseInt(cap));
+    const defaultGrowth = (await Promise.all([
+      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultGrowth(i)),
+    ])).map(cap => parseInt(cap));
     return { xSize, ySize, planetRarity, defaultCapacity, defaultGrowth };
   }
 

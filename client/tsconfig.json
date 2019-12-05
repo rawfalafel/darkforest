@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "jsx": "react", // use typescript to transpile jsx to js
     "allowJs": true, // allow a partial TypeScript and JavaScript codebase
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "lib": ["es2015", "dom", "webworker"]
   }
 }

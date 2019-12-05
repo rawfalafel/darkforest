@@ -1,5 +1,7 @@
 // web3 injected types, from metamask
-interface Web3ProviderObject {}
+import {PlanetType} from "./enums";
+
+interface Web3ProviderObject { }
 
 interface Web3Object {
   currentProvider: Web3ProviderObject;
@@ -9,10 +11,7 @@ declare global {
   interface Window {
     web3: Web3Object;
     // from websnark's function injected into window
-    genZKSnarkProof: (
-      witness: ArrayBuffer,
-      provingKey: ArrayBuffer
-    ) => Promise<WebsnarkProof>;
+    genZKSnarkProof: (witness: ArrayBuffer, provingKey: ArrayBuffer) => Promise<WebsnarkProof>;
   }
 }
 
@@ -39,21 +38,6 @@ export interface Coordinates {
 export interface Location {
   coords: Coordinates;
   hash: LocationId;
-}
-
-export enum PlanetType {
-  None,
-  LittleAsteroid,
-  BigAsteroid,
-  BrownDwarf,
-  RedDwarf,
-  WhiteDwarf,
-  YellowStar,
-  BlueStar,
-  SubGiant,
-  Giant,
-  SuperGiant,
-  HyperGiant,
 }
 
 export interface Planet {
@@ -98,7 +82,7 @@ export interface ExploredChunkData {
   planetLocations: Location[];
 }
 
-export type BoardData = Array<Array<ExploredChunkData | null | undefined>>;
+export interface BoardData extends Array<Array<(ExploredChunkData | null | undefined)>> {}
 
 export interface MinerWorkerMessage {
   chunkX: number;

@@ -147,6 +147,7 @@ class GameManager extends EventEmitter {
       })
       .on('planetUpdate', (planet: OwnedPlanet) => {
         gameManager.planets[<string>planet.locationId] = planet;
+        console.log(planet);
         gameManager.emit('planetUpdate');
       });
 

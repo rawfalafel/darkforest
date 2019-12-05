@@ -5,8 +5,8 @@ import {
   LocationId,
   OwnedPlanet,
   Planet,
-  PlanetType,
 } from '../@types/global/global';
+import {PlanetType} from "../@types/global/enums";
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
 

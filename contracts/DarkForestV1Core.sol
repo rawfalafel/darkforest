@@ -13,7 +13,7 @@ contract DarkForestV1 is Verifier {
     uint public planetRarity = 4096;
     uint public nPlanetTypes = 12;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
-    uint[12] public defaultGrowth = [167, 250, 333, 500, 667, 833, 1000, 1167, 1333, 1500, 1667]; // max growth rate, achieved at 50% population, in milliPop per second
+    uint[12] public defaultGrowth = [16700, 25000, 33300, 50000, 66700, 83300, 100000, 116700, 133300, 150000, 166700]; // max growth rate, achieved at 50% population, in milliPop per second
     uint[12] public defaultStalwartness = [50, 100, 200, 400, 800, 1600, 3200, 5000, 7200, 10000, 12000];
     uint[12] public defaultHardiness = [900, 800, 700, 600, 500, 400, 300, 200, 100, 75, 50];
     uint moveDecayNumerator = 80;
@@ -124,7 +124,7 @@ contract DarkForestV1 is Verifier {
 
     function initializePlanet(uint _loc, address _player, uint _population) private {
         require (locationIdValid(_loc));
-        PlanetType planetType = PlanetType.LittleAsteroid;
+        PlanetType planetType = getPlanetType(_loc);
         planets[_loc] = Planet(_loc, _player, planetType, defaultCapacity[uint(planetType)], defaultGrowth[uint(planetType)], _population, now, false, 0, 0, 1);
         planetIds.push(_loc);
     }
