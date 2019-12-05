@@ -21,6 +21,7 @@ import {
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
 import SnarkArgsHelper from './SnarkArgsHelper';
+import { PlanetType } from '../@types/global/enums';
 
 class GameManager extends EventEmitter {
   static instance: any;
@@ -205,10 +206,9 @@ class GameManager extends EventEmitter {
       return this.planets[locationId];
     }
     // return a default unowned planet
-    // TODO the default constants for capacity and growth should be pulled from contract
     const planetType = getPlanetTypeForLocationId(locationId);
     return {
-      planetType,
+      planetType: planetType,
       capacity: this.defaultCapacity[planetType],
       growth: this.defaultGrowth[planetType],
       lastUpdated: Date.now(),

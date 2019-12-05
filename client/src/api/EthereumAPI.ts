@@ -1,17 +1,29 @@
 import * as EventEmitter from 'events';
-import {EthAddress, OwnedPlanet, PlanetMap, Player, PlayerMap, Web3Object} from "../@types/global/global";
-import {Contract, Signer, providers} from "ethers";
+import {
+  EthAddress,
+  OwnedPlanet,
+  PlanetMap,
+  Player,
+  PlayerMap,
+  Web3Object,
+} from '../@types/global/global';
+import { Contract, Signer, providers } from 'ethers';
 
 // NOTE: DO NOT IMPORT FROM ETHERS SUBPATHS. see https://github.com/ethers-io/ethers.js/issues/349 (these imports trip up webpack)
 // in particular, the below is bad!
 // import {TransactionReceipt, Provider, TransactionResponse, Web3Provider} from "ethers/providers";
 
-import {contractAddress} from "../utils/local_contract_addr";
-import {address, locationIdFromDecStr} from "../utils/CheckedTypeUtils";
-import {ContractConstants, InitializePlayerArgs, MoveArgs, RawPlanetData} from "../@types/darkforest/api/EthereumAPI";
-import {TransactionRequest} from "ethers/providers";
-import {PlanetType} from "../@types/global/enums"; // this is a gitignored file and must be generated
-const contractABI = require("../contracts/DarkForestV1.json").abi; // this is also gitignored and must be compiled
+import { contractAddress } from '../utils/local_contract_addr';
+import { address, locationIdFromDecStr } from '../utils/CheckedTypeUtils';
+import {
+  ContractConstants,
+  InitializePlayerArgs,
+  MoveArgs,
+  RawPlanetData,
+} from '../@types/darkforest/api/EthereumAPI';
+import { TransactionRequest } from 'ethers/providers';
+import { PlanetType } from '../@types/global/enums'; // this is a gitignored file and must be generated
+const contractABI = require('../contracts/DarkForestV1.json').abi; // this is also gitignored and must be compiled
 
 // singleton class for managing all ethereum network calls
 class EthereumAPI extends EventEmitter {
@@ -200,7 +212,7 @@ class EthereumAPI extends EventEmitter {
     const planet: OwnedPlanet = {
       capacity: rawCapacity.toNumber(),
       growth: rawGrowth.toNumber(),
-      planetType: (<any>PlanetType)[rawType],
+      planetType: rawType,
       coordinatesRevealed: rawCoordinatesRevealed,
       lastUpdated: rawLastUpdated.toNumber(),
       locationId: locationIdFromDecStr(rawLocationId.toString()),
