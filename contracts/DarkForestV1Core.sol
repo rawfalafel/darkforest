@@ -14,9 +14,8 @@ contract DarkForestV1 is Verifier {
     uint public nPlanetTypes = 12;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
     uint[12] public defaultGrowth = [16700, 25000, 33300, 50000, 66700, 83300, 100000, 116700, 133300, 150000, 166700]; // max growth rate, achieved at 50% population, in milliPop per second
-    uint[12] public defaultStalwartness = [50, 100, 200, 400, 800, 1600, 3200, 5000, 7200, 10000, 12000];
-    uint[12] public defaultHardiness = [900, 800, 700, 600, 500, 400, 300, 200, 100, 75, 50];
-    uint moveDecayNumerator = 80;
+    uint[12] public defaultHardiness = [50, 100, 200, 400, 800, 1600, 3200, 5000, 7200, 10000, 12000];
+    uint[12] public defaultStalwartness = [900, 800, 700, 600, 500, 400, 300, 200, 100, 75, 50];
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
@@ -42,6 +41,8 @@ contract DarkForestV1 is Verifier {
         PlanetType planetType;
         uint capacity;
         uint growth;
+        uint hardiness;
+        uint stalwartness;
         uint population;
         uint lastUpdated;
 
@@ -125,7 +126,19 @@ contract DarkForestV1 is Verifier {
     function initializePlanet(uint _loc, address _player, uint _population) private {
         require (locationIdValid(_loc));
         PlanetType planetType = getPlanetType(_loc);
-        planets[_loc] = Planet(_loc, _player, planetType, defaultCapacity[uint(planetType)], defaultGrowth[uint(planetType)], _population, now, false, 0, 0, 1);
+        planets[_loc] = Planet(_loc,
+            _player,
+            planetType,
+            defaultCapacity[uint(planetType)],
+            defaultGrowth[uint(planetType)],
+            defaultHardiness[uint(planetType)],
+            defaultStalwartness[uint(planetType)],
+            _population,
+            now,
+            false,
+            0,
+            0,
+            1);
         planetIds.push(_loc);
     }
 
@@ -187,8 +200,8 @@ contract DarkForestV1 is Verifier {
         emit PlayerInitialized(player, loc, planets[loc]);
     }
 
-    function moveShipsDecay(uint shipsMoved, uint dist) private view returns (uint) {
-        int128 decayRatio = ABDKMath64x64.divu(moveDecayNumerator, moveDecayNumerator + dist);
+    function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private view returns (uint) {
+        int128 decayRatio = ABDKMath64x64.divu(hardiness, hardiness + dist);
         return ABDKMath64x64.mulu(decayRatio, shipsMoved);
     }
 
@@ -237,7 +250,7 @@ contract DarkForestV1 is Verifier {
                 initializePlanet(newLoc, player, 0);
             }
             planets[oldLoc].population -= shipsMoved;
-            uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
+            uint shipsLanded = moveShipsDecay(shipsMoved, planets[oldLoc].hardiness, maxDist);
             planets[newLoc].population += shipsLanded;
             if (planets[newLoc].population > planets[newLoc].capacity) {
                 planets[newLoc].population = planets[newLoc].capacity;
@@ -245,20 +258,20 @@ contract DarkForestV1 is Verifier {
         } else if (ownerIfOccupiedElseZero(newLoc) == player) {
             // moving forces between my planets
             planets[oldLoc].population -= shipsMoved;
-            uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
+            uint shipsLanded = moveShipsDecay(shipsMoved, planets[oldLoc].hardiness, maxDist);
             planets[newLoc].population += shipsLanded;
         } else {
             // attacking enemy
             planets[oldLoc].population -= shipsMoved;
-            uint shipsLanded = moveShipsDecay(shipsMoved, maxDist);
+            uint shipsLanded = moveShipsDecay(shipsMoved, planets[oldLoc].hardiness, maxDist);
 
-            if (planets[newLoc].population > shipsLanded) {
+            if (planets[newLoc].population > (shipsLanded * 100 / planets[newLoc].stalwartness)) {
                 // attack reduces target planet's garrison but doesn't conquer it
-                planets[newLoc].population -= shipsLanded;
+                planets[newLoc].population -= (shipsLanded * 100 / planets[newLoc].stalwartness);
             } else {
                 // conquers planet
                 planets[newLoc].owner = player;
-                planets[newLoc].population = shipsLanded - planets[newLoc].population;
+                planets[newLoc].population = shipsLanded - (planets[newLoc].population * planets[newLoc].stalwartness / 100);
             }
         }
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
