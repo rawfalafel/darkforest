@@ -13,6 +13,8 @@ export interface ContractConstants {
   planetRarity: number;
   defaultCapacity: number[];
   defaultGrowth: number[];
+  defaultHardiness: number[];
+  defaultStalwartness: number[];
 }
 
 export interface RawPlanetData
@@ -24,19 +26,22 @@ export interface RawPlanetData
   4: BigNumber;
   5: BigNumber;
   6: BigNumber;
-  7: boolean;
+  7: BigNumber;
   8: BigNumber;
-  9: BigNumber;
-  10: number;
+  9: boolean;
+  10: BigNumber;
+  11: BigNumber;
+
+  locationId: BigNumber;
+  owner: string;
   planetType: number;
   capacity: BigNumber;
   growth: BigNumber;
-  coordinatesRevealed: boolean;
-  lastUpdated: BigNumber;
-  locationId: BigNumber;
-  owner: string;
+  hardiness: BigNumber;
+  stalwartness: BigNumber;
   population: BigNumber;
-  version: number;
+  lastUpdated: BigNumber;
+  coordinatesRevealed: boolean;
   x?: BigNumber; // if coordinatesRevealed
   y?: BigNumber; // if coordinatesRevealed
 }

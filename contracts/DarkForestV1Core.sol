@@ -13,7 +13,7 @@ contract DarkForestV1 is Verifier {
     uint public planetRarity = 4096;
     uint public nPlanetTypes = 12;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
-    uint[12] public defaultGrowth = [16700, 25000, 33300, 50000, 66700, 83300, 100000, 116700, 133300, 150000, 166700]; // max growth rate, achieved at 50% population, in milliPop per second
+    uint[12] public defaultGrowth = [1670, 2500, 3330, 5000, 6670, 8330, 10000, 11670, 13330, 15000, 16670]; // max growth rate, achieved at 50% population, in milliPop per second
     uint[12] public defaultHardiness = [50, 100, 200, 400, 800, 1600, 3200, 5000, 7200, 10000, 12000];
     uint[12] public defaultStalwartness = [900, 800, 700, 600, 500, 400, 300, 200, 100, 75, 50];
 
@@ -45,15 +45,14 @@ contract DarkForestV1 is Verifier {
         uint stalwartness;
         uint population;
         uint lastUpdated;
+        bool coordinatesRevealed;
+        uint x;
+        uint y;
     }
 
     struct PlanetMetadata {
         uint locationId;
         address owner;
-
-        bool coordinatesRevealed;
-        uint x;
-        uint y;
 
         uint8 version;
     }
@@ -142,12 +141,12 @@ contract DarkForestV1 is Verifier {
         newPlanet.stalwartness = defaultStalwartness[uint(planetType)];
         newPlanet.population = _population;
         newPlanet.lastUpdated = now;
+        newPlanet.coordinatesRevealed = false;
         planets[_loc] = newPlanet;
 
         PlanetMetadata memory newPlanetMetadata;
         newPlanetMetadata.locationId = _loc;
         newPlanetMetadata.owner = _player;
-        newPlanetMetadata.coordinatesRevealed = false;
         newPlanetMetadata.version = 1;
         planetMetadatas[_loc] = newPlanetMetadata;
 

@@ -44,6 +44,8 @@ class GameManager extends EventEmitter {
   private readonly planetRarity: number;
   private readonly defaultGrowth: number[];
   private readonly defaultCapacity: number[];
+  private readonly defaultHardiness: number[];
+  private readonly defaultStalwartness: number[];
 
   private constructor(
     account: EthAddress,
@@ -57,6 +59,8 @@ class GameManager extends EventEmitter {
     planetRarity: number,
     defaultGrowth: number[],
     defaultCapacity: number[],
+    defaultHardiness: number[],
+    defaultStalwartness: number[],
     ethereumAPI: EthereumAPI,
     localStorageManager: LocalStorageManager,
     snarkHelper: SnarkArgsHelper
@@ -75,6 +79,8 @@ class GameManager extends EventEmitter {
     this.planetRarity = planetRarity;
     this.defaultGrowth = defaultGrowth;
     this.defaultCapacity = defaultCapacity;
+    this.defaultHardiness = defaultHardiness;
+    this.defaultStalwartness = defaultStalwartness;
 
     this.ethereumAPI = ethereumAPI;
     this.localStorageManager = localStorageManager;
@@ -101,6 +107,8 @@ class GameManager extends EventEmitter {
       planetRarity,
       defaultGrowth,
       defaultCapacity,
+      defaultHardiness,
+      defaultStalwartness,
     } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
@@ -130,6 +138,8 @@ class GameManager extends EventEmitter {
       planetRarity,
       defaultGrowth,
       defaultCapacity,
+      defaultHardiness,
+      defaultStalwartness,
       ethereumAPI,
       localStorageManager,
       snarkHelper
@@ -211,6 +221,8 @@ class GameManager extends EventEmitter {
       planetType: planetType,
       capacity: this.defaultCapacity[planetType],
       growth: this.defaultGrowth[planetType],
+      hardiness: this.defaultHardiness[planetType],
+      stalwartness: this.defaultStalwartness[planetType],
       lastUpdated: Date.now(),
       locationId,
       population: 0,

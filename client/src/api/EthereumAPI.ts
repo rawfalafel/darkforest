@@ -22,7 +22,6 @@ import {
   RawPlanetData,
 } from '../@types/darkforest/api/EthereumAPI';
 import { TransactionRequest } from 'ethers/providers';
-import { PlanetType } from '../@types/global/enums'; // this is a gitignored file and must be generated
 const contractABI = require('../contracts/DarkForestV1.json').abi; // this is also gitignored and must be compiled
 
 // singleton class for managing all ethereum network calls
@@ -152,8 +151,24 @@ class EthereumAPI extends EventEmitter {
     ])).map(cap => parseInt(cap));
     const defaultGrowth = (await Promise.all([
       ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultGrowth(i)),
-    ])).map(cap => parseInt(cap));
-    return { xSize, ySize, planetRarity, defaultCapacity, defaultGrowth };
+    ])).map(gro => parseInt(gro));
+    const defaultHardiness = (await Promise.all([
+      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultHardiness(i)),
+    ])).map(har => parseInt(har));
+    const defaultStalwartness = (await Promise.all([
+      ...[...Array(nPlanetTypes).keys()].map(i =>
+        contract.defaultStalwartness(i)
+      ),
+    ])).map(sta => parseInt(sta));
+    return {
+      xSize,
+      ySize,
+      planetRarity,
+      defaultCapacity,
+      defaultGrowth,
+      defaultHardiness,
+      defaultStalwartness,
+    };
   }
 
   async getPlayers(): Promise<PlayerMap> {
@@ -202,23 +217,25 @@ class EthereumAPI extends EventEmitter {
     const rawType = rawPlanet.planetType || rawPlanet[2];
     const rawCapacity = rawPlanet.capacity || rawPlanet[3];
     const rawGrowth = rawPlanet.growth || rawPlanet[4];
-    const rawPopulation = rawPlanet.population || rawPlanet[5];
-    const rawLastUpdated = rawPlanet.lastUpdated || rawPlanet[6];
+    const rawHardiness = rawPlanet.hardiness || rawPlanet[5];
+    const rawStalwartness = rawPlanet.stalwartness || rawPlanet[6];
+    const rawPopulation = rawPlanet.population || rawPlanet[7];
+    const rawLastUpdated = rawPlanet.lastUpdated || rawPlanet[8];
     const rawCoordinatesRevealed =
-      rawPlanet.coordinatesRevealed || rawPlanet[7];
-    const rawX = rawPlanet.x || rawPlanet[8];
-    const rawY = rawPlanet.y || rawPlanet[9];
-    const rawVersion = rawPlanet.version || rawPlanet[10];
+      rawPlanet.coordinatesRevealed || rawPlanet[9];
+    const rawX = rawPlanet.x || rawPlanet[10];
+    const rawY = rawPlanet.y || rawPlanet[11];
     const planet: OwnedPlanet = {
       capacity: rawCapacity.toNumber(),
       growth: rawGrowth.toNumber(),
+      hardiness: rawHardiness.toNumber(),
+      stalwartness: rawStalwartness.toNumber(),
       planetType: rawType,
       coordinatesRevealed: rawCoordinatesRevealed,
       lastUpdated: rawLastUpdated.toNumber(),
       locationId: locationIdFromDecStr(rawLocationId.toString()),
       owner: address(rawOwner),
       population: rawPopulation.toNumber(),
-      version: rawVersion,
     };
     if (planet.coordinatesRevealed) {
       planet.x = rawX.toNumber();
