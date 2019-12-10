@@ -45,6 +45,11 @@ contract DarkForestV1 is Verifier {
         uint stalwartness;
         uint population;
         uint lastUpdated;
+    }
+
+    struct PlanetMetadata {
+        uint locationId;
+        address owner;
 
         bool coordinatesRevealed;
         uint x;
@@ -58,6 +63,7 @@ contract DarkForestV1 is Verifier {
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
+    mapping (uint => PlanetMetadata) public planetMetadatas;
     address[] public playerIds;
     mapping (address => bool) public playerInitialized;
     // TODO: how to query all planets owned by player?
@@ -126,19 +132,25 @@ contract DarkForestV1 is Verifier {
     function initializePlanet(uint _loc, address _player, uint _population) private {
         require (locationIdValid(_loc));
         PlanetType planetType = getPlanetType(_loc);
-        planets[_loc] = Planet(_loc,
-            _player,
-            planetType,
-            defaultCapacity[uint(planetType)],
-            defaultGrowth[uint(planetType)],
-            defaultHardiness[uint(planetType)],
-            defaultStalwartness[uint(planetType)],
-            _population,
-            now,
-            false,
-            0,
-            0,
-            1);
+        Planet memory newPlanet;
+        newPlanet.locationId = _loc;
+        newPlanet.owner = _player;
+        newPlanet.planetType = planetType;
+        newPlanet.capacity = defaultCapacity[uint(planetType)];
+        newPlanet.growth = defaultGrowth[uint(planetType)];
+        newPlanet.hardiness = defaultHardiness[uint(planetType)];
+        newPlanet.stalwartness = defaultStalwartness[uint(planetType)];
+        newPlanet.population = _population;
+        newPlanet.lastUpdated = now;
+        planets[_loc] = newPlanet;
+
+        PlanetMetadata memory newPlanetMetadata;
+        newPlanetMetadata.locationId = _loc;
+        newPlanetMetadata.owner = _player;
+        newPlanetMetadata.coordinatesRevealed = false;
+        newPlanetMetadata.version = 1;
+        planetMetadatas[_loc] = newPlanetMetadata;
+
         planetIds.push(_loc);
     }
 
