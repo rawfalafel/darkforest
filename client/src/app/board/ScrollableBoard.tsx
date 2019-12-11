@@ -228,7 +228,7 @@ class ScrollableBoard extends React.Component<
       .toString(16);
     planetColor = '#' + '0'.repeat(6 - planetColor.length) + planetColor;
     if (planetDesc.destroyed) {
-      planetColor = '#ffffff';
+      planetColor = '#000000';
     }
     this.ctx.fillStyle = planetColor;
 
