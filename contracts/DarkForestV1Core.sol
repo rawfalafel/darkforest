@@ -127,6 +127,10 @@ contract DarkForestV1 is Verifier {
         return playerIds.length;
     }
 
+    function getBalance() public view returns (uint) {
+        return (address(this)).balance;
+    }
+
     function locationIdValid(uint _loc) private view returns (bool) {
         return (_loc < (LOCATION_ID_UB / planetRarity));
     }
@@ -296,17 +300,17 @@ contract DarkForestV1 is Verifier {
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
     }
 
-    function cashOut(uint _loc) public {
-        require(msg.sender == planets[_loc].owner);
-        require(!planetMetadatas[_loc].destroyed);
+    function cashOut(uint loc) public {
+        require(msg.sender == planets[loc].owner);
+        require(!planetMetadatas[loc].destroyed);
 
-        updatePopulation(_loc);
-        planetMetadatas[_loc].destroyed = true;
-        uint oldCapacity = planets[_loc].capacity;
-        uint toWithdraw = address(this).balance * planets[_loc].population / totalCap;
+        updatePopulation(loc);
+        planetMetadatas[loc].destroyed = true;
+        uint oldCapacity = planets[loc].capacity;
+        uint toWithdraw = (address(this)).balance * planets[loc].population / totalCap;
         totalCap -= oldCapacity;
         msg.sender.transfer(toWithdraw);
 
-        emit PlanetDestroyed(_loc);
+        emit PlanetDestroyed(loc);
     }
 }

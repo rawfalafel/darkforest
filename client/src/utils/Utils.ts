@@ -1,12 +1,8 @@
 import * as bigInt from 'big-integer';
 import { BigInteger } from 'big-integer';
 import { Witness } from 'snarkjs';
-import {
-  LocationId,
-  OwnedPlanet,
-  Planet,
-} from '../@types/global/global';
-import {PlanetType} from "../@types/global/enums";
+import { LocationId, OwnedPlanet, Planet } from '../@types/global/global';
+import { PlanetType } from '../@types/global/enums';
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
 
@@ -66,6 +62,9 @@ export function isOwnedPlanet(planet: Planet): planet is OwnedPlanet {
 export const getCurrentPopulation: (planet: OwnedPlanet) => number = planet => {
   if (planet.population === 0) {
     return 0;
+  }
+  if (planet.destroyed) {
+    return planet.population;
   }
   const timeElapsed = Date.now() / 1000 - planet.lastUpdated;
   const denominator =

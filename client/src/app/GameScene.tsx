@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Spinner from 'react-spinkit';
 import ScrollableBoard from './board/ScrollableBoard';
 import GameManager from '../api/GameManager';
-import { Coordinates, Planet } from '../@types/global/global';
-import {getPlanetTypeForLocationId, isOwnedPlanet} from '../utils/Utils';
+import { Coordinates, OwnedPlanet, Planet } from '../@types/global/global';
+import { isOwnedPlanet } from '../utils/Utils';
 import Button from '../components/Button';
 
 interface GameSceneProps {
@@ -72,7 +72,8 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
           startPlanet &&
           endPlanet &&
           isOwnedPlanet(startPlanet) &&
-          startPlanet.owner === gameManager.account
+          startPlanet.owner === gameManager.account &&
+          !startPlanet.destroyed
         ) {
           gameManager.move(
             {
@@ -114,6 +115,33 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
             <Spinner name="ball-clip-rotate-multiple" fadeIn="none" />
           </div>
         )}
+      </div>
+      <div className="absolute top-0 right-0 flex flex-row items-center">
+        <Button
+          className="bg-gray-900 border border-white rounded-sm p-2 m-2"
+          onClick={() => {
+            if (selected) {
+              const planet: Planet | null = gameManager.getPlanetIfExists(
+                selected
+              ); // returns Planet | null
+              if (
+                planet &&
+                gameManager.planets.hasOwnProperty(planet.locationId)
+              ) {
+                const ownedPlanet: OwnedPlanet =
+                  gameManager.planets[planet.locationId];
+                if (ownedPlanet.owner === gameManager.account) {
+                  gameManager.cashOut({
+                    coords: selected,
+                    hash: ownedPlanet.locationId,
+                  });
+                }
+              }
+            }
+          }}
+        >
+          Cash out
+        </Button>
       </div>
       <ScrollableBoard
         xSize={gameManager.xSize}

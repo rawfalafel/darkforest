@@ -21,7 +21,7 @@ import {
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
 import SnarkArgsHelper from './SnarkArgsHelper';
-import { PlanetType } from '../@types/global/enums';
+import { locationIdToDecStr } from '../utils/CheckedTypeUtils';
 
 class GameManager extends EventEmitter {
   static instance: any;
@@ -301,6 +301,13 @@ class GameManager extends EventEmitter {
       .then(() => {
         this.emit('moved');
       });
+    return this;
+  }
+
+  cashOut(location: Location): GameManager {
+    this.ethereumAPI.cashOut(locationIdToDecStr(location.hash)).then(() => {
+      this.emit('destroyedPlanet');
+    });
     return this;
   }
 }
