@@ -266,6 +266,9 @@ class GameManager extends EventEmitter {
       .then(() => {
         this.initMiningManager();
         this.emit('initializedPlayer');
+      })
+      .catch(() => {
+        this.emit('initializedPlayerError');
       });
     return this;
   }

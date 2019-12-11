@@ -42,8 +42,21 @@ export interface RawPlanetData
   population: BigNumber;
   lastUpdated: BigNumber;
   coordinatesRevealed: boolean;
-  x?: BigNumber; // if coordinatesRevealed
-  y?: BigNumber; // if coordinatesRevealed
+  x: BigNumber; // if coordinatesRevealed
+  y: BigNumber; // if coordinatesRevealed
+}
+
+export interface RawPlanetMetadata
+  extends Array<string | boolean | number | BigNumber> {
+  0: BigNumber;
+  1: string;
+  2: number;
+  3: boolean;
+
+  locationId: BigNumber;
+  owner: string;
+  version: number;
+  destroyed: boolean;
 }
 
 /*export interface InitializePlayerArgs extends Array<any> {

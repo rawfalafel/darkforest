@@ -8,10 +8,12 @@ contract DarkForestV1 is Verifier {
 
     uint8 constant VERSION = 1;
 
+    uint buyin = 1 ether / 20;
     uint public xSize = 2048;
     uint public ySize = 2048;
     uint public planetRarity = 4096;
     uint public nPlanetTypes = 12;
+    uint public totalCap = 0;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
     uint[12] public defaultGrowth = [1670, 2500, 3330, 5000, 6670, 8330, 10000, 11670, 13330, 15000, 16670]; // max growth rate, achieved at 50% population, in milliPop per second
     uint[12] public defaultHardiness = [50, 100, 200, 400, 800, 1600, 3200, 5000, 7200, 10000, 12000];
@@ -53,12 +55,13 @@ contract DarkForestV1 is Verifier {
     struct PlanetMetadata {
         uint locationId;
         address owner;
-
         uint8 version;
+        bool destroyed;
     }
 
-    event PlayerInitialized(address player, uint loc, Planet planet);
-    event PlayerMoved(address player, uint oldLoc, uint newLoc, uint maxDist, uint shipsMoved, Planet fromPlanet, Planet toPlanet);
+    event PlayerInitialized(address player, uint loc);
+    event PlayerMoved(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
+    event PlanetDestroyed(uint loc);
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
@@ -147,10 +150,12 @@ contract DarkForestV1 is Verifier {
         PlanetMetadata memory newPlanetMetadata;
         newPlanetMetadata.locationId = _loc;
         newPlanetMetadata.owner = _player;
-        newPlanetMetadata.version = 1;
+        newPlanetMetadata.version = VERSION;
+        newPlanetMetadata.destroyed = false;
         planetMetadatas[_loc] = newPlanetMetadata;
 
         planetIds.push(_loc);
+        totalCap += newPlanet.capacity;
     }
 
     function updatePopulation(uint _locationId) private {
@@ -197,8 +202,9 @@ contract DarkForestV1 is Verifier {
         uint[2][2] memory _b,
         uint[2] memory _c,
         uint[1] memory _input
-    ) public {
+    ) public payable {
         require(verifyInitProof(_a, _b, _c, _input));
+        require(msg.value >= buyin);
         address player = msg.sender;
         uint loc = _input[0];
         require(!playerInitialized[player]); // player doesn't have account
@@ -208,7 +214,7 @@ contract DarkForestV1 is Verifier {
         playerInitialized[player] = true;
         initializePlanet(loc, player, 25000);
 
-        emit PlayerInitialized(player, loc, planets[loc]);
+        emit PlayerInitialized(player, loc);
     }
 
     function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private view returns (uint) {
@@ -250,6 +256,8 @@ contract DarkForestV1 is Verifier {
 
         require(playerInitialized[player]); // player exists
         require(ownerIfOccupiedElseZero(oldLoc) == player); // planet at oldLoc is occupied by player
+        require(!planetMetadatas[oldLoc].destroyed);
+        require(!planetMetadatas[newLoc].destroyed);
 
         updatePopulation(oldLoc);
         updatePopulation(newLoc);
@@ -285,6 +293,20 @@ contract DarkForestV1 is Verifier {
                 planets[newLoc].population = shipsLanded - (planets[newLoc].population * planets[newLoc].stalwartness / 100);
             }
         }
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved, planets[oldLoc], planets[newLoc]);
+        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
+    }
+
+    function cashOut(uint _loc) public {
+        require(msg.sender == planets[_loc].owner);
+        require(!planetMetadatas[_loc].destroyed);
+
+        updatePopulation(_loc);
+        planetMetadatas[_loc].destroyed = true;
+        uint oldCapacity = planets[_loc].capacity;
+        uint toWithdraw = address(this).balance * planets[_loc].population / totalCap;
+        totalCap -= oldCapacity;
+        msg.sender.transfer(toWithdraw);
+
+        emit PlanetDestroyed(_loc);
     }
 }

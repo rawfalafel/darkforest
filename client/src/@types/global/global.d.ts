@@ -59,6 +59,8 @@ export interface Planet {
 
 export interface OwnedPlanet extends Planet {
   owner: EthAddress;
+  version: number;
+  destroyed: boolean;
 }
 
 export interface PlanetMap {
