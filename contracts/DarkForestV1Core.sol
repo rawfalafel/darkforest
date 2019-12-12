@@ -7,6 +7,8 @@ contract DarkForestV1 is Verifier {
     using ABDKMath64x64 for *;
 
     uint8 constant VERSION = 1;
+    bool gamePaused = false;
+    bool gameEnded = false;
 
     uint buyin = 1 ether / 20;
     uint public xSize = 2048;
@@ -18,8 +20,17 @@ contract DarkForestV1 is Verifier {
     uint[12] public defaultGrowth = [1670, 2500, 3330, 5000, 6670, 8330, 10000, 11670, 13330, 15000, 16670]; // max growth rate, achieved at 50% population, in milliPop per second
     uint[12] public defaultHardiness = [50, 100, 200, 400, 800, 1600, 3200, 5000, 7200, 10000, 12000];
     uint[12] public defaultStalwartness = [900, 800, 700, 600, 500, 400, 300, 200, 100, 75, 50];
+    address payable owner = 0xe8170282c5Bc6E7c5b2d984Cd5D897a05E0AFAFb;
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
+    modifier onlyOwner {
+        require(
+            msg.sender == owner,
+            "Only owner can call this function."
+        );
+        _;
+    }
 
     enum PlanetType {
         None,
@@ -207,6 +218,7 @@ contract DarkForestV1 is Verifier {
         uint[2] memory _c,
         uint[1] memory _input
     ) public payable {
+        require (!gamePaused && !gameEnded);
         require(verifyInitProof(_a, _b, _c, _input));
         require(msg.value >= buyin);
         address player = msg.sender;
@@ -221,7 +233,7 @@ contract DarkForestV1 is Verifier {
         emit PlayerInitialized(player, loc);
     }
 
-    function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private view returns (uint) {
+    function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private pure returns (uint) {
         int128 decayRatio = ABDKMath64x64.divu(hardiness, hardiness + dist);
         return ABDKMath64x64.mulu(decayRatio, shipsMoved);
     }
@@ -245,6 +257,7 @@ contract DarkForestV1 is Verifier {
         uint[2] memory _c,
         uint[4] memory _input
     ) public {
+        require (!gamePaused && !gameEnded);
         // check proof validity
         uint[3] memory moveCheckproofInput;
         for (uint i = 0; i < 3; i++) {
@@ -300,7 +313,7 @@ contract DarkForestV1 is Verifier {
         emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
     }
 
-    function cashOut(uint loc) public {
+    function cashOut(uint loc) external {
         require(msg.sender == planets[loc].owner);
         require(!planetMetadatas[loc].destroyed);
 
@@ -312,5 +325,35 @@ contract DarkForestV1 is Verifier {
         msg.sender.transfer(toWithdraw);
 
         emit PlanetDestroyed(loc);
+    }
+
+    // admin functions
+    function setOwner(address newOwner) external onlyOwner {
+        require(newOwner != address(0));
+        owner = address(uint160(newOwner));
+    }
+
+    function pauseGame() external onlyOwner {
+        require(!gamePaused && !gameEnded);
+        gamePaused = true;
+    }
+
+    function resumeGame() external onlyOwner {
+        require(gamePaused && !gameEnded);
+        gamePaused = false;
+    }
+
+    function endGame() external onlyOwner {
+        require(gamePaused && !gameEnded);
+        gameEnded = true;
+        uint oldBalance = (address(this)).balance;
+        for (uint i = 0; i < planetIds.length; i++) {
+            Planet memory planet = planets[planetIds[i]];
+            PlanetMetadata memory planetMetadata = planetMetadatas[planetIds[i]];
+            if (planet.owner != address(0) && planet.owner == planetMetadata.owner && !planetMetadata.destroyed) {
+                address payable ownerPayable = address(uint160(planet.owner));
+                ownerPayable.transfer(oldBalance * planet.capacity / totalCap);
+            }
+        }
     }
 }
