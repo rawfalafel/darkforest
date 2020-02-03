@@ -7,7 +7,7 @@ type LandingProps = { onInitialize: () => void };
 const LandingPage = ({ onInitialize }: LandingProps) => {
   const firestore = useFirestore();
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(true);
 
   async function handleSubmit() {
     await firestore.collection('emails').add({ email });
