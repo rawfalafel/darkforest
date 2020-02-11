@@ -95,16 +95,6 @@ contract DarkForestV1 is Verifier {
         return ABDKMath64x64.mulu(getMultiplier(_rand), _baseVal);
     }
 
-    // \frac{100}{\left(x+10\right)}
-    //function getIntFromNthBytes(bytes32 _data, uint8 _start, uint8 _end) private pure returns (uint) {
-    //    uint out = 0;
-    //    for(uint8 i = _start; i < _end; i++) {
-    //        out = out * 256 + uint(uint8(_data[i]));
-    //    }
-
-    //    return out;
-    //}
-
     function getPlanetType(uint _loc) private pure returns (PlanetType) {
         bytes memory b = toBytes(_loc);
         uint planetTypeUInt;
@@ -168,7 +158,6 @@ contract DarkForestV1 is Verifier {
     function initializePlanet(uint _loc, address _player, uint _population) private {
         require (locationIdValid(_loc));
         bytes32 entropy = blockhash(block.number - 1);
-        // 2w = 16bits = 65535 possibilities.
         PlanetType planetType = getPlanetType(_loc);
         Planet memory newPlanet;
         newPlanet.locationId = _loc;
