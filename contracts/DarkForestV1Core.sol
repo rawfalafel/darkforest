@@ -68,6 +68,7 @@ contract DarkForestV1 is Verifier {
         address owner;
         uint8 version;
         bool destroyed;
+        bytes32 entropySource;
     }
 
     event PlayerInitialized(address player, uint loc);
@@ -174,9 +175,9 @@ contract DarkForestV1 is Verifier {
         newPlanet.owner = _player;
         newPlanet.planetType = planetType;
         newPlanet.capacity = perturbValue(defaultCapacity[uint(planetType)], uint8(entropy[0]));
-        newPlanet.growth = defaultGrowth[uint(planetType)];
-        newPlanet.hardiness = defaultHardiness[uint(planetType)];
-        newPlanet.stalwartness = defaultStalwartness[uint(planetType)];
+        newPlanet.growth = perturbValue(defaultGrowth[uint(planetType)], uint8(entropy[1]));
+        newPlanet.hardiness = perturbValue(defaultHardiness[uint(planetType)], uint8(entropy[2]));
+        newPlanet.stalwartness = perturbValue(defaultStalwartness[uint(planetType)], uint8(entropy[3]));
         newPlanet.population = _population;
         newPlanet.lastUpdated = now;
         newPlanet.coordinatesRevealed = false;
@@ -187,6 +188,7 @@ contract DarkForestV1 is Verifier {
         newPlanetMetadata.owner = _player;
         newPlanetMetadata.version = VERSION;
         newPlanetMetadata.destroyed = false;
+        newPlanetMetadata.entropySource = entropy;
         planetMetadatas[_loc] = newPlanetMetadata;
 
         planetIds.push(_loc);
