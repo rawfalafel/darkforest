@@ -1,4 +1,5 @@
-import ControllableCanvas from './ControllableCanvas';
+import CanvasEmitter from '../../utils/CanvasEmitter';
+import { CanvasCoords } from '../../@types/darkforest/app/board/Camera';
 
 class Viewport {
   static instance: Viewport;
@@ -13,9 +14,27 @@ class Viewport {
     return Viewport.instance;
   }
 
-  static initialize(controllableCanvas: ControllableCanvas): Viewport {
+  static initialize(canvasEmitter: CanvasEmitter): Viewport {
     const viewport = new Viewport();
+
+    canvasEmitter.on('MOUSE_DOWN', viewport.onMouseDown.bind(viewport));
+    canvasEmitter.on('MOUSE_MOVE', viewport.onMouseMove.bind(viewport));
+    canvasEmitter.on('MOUSE_UP', viewport.onMouseUp.bind(viewport));
+    canvasEmitter.on('MOUSE_OUT', viewport.onMouseOut.bind(viewport));
+    canvasEmitter.on('SCROLL', viewport.onScroll.bind(viewport));
 
     return viewport;
   }
+
+  onMouseDown(canvasX: number, canvasY: number) {}
+
+  onMouseMove(canvasX: number, canvasY: number) {}
+
+  onMouseUp(canvasX: number, canvasY: number) {}
+
+  onMouseOut() {}
+
+  onScroll(deltaY: number) {}
 }
+
+export default Viewport;

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { RefObject } from 'react';
+import CanvasEmitter from '../../utils/CanvasEmitter';
 
 interface ControllableCanvasProps {}
 
@@ -17,9 +18,12 @@ class ControllableCanvas extends React.Component<
   >();
   canvas: HTMLCanvasElement | null;
   ctx: CanvasRenderingContext2D | null;
+  canvasEmitter: CanvasEmitter;
 
   constructor(props) {
     super(props);
+
+    this.canvasEmitter = CanvasEmitter.getInstance();
 
     this.state = {
       width: window.innerWidth,
@@ -43,25 +47,31 @@ class ControllableCanvas extends React.Component<
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
+    this.canvasEmitter.emit('MOUSE_DOWN', canvasX, canvasY);
   }
 
   onMouseMove(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
+    this.canvasEmitter.emit('MOUSE_MOVE', canvasX, canvasY);
   }
 
   onMouseUp(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
+    this.canvasEmitter.emit('MOUSE_UP', canvasX, canvasY);
   }
 
-  onMouseOut() {}
+  onMouseOut() {
+    this.canvasEmitter.emit('MOUSE_OUT');
+  }
 
   onScroll(e) {
     e.preventDefault();
     const { deltaY } = e;
+    this.canvasEmitter.emit('SCROLL', deltaY);
   }
 
   render() {
