@@ -62,7 +62,8 @@ contract DarkForestV1 is Verifier {
         bool coordinatesRevealed;
         uint x;
         uint y;
-        Transaction[] pending;
+        mapping(uint => Transaction) pending;
+        uint pendingCount;
     }
 
     struct PlanetMetadata {
@@ -277,7 +278,7 @@ contract DarkForestV1 is Verifier {
     //grossly slow right now, can write a sort and make it fast later.
     function executeReadyTransactions(Planet storage _p) internal { 
         for (uint currentBlock = _p.lastUpdatedBlock; currentBlock < block.number; currentBlock++) {
-            for (uint i = 0; i < _p.pending.length; i++) {
+            for (uint i = 0; i < _p.pendingCount; i++) {
                 if (_p.pending[i].blockNumber != 0 && _p.pending[i].blockNumber <= currentBlock) {
                     arrive(_p.pending[i]);
                     delete _p.pending[i];
@@ -351,13 +352,14 @@ contract DarkForestV1 is Verifier {
     }
 
     function enqueueTransactionOnPlanet(Planet storage _p, Transaction memory _tx) internal {
-        for (uint i = 0; i < _p.pending.length; i++) {
+        for (uint i = 0; i < _p.pendingCount; i++) {
             if (_p.pending[i].blockNumber == 0) {
                 _p.pending[i] = _tx;
                 return;
             }
         }
-        _p.pending.push(_tx);
+        _p.pending[_p.pendingCount] = _tx;
+        _p.pendingCount += 1;
     }
 
     function dequeueTransactionOnPlanet(Planet storage _p, uint _index) internal {
