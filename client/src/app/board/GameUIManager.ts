@@ -11,7 +11,10 @@ class GameUIManager {
   circleCenter: WorldCoords;
   circleSelected = false;
 
-  private constructor(viewport: Viewport) {}
+  private constructor() {
+    this.squareCenter = { x: 10, y: 20 };
+    this.circleCenter = { x: -5, y: 12 };
+  }
 
   static getInstance(): GameUIManager {
     if (!GameUIManager.instance) {
@@ -24,7 +27,7 @@ class GameUIManager {
   }
 
   static initialize(viewport: Viewport) {
-    const gameUIManager = new GameUIManager(viewport);
+    const gameUIManager = new GameUIManager();
 
     return gameUIManager;
   }

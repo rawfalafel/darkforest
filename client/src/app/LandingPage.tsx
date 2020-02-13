@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { useFirestore } from "../integrations/firebase";
-import Button from "../components/Button";
+import { useFirestore } from '../integrations/firebase';
+import Button from '../components/Button';
 
 type LandingProps = { onInitialize: () => void };
 const LandingPage = ({ onInitialize }: LandingProps) => {
   const firestore = useFirestore();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(true);
 
   async function handleSubmit() {
-    await firestore.collection("emails").add({ email });
+    await firestore.collection('emails').add({ email });
     setSubmitted(true);
   }
 

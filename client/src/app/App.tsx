@@ -5,6 +5,7 @@ import LandingPage from './LandingPage';
 import LoadingPage from './LoadingPage';
 import GameManager from '../api/GameManager';
 import GameScene from './GameScene';
+import ControllableCanvas from './board/ControllableCanvas';
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,7 @@ const App = () => {
   }
 
   if (joinedGame) {
+    // return <ControllableCanvas />;
     return <GameScene gameManager={gameManagerRef.current} />;
   } else {
     return <LandingPage onInitialize={initialize} />;

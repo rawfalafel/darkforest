@@ -14,13 +14,15 @@ class CanvasRenderer {
 
   private constructor(
     canvasRef: RefObject<HTMLCanvasElement>,
-    uiManager: GameUIManager
+    uiManager: GameUIManager,
+    viewport: Viewport
   ) {
     this.canvasRef = canvasRef;
     this.canvas = this.canvasRef.current;
     this.ctx = this.canvas.getContext('2d');
 
     this.uiManager = uiManager;
+    this.viewport = viewport;
 
     this.frame();
   }
@@ -37,21 +39,63 @@ class CanvasRenderer {
 
   static initialize(
     canvasRef: RefObject<HTMLCanvasElement>,
-    uiManager: GameUIManager
+    uiManager: GameUIManager,
+    viewport: Viewport
   ) {
-    const canvasRenderer = new CanvasRenderer(canvasRef, uiManager);
+    const canvasRenderer = new CanvasRenderer(canvasRef, uiManager, viewport);
 
     return canvasRenderer;
   }
 
   private frame() {
+    this.ctx.clearRect(
+      0,
+      0,
+      this.viewport.viewportWidth,
+      this.viewport.viewportHeight
+    );
+
     this.drawCircle();
     this.drawSquare();
 
     window.requestAnimationFrame(this.frame.bind(this));
   }
 
-  private drawCircle() {}
+  private drawCircle() {
+    const circleCenterCanvas = this.viewport.worldToCanvasCoords(
+      this.uiManager.circleCenter
+    );
+    const circleRadiusCanvas = this.uiManager.radius / this.viewport.scale();
 
-  private drawSquare() {}
+    this.ctx.fillStyle = 'blue';
+    this.ctx.beginPath();
+    this.ctx.arc(
+      circleCenterCanvas.x,
+      circleCenterCanvas.y,
+      circleRadiusCanvas,
+      0,
+      2 * Math.PI,
+      false
+    );
+    this.ctx.fill();
+  }
+
+  private drawSquare() {
+    const topY = this.viewport.worldToCanvasY(
+      this.uiManager.squareCenter.y + this.uiManager.sideLength / 2
+    );
+    const leftX = this.viewport.worldToCanvasX(
+      this.uiManager.squareCenter.x - this.uiManager.sideLength / 2
+    );
+
+    this.ctx.fillStyle = 'red';
+    this.ctx.fillRect(
+      leftX,
+      topY,
+      this.viewport.worldToCanavsDist(this.uiManager.sideLength),
+      this.viewport.worldToCanavsDist(this.uiManager.sideLength)
+    );
+  }
 }
+
+export default CanvasRenderer;

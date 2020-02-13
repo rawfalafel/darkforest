@@ -1,16 +1,16 @@
 import {
   ContractCallArgs,
   InitializePlayerArgs,
-  MoveArgs
-} from "../@types/darkforest/api/EthereumAPI";
-import { Circuit, CircuitDef } from "snarkjs";
-import { witnessObjToBuffer } from "../utils/Utils";
-import { WebsnarkProof } from "../@types/global/global";
-import { BigInteger } from "big-integer";
-import mimcHash from "../miner/mimc";
-import * as bigInt from "big-integer";
+  MoveArgs,
+} from '../@types/darkforest/api/EthereumAPI';
+import { Circuit, CircuitDef } from 'snarkjs';
+import { witnessObjToBuffer } from '../utils/Utils';
+import { WebsnarkProof } from '../@types/global/global';
+import { BigInteger } from 'big-integer';
+import mimcHash from '../miner/mimc';
+import * as bigInt from 'big-integer';
 
-const zkSnark = require("snarkjs");
+const zkSnark = require('snarkjs');
 
 class SnarkArgsHelper {
   static instance: SnarkArgsHelper;
@@ -24,8 +24,8 @@ class SnarkArgsHelper {
     provingKeyInit: ArrayBuffer,
     provingKeyMove: ArrayBuffer
   ) {
-    const initCircuit: CircuitDef = require("../circuits/init/circuit.json");
-    const moveCircuit: CircuitDef = require("../circuits/move/circuit.json");
+    const initCircuit: CircuitDef = require('../circuits/init/circuit.json');
+    const moveCircuit: CircuitDef = require('../circuits/move/circuit.json');
 
     this.initCircuit = new zkSnark.Circuit(initCircuit);
     this.moveCircuit = new zkSnark.Circuit(moveCircuit);
@@ -35,7 +35,7 @@ class SnarkArgsHelper {
 
   static getInstance(): SnarkArgsHelper {
     if (!SnarkArgsHelper.instance) {
-      throw new Error("SnarkArgsHelper object has not been initialized yet");
+      throw new Error('SnarkArgsHelper object has not been initialized yet');
     }
 
     return SnarkArgsHelper.instance;
@@ -44,9 +44,9 @@ class SnarkArgsHelper {
   static async initialize(): Promise<SnarkArgsHelper> {
     // we don't do the usual webpack stuff
     // instead we do this based on the example from https://github.com/iden3/websnark
-    const provingKeyInitBin = await fetch("./public/proving_key_init.bin");
+    const provingKeyInitBin = await fetch('./public/proving_key_init.bin');
     const provingKeyInit = await provingKeyInitBin.arrayBuffer();
-    const provingKeyMoveBin = await fetch("./public/proving_key_move.bin"); // proving_keys needs to be in `public`
+    const provingKeyMoveBin = await fetch('./public/proving_key_move.bin'); // proving_keys needs to be in `public`
     const provingKeyMove = await provingKeyMoveBin.arrayBuffer();
 
     const snarkArgsHelper = new SnarkArgsHelper(provingKeyInit, provingKeyMove);
@@ -58,7 +58,7 @@ class SnarkArgsHelper {
   async getInitArgs(x: number, y: number): Promise<InitializePlayerArgs> {
     const input: any = {
       x: x.toString(),
-      y: y.toString()
+      y: y.toString(),
     };
     const witness: ArrayBuffer = witnessObjToBuffer(
       this.initCircuit.calculateWitness(input)
@@ -88,7 +88,7 @@ class SnarkArgsHelper {
       y1: y1.toString(),
       x2: x2.toString(),
       y2: y2.toString(),
-      distMax: distMax.toString()
+      distMax: distMax.toString(),
     };
     const witness: ArrayBuffer = witnessObjToBuffer(
       this.moveCircuit.calculateWitness(input)
@@ -102,7 +102,7 @@ class SnarkArgsHelper {
       mimcHash(x1, y1),
       mimcHash(x2, y2),
       bigInt(distMax),
-      bigInt(shipsMoved)
+      bigInt(shipsMoved),
     ];
     return this.callArgsFromProofAndSignals(
       snarkProof,
@@ -121,7 +121,7 @@ class SnarkArgsHelper {
       // genZKSnarkProof reverses values in the inner arrays of pi_b
       [snarkProof.pi_b[0].reverse(), snarkProof.pi_b[1].reverse()], // pi_b
       snarkProof.pi_c.slice(0, 2), // pi_c
-      publicSignals.map(signal => signal.toString(10)) // input
+      publicSignals.map(signal => signal.toString(10)), // input
     ];
   }
 }
