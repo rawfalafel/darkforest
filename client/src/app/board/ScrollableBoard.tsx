@@ -1,6 +1,6 @@
 import * as bigInt from 'big-integer';
 import * as React from 'react';
-import { getCurrentPopulation, isOwnedPlanet } from '../../utils/Utils';
+import { getCurrentPopulation } from '../../utils/Utils';
 import Camera from './Camera';
 import { CHUNK_SIZE } from '../../utils/constants';
 import { RefObject } from 'react';
@@ -145,11 +145,7 @@ class ScrollableBoard extends React.Component<
       // if the hold-drag started from a planet user owns, then don't pan
       // if the hold-dragging started from anywhere else, then pan camera
       const mouseDownPlanet: Planet | null = this.props.mouseDownPlanet;
-      if (
-        !mouseDownPlanet ||
-        !isOwnedPlanet(mouseDownPlanet) ||
-        mouseDownPlanet.owner !== this.props.myAddress
-      ) {
+      if (!mouseDownPlanet || mouseDownPlanet.owner !== this.props.myAddress) {
         // move camera if not holding down on a planet
         this.camera.onPanCursorMove({ x: canvasX, y: canvasY });
       }
@@ -357,10 +353,7 @@ class ScrollableBoard extends React.Component<
       }
     }
     if (this.props.hoveringOver && this.props.mouseDownPlanet) {
-      if (
-        isOwnedPlanet(this.props.mouseDownPlanet) &&
-        this.props.mouseDownPlanet.owner === this.props.myAddress
-      ) {
+      if (this.props.mouseDownPlanet.owner === this.props.myAddress) {
         this.ctx.beginPath();
         this.ctx.lineWidth = 4;
         this.ctx.strokeStyle = 'white';

@@ -1,11 +1,11 @@
 import * as EventEmitter from 'events';
 import {
   EthAddress,
-  OwnedPlanet,
   PlanetMap,
   Player,
   PlayerMap,
   Web3Object,
+  Planet
 } from '../@types/global/global';
 import { Contract, Signer, providers, utils } from 'ethers';
 
@@ -20,7 +20,7 @@ import {
   InitializePlayerArgs,
   MoveArgs,
   RawPlanetData,
-  RawPlanetMetadata,
+  RawPlanetMetadata
 } from '../@types/darkforest/api/EthereumAPI';
 import { TransactionRequest } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
@@ -92,20 +92,20 @@ class EthereumAPI extends EventEmitter {
       .on('PlayerInitialized', async (player, locRaw) => {
         const newPlayer: Player = { address: address(player) };
         this.emit('playerUpdate', newPlayer);
-        const newPlanet: OwnedPlanet = await this.getPlanet(locRaw);
+        const newPlanet: Planet = await this.getPlanet(locRaw);
         this.emit('planetUpdate', newPlanet);
       })
       .on(
         'PlayerMoved',
         async (player, fromLocRaw, toLocRaw, maxDist, shipsMoved) => {
-          const fromPlanet: OwnedPlanet = await this.getPlanet(fromLocRaw);
-          const toPlanet: OwnedPlanet = await this.getPlanet(toLocRaw);
+          const fromPlanet: Planet = await this.getPlanet(fromLocRaw);
+          const toPlanet: Planet = await this.getPlanet(toLocRaw);
           this.emit('planetUpdate', fromPlanet);
           this.emit('planetUpdate', toPlanet);
         }
       )
       .on('PlanetDestroyed', async locRaw => {
-        const planet: OwnedPlanet = await this.getPlanet(locRaw);
+        const planet: Planet = await this.getPlanet(locRaw);
         this.emit('planetUpdate', planet);
       });
   }
@@ -115,7 +115,7 @@ class EthereumAPI extends EventEmitter {
   ): Promise<providers.TransactionReceipt> {
     const overrides: TransactionRequest = {
       gasLimit: 2000000,
-      value: utils.parseEther('0.05'),
+      value: utils.parseEther('0.05')
     };
     const tx: providers.TransactionResponse = await this.contract.initializePlayer(
       ...args,
@@ -126,7 +126,7 @@ class EthereumAPI extends EventEmitter {
 
   async move(args: MoveArgs): Promise<providers.TransactionReceipt> {
     const overrides: TransactionRequest = {
-      gasLimit: 2000000,
+      gasLimit: 2000000
     };
     const tx: providers.TransactionResponse = await this.contract.move(
       ...args,
@@ -137,7 +137,7 @@ class EthereumAPI extends EventEmitter {
 
   async cashOut(locationString: string): Promise<providers.TransactionReceipt> {
     const overrides: TransactionRequest = {
-      gasLimit: 2000000,
+      gasLimit: 2000000
     };
     const tx: providers.TransactionResponse = await this.contract.cashOut(
       locationString,
@@ -152,25 +152,25 @@ class EthereumAPI extends EventEmitter {
       contract.xSize(),
       contract.ySize(),
       contract.planetRarity(),
-      contract.nPlanetTypes(),
+      contract.nPlanetTypes()
     ]);
     const xSize = parseInt(res[0]);
     const ySize = parseInt(res[1]);
     const planetRarity = parseInt(res[2]);
     const nPlanetTypes = parseInt(res[3]);
     const defaultCapacity = (await Promise.all([
-      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultCapacity(i)),
+      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultCapacity(i))
     ])).map(cap => parseInt(cap));
     const defaultGrowth = (await Promise.all([
-      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultGrowth(i)),
+      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultGrowth(i))
     ])).map(gro => parseInt(gro));
     const defaultHardiness = (await Promise.all([
-      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultHardiness(i)),
+      ...[...Array(nPlanetTypes).keys()].map(i => contract.defaultHardiness(i))
     ])).map(har => parseInt(har));
     const defaultStalwartness = (await Promise.all([
       ...[...Array(nPlanetTypes).keys()].map(i =>
         contract.defaultStalwartness(i)
-      ),
+      )
     ])).map(sta => parseInt(sta));
     return {
       xSize,
@@ -179,7 +179,7 @@ class EthereumAPI extends EventEmitter {
       defaultCapacity,
       defaultGrowth,
       defaultHardiness,
-      defaultStalwartness,
+      defaultStalwartness
     };
   }
 
@@ -240,7 +240,7 @@ class EthereumAPI extends EventEmitter {
     return planets;
   }
 
-  private async getPlanet(rawLoc: BigNumber): Promise<OwnedPlanet> {
+  private async getPlanet(rawLoc: BigNumber): Promise<Planet> {
     const rawPlanet = await this.contract.planets(rawLoc);
     const rawPlanetMetadata = await this.contract.planetMetadatas(rawLoc);
     return this.rawPlanetToObject(rawPlanet, rawPlanetMetadata);
@@ -249,7 +249,7 @@ class EthereumAPI extends EventEmitter {
   private rawPlanetToObject(
     rawPlanet: RawPlanetData,
     rawPlanetMetadata: RawPlanetMetadata
-  ): OwnedPlanet {
+  ): Planet {
     const rawLocationId = rawPlanet.locationId || rawPlanet[0];
     const rawOwner = rawPlanet.owner || rawPlanet[1];
     const rawType = rawPlanet.planetType || rawPlanet[2];
@@ -262,10 +262,9 @@ class EthereumAPI extends EventEmitter {
     const rawCoordinatesRevealed =
       rawPlanet.coordinatesRevealed || rawPlanet[9];
 
-    const rawVersion = rawPlanetMetadata.version || rawPlanetMetadata[2];
     const rawDestroyed = rawPlanetMetadata.destroyed || rawPlanetMetadata[3];
 
-    const planet: OwnedPlanet = {
+    const planet: Planet = {
       capacity: rawCapacity.toNumber(),
       growth: rawGrowth.toNumber(),
       hardiness: rawHardiness.toNumber(),
@@ -276,8 +275,7 @@ class EthereumAPI extends EventEmitter {
       locationId: locationIdFromDecStr(rawLocationId.toString()),
       owner: address(rawOwner),
       population: rawPopulation.toNumber(),
-      version: rawVersion,
-      destroyed: rawDestroyed,
+      destroyed: rawDestroyed
     };
     if (planet.coordinatesRevealed) {
       const rawX = rawPlanet.x || rawPlanet[10];

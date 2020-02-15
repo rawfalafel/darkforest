@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Spinner from 'react-spinkit';
 import ScrollableBoard from './board/ScrollableBoard';
 import GameManager from '../api/GameManager';
-import { Coordinates, OwnedPlanet, Planet } from '../@types/global/global';
-import { isOwnedPlanet } from '../utils/Utils';
+import { Coordinates, Planet } from '../@types/global/global';
 import Button from '../components/Button';
 
 interface GameSceneProps {
@@ -71,7 +70,6 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
         if (
           startPlanet &&
           endPlanet &&
-          isOwnedPlanet(startPlanet) &&
           startPlanet.owner === gameManager.account &&
           !startPlanet.destroyed
         ) {
@@ -128,7 +126,7 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
                 planet &&
                 gameManager.planets.hasOwnProperty(planet.locationId)
               ) {
-                const ownedPlanet: OwnedPlanet =
+                const ownedPlanet: Planet =
                   gameManager.planets[planet.locationId];
                 if (ownedPlanet.owner === gameManager.account) {
                   gameManager.cashOut({

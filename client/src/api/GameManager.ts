@@ -12,7 +12,6 @@ import {
   EthAddress,
   Location,
   LocationId,
-  OwnedPlanet,
   Planet,
   PlanetMap,
   Player,
@@ -159,9 +158,8 @@ class GameManager extends EventEmitter {
       .on('playerUpdate', (player: Player) => {
         gameManager.players[<string>player.address] = player;
       })
-      .on('planetUpdate', (planet: OwnedPlanet) => {
+      .on('planetUpdate', (planet: Planet) => {
         gameManager.planets[<string>planet.locationId] = planet;
-        console.log(planet);
         gameManager.emit('planetUpdate');
       });
 
@@ -221,6 +219,7 @@ class GameManager extends EventEmitter {
     // return a default unowned planet
     const planetType = getPlanetTypeForLocationId(locationId);
     return {
+      owner: null,
       planetType: planetType,
       capacity: this.defaultCapacity[planetType],
       growth: this.defaultGrowth[planetType],
@@ -228,16 +227,10 @@ class GameManager extends EventEmitter {
       stalwartness: this.defaultStalwartness[planetType],
       lastUpdated: Date.now(),
       locationId,
+      destroyed: false,
       population: 0,
       coordinatesRevealed: false
     };
-  }
-
-  planetToOwnedPlanet(planet: Planet): OwnedPlanet | null {
-    if (!!this.planets[planet.locationId]) {
-      return this.planets[planet.locationId];
-    }
-    return null;
   }
 
   getHomeChunk(): ChunkCoordinates | null {

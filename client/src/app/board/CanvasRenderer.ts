@@ -61,6 +61,9 @@ class CanvasRenderer {
     this.drawCleanBoard();
     this.drawKnownChunks(knownChunks);
     this.drawPlanets(planetLocations);
+    this.drawHoveringRect();
+    this.drawSelectedRect();
+    this.drawMousePath();
 
     window.requestAnimationFrame(this.frame.bind(this));
   }
@@ -93,9 +96,8 @@ class CanvasRenderer {
     const gameManager = GameManager.getInstance();
 
     const planet = gameManager.getPlanetWithId(location.hash);
-    const ownedPlanet = gameManager.planetToOwnedPlanet(planet);
-    const population = ownedPlanet
-      ? Math.floor(getCurrentPopulation(ownedPlanet) / 100)
+    const population = planet
+      ? Math.floor(getCurrentPopulation(planet) / 100)
       : 0;
     const center = new WorldCoords(location.coords.x, location.coords.y);
     const radius = 2;
@@ -103,12 +105,12 @@ class CanvasRenderer {
       .and(0xffffff)
       .toString(16);
     color = '#' + '0'.repeat(6 - color.length) + color;
-    if (ownedPlanet && ownedPlanet.destroyed) {
+    if (planet && planet.destroyed) {
       color = '#000000';
     }
 
-    if (ownedPlanet) {
-      if (ownedPlanet.owner === gameManager.account) {
+    if (planet.owner) {
+      if (planet.owner === gameManager.account) {
         this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'blue');
       } else {
         this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'red');
@@ -118,12 +120,18 @@ class CanvasRenderer {
     this.drawCircleWithCenter(center, radius, color);
 
     this.drawText(
-      ownedPlanet ? population.toString() : '0',
+      population.toString(),
       15,
-      new WorldCoords(center.x, center.y - (ownedPlanet ? 3 : 2.5)),
+      new WorldCoords(center.x, center.y - (planet.owner ? 3 : 2.5)),
       'white'
     );
   }
+
+  private drawHoveringRect() {}
+
+  private drawSelectedRect() {}
+
+  private drawMousePath() {}
 
   private drawRectWithCenter(
     center: WorldCoords,

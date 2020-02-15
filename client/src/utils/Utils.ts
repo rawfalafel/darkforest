@@ -1,7 +1,7 @@
 import * as bigInt from 'big-integer';
 import { BigInteger } from 'big-integer';
 import { Witness } from 'snarkjs';
-import { LocationId, OwnedPlanet, Planet } from '../@types/global/global';
+import { LocationId, Planet } from '../@types/global/global';
 import { PlanetType } from '../@types/global/enums';
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
@@ -44,7 +44,7 @@ export const witnessObjToBuffer: (
 
   const h: DataViewWithOffset = {
     dataView: new DataView(buff),
-    offset: 0,
+    offset: 0
   };
 
   for (let i = 0; i < witness.length; i++) {
@@ -54,12 +54,7 @@ export const witnessObjToBuffer: (
   return buff;
 };
 
-// type guard
-export function isOwnedPlanet(planet: Planet): planet is OwnedPlanet {
-  return (planet as OwnedPlanet).owner !== undefined;
-}
-
-export const getCurrentPopulation: (planet: OwnedPlanet) => number = planet => {
+export const getCurrentPopulation: (planet: Planet) => number = planet => {
   if (planet.population === 0) {
     return 0;
   }

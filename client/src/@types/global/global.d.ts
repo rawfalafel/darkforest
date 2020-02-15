@@ -44,6 +44,7 @@ export interface Location {
 }
 
 export interface Planet {
+  owner: EthAddress | null;
   planetType: PlanetType;
   capacity: number;
   growth: number;
@@ -53,18 +54,13 @@ export interface Planet {
   locationId: LocationId;
   population: number;
   coordinatesRevealed: boolean;
+  destroyed: boolean;
   x?: number;
   y?: number;
 }
 
-export interface OwnedPlanet extends Planet {
-  owner: EthAddress;
-  version: number;
-  destroyed: boolean;
-}
-
 export interface PlanetMap {
-  [planetId: string]: OwnedPlanet;
+  [planetId: string]: Planet;
 }
 
 export interface Player {
@@ -88,7 +84,7 @@ export interface ExploredChunkData {
   planetLocations: Location[];
 }
 
-export type BoardData = Array<Array<ExploredChunkData | null | undefined>>
+export type BoardData = Array<Array<ExploredChunkData | null | undefined>>;
 
 export interface MinerWorkerMessage {
   chunkX: number;
