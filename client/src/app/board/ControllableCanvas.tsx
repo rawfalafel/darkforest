@@ -2,7 +2,7 @@ import * as React from 'react';
 import { RefObject } from 'react';
 import UIEmitter from '../../utils/UIEmitter';
 import Viewport from './Viewport';
-import GameUIManager from './GameUIManager';
+import { WorldCoords } from '../../utils/Coordinates';
 import CanvasRenderer from './CanvasRenderer';
 
 interface ControllableCanvasProps {}
@@ -38,19 +38,14 @@ class ControllableCanvas extends React.Component<
     this.canvas = this.canvasRef.current;
     this.ctx = this.canvas.getContext('2d');
 
-    const viewport = Viewport.initialize(
-      this.uiEmitter,
-      { x: 0, y: 0 },
+    Viewport.initialize(
+      new WorldCoords(0, 0),
       50,
       this.state.width,
       this.state.height
     );
-    const uiManager = GameUIManager.initialize(viewport);
-    const canvasRenderer = CanvasRenderer.initialize(
-      this.canvasRef,
-      uiManager,
-      viewport
-    );
+
+    CanvasRenderer.initialize(this.canvasRef);
 
     // TODO: pull viewportwidth and height from page, set page size listener to update
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
@@ -65,21 +60,21 @@ class ControllableCanvas extends React.Component<
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    this.uiEmitter.emit('CANVAS_MOUSE_DOWN', canvasX, canvasY);
+    this.uiEmitter.emit('CANVAS_MOUSE_DOWN', { x: canvasX, y: canvasY });
   }
 
   onMouseMove(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    this.uiEmitter.emit('CANVAS_MOUSE_MOVE', canvasX, canvasY);
+    this.uiEmitter.emit('CANVAS_MOUSE_MOVE', { x: canvasX, y: canvasY });
   }
 
   onMouseUp(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    this.uiEmitter.emit('CANVAS_MOUSE_UP', canvasX, canvasY);
+    this.uiEmitter.emit('CANVAS_MOUSE_UP', { x: canvasX, y: canvasY });
   }
 
   onMouseOut() {

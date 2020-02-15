@@ -1,8 +1,6 @@
 import UIEmitter from '../../utils/UIEmitter';
-import {
-  CanvasCoords,
-  WorldCoords
-} from '../../@types/darkforest/app/board/Camera';
+import GameUIManager from './GameUIManager';
+import { WorldCoords, CanvasCoords } from '../../utils/Coordinates';
 
 class Viewport {
   // The sole listener for events from Canvas
@@ -20,12 +18,17 @@ class Viewport {
   isPanning = false;
   mouseLastCoords: CanvasCoords;
 
+  uiEmitter: UIEmitter;
+
   private constructor(
     centerWorldCoords: WorldCoords,
     widthInWorldUnits: number,
     viewportWidth: number,
-    viewportHeight: number
+    viewportHeight: number,
+    uiEmitter: UIEmitter
   ) {
+    this.uiEmitter = uiEmitter;
+
     // each of these is measured relative to the world coordinate system
     this.centerWorldCoords = centerWorldCoords;
     this.widthInWorldUnits = widthInWorldUnits;
@@ -49,17 +52,19 @@ class Viewport {
   }
 
   static initialize(
-    uiEmitter: UIEmitter,
     centerWorldCoords: WorldCoords,
     widthInWorldUnits: number,
     viewportWidth: number,
     viewportHeight: number
   ): Viewport {
+    const uiEmitter = UIEmitter.getInstance();
+
     const viewport = new Viewport(
       centerWorldCoords,
       widthInWorldUnits,
       viewportWidth,
-      viewportHeight
+      viewportHeight,
+      uiEmitter
     );
 
     uiEmitter.on('CANVAS_MOUSE_DOWN', viewport.onMouseDown.bind(viewport));
@@ -68,31 +73,47 @@ class Viewport {
     uiEmitter.on('CANVAS_MOUSE_OUT', viewport.onMouseOut.bind(viewport));
     uiEmitter.on('CANVAS_SCROLL', viewport.onScroll.bind(viewport));
 
+    Viewport.instance = viewport;
+
     return viewport;
   }
 
   // Event handlers
-  onMouseDown(canvasX: number, canvasY: number) {
-    const coords: CanvasCoords = { x: canvasX, y: canvasY };
-    this.isPanning = true;
-    this.mouseLastCoords = coords;
+  onMouseDown(canvasCoords: CanvasCoords) {
+    const uiManager = GameUIManager.getInstance();
+
+    const worldCoords = this.canvasToWorldCoords(canvasCoords);
+    if (
+      uiManager.isOverCircle(worldCoords) ||
+      uiManager.isOverSquare(worldCoords)
+    ) {
+      this.uiEmitter.emit('WORLD_MOUSE_DOWN', worldCoords);
+    } else {
+      this.isPanning = true;
+    }
+    this.mouseLastCoords = canvasCoords;
   }
 
-  onMouseMove(canvasX: number, canvasY: number) {
-    const coords: CanvasCoords = { x: canvasX, y: canvasY };
+  onMouseMove(canvasCoords: CanvasCoords) {
     if (this.isPanning) {
-      const dx = coords.x - this.mouseLastCoords.x;
-      const dy = coords.y - this.mouseLastCoords.y;
+      const dx = canvasCoords.x - this.mouseLastCoords.x;
+      const dy = canvasCoords.y - this.mouseLastCoords.y;
       this.centerWorldCoords.x -= dx * this.scale();
       this.centerWorldCoords.y -= -1 * dy * this.scale();
+    } else {
+      const worldCoords = this.canvasToWorldCoords(canvasCoords);
+      this.uiEmitter.emit('WORLD_MOUSE_MOVE', worldCoords);
     }
-    this.mouseLastCoords = coords;
+    this.mouseLastCoords = canvasCoords;
   }
 
-  onMouseUp(canvasX: number, canvasY: number) {
-    const coords: CanvasCoords = { x: canvasX, y: canvasY };
+  onMouseUp(canvasCoords: CanvasCoords) {
+    if (!this.isPanning) {
+      const worldCoords = this.canvasToWorldCoords(canvasCoords);
+      this.uiEmitter.emit('WORLD_MOUSE_UP', worldCoords);
+    }
     this.isPanning = false;
-    this.mouseLastCoords = coords;
+    this.mouseLastCoords = canvasCoords;
   }
 
   onMouseOut() {
@@ -103,22 +124,22 @@ class Viewport {
   onScroll(deltaY: number) {
     if (this.mouseLastCoords !== null) {
       const mouseWorldCoords = this.canvasToWorldCoords(this.mouseLastCoords);
-      let centersDiff = {
+      const centersDiff = {
         x: this.centerWorldCoords.x - mouseWorldCoords.x,
         y: this.centerWorldCoords.y - mouseWorldCoords.y
       };
-      let newCentersDiff = {
+      const newCentersDiff = {
         x: centersDiff.x * 1.001 ** deltaY,
         y: centersDiff.y * 1.001 ** deltaY
       };
-      let newCenter = {
+      const newCenter = {
         x: mouseWorldCoords.x + newCentersDiff.x,
         y: mouseWorldCoords.y + newCentersDiff.y
       };
       this.centerWorldCoords.x = newCenter.x;
       this.centerWorldCoords.y = newCenter.y;
 
-      let newWidth = this.widthInWorldUnits * 1.001 ** deltaY;
+      const newWidth = this.widthInWorldUnits * 1.001 ** deltaY;
       this.setWorldWidth(newWidth);
     }
   }
@@ -129,26 +150,18 @@ class Viewport {
   }
 
   canvasToWorldCoords(canvasCoords: CanvasCoords): WorldCoords {
-    const worldX =
-      (canvasCoords.x - this.viewportWidth / 2) * this.scale() +
-      this.centerWorldCoords.x;
-    const worldY =
-      -1 * (canvasCoords.y - this.viewportHeight / 2) * this.scale() +
-      this.centerWorldCoords.y;
-    return { x: Math.round(worldX), y: Math.round(worldY) };
+    const worldX = this.canvasToWorldX(canvasCoords.x);
+    const worldY = this.canvasToWorldY(canvasCoords.y);
+    return new WorldCoords(worldX, worldY);
   }
 
   worldToCanvasCoords(worldCoords: WorldCoords): CanvasCoords {
-    const canvasX =
-      (worldCoords.x - this.centerWorldCoords.x) / this.scale() +
-      this.viewportWidth / 2;
-    const canvasY =
-      (-1 * (worldCoords.y - this.centerWorldCoords.y)) / this.scale() +
-      this.viewportHeight / 2;
-    return { x: canvasX, y: canvasY };
+    const canvasX = this.worldToCanvasX(worldCoords.x);
+    const canvasY = this.worldToCanvasY(worldCoords.y);
+    return new CanvasCoords(canvasX, canvasY);
   }
 
-  worldToCanavsDist(d: number): number {
+  worldToCanvasDist(d: number): number {
     return d / this.scale();
   }
 

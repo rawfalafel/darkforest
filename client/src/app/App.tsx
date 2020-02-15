@@ -41,8 +41,8 @@ const App = () => {
   }
 
   if (joinedGame) {
-    // return <ControllableCanvas />;
-    return <GameScene gameManager={gameManagerRef.current} />;
+    return <ControllableCanvas />;
+    // return <GameScene gameManager={gameManagerRef.current} />;
   } else {
     return <LandingPage onInitialize={initialize} />;
   }
