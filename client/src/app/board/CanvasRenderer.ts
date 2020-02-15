@@ -41,12 +41,7 @@ class CanvasRenderer {
   }
 
   private frame() {
-    const viewport = Viewport.getInstance();
     const gameManager = GameManager.getInstance();
-
-    this.ctx.clearRect(0, 0, viewport.viewportWidth, viewport.viewportHeight);
-    this.ctx.fillStyle = 'grey';
-    this.ctx.fillRect(0, 0, viewport.viewportWidth, viewport.viewportHeight);
 
     const board = gameManager.inMemoryBoard;
     const knownChunks: ChunkCoordinates[] = [];
@@ -63,10 +58,19 @@ class CanvasRenderer {
       }
     }
 
+    this.drawCleanBoard();
     this.drawKnownChunks(knownChunks);
     this.drawPlanets(planetLocations);
 
     window.requestAnimationFrame(this.frame.bind(this));
+  }
+
+  private drawCleanBoard() {
+    const viewport = Viewport.getInstance();
+
+    this.ctx.clearRect(0, 0, viewport.viewportWidth, viewport.viewportHeight);
+    this.ctx.fillStyle = 'grey';
+    this.ctx.fillRect(0, 0, viewport.viewportWidth, viewport.viewportHeight);
   }
 
   private drawKnownChunks(knownChunks: ChunkCoordinates[]) {
