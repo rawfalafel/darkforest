@@ -10,7 +10,7 @@ import {
   Coordinates,
   EthAddress,
   Planet,
-  PlanetMap,
+  PlanetMap
 } from '../../@types/global/global';
 
 interface ScrollableBoardProps {
@@ -56,7 +56,7 @@ class ScrollableBoard extends React.Component<
   PlanetViewTypes = {
     UNOCCUPIED: 0,
     MINE: 1,
-    ENEMY: 2,
+    ENEMY: 2
   };
 
   constructor(props) {
@@ -64,13 +64,13 @@ class ScrollableBoard extends React.Component<
 
     this.state = {
       width: window.innerWidth,
-      height: window.innerHeight,
+      height: window.innerHeight
     };
 
     const { xSize, ySize } = this.props;
     const centerWorldCoords = {
       x: (this.props.homeChunk.chunkX + 0.5) * CHUNK_SIZE,
-      y: (this.props.homeChunk.chunkY + 0.5) * CHUNK_SIZE,
+      y: (this.props.homeChunk.chunkY + 0.5) * CHUNK_SIZE
     };
     this.camera = new Camera(
       centerWorldCoords,
@@ -83,25 +83,25 @@ class ScrollableBoard extends React.Component<
       x: xSize / 2 - 0.5,
       y: ySize - 0.7,
       width: xSize,
-      height: 4,
+      height: 4
     };
     this.bottomBorder = {
       x: xSize / 2 - 0.5,
       y: -0.3,
       width: xSize,
-      height: 4,
+      height: 4
     };
     this.leftBorder = {
       x: -0.3,
       y: ySize / 2 - 0.5,
       width: 4,
-      height: ySize,
+      height: ySize
     };
     this.rightBorder = {
       x: xSize - 0.7,
       y: ySize / 2 - 0.5,
       width: 4,
-      height: ySize,
+      height: ySize
     };
   }
 
@@ -125,7 +125,7 @@ class ScrollableBoard extends React.Component<
     const canvasY = e.clientY - rect.top;
     const worldCoords = this.camera.canvasToWorldCoords({
       x: canvasX,
-      y: canvasY,
+      y: canvasY
     });
     this.props.onMouseDownOverCoords(worldCoords);
     this.camera.startPan({ x: canvasX, y: canvasY });
@@ -137,7 +137,7 @@ class ScrollableBoard extends React.Component<
     const canvasY = e.clientY - rect.top;
     const worldCoords: Coordinates = this.camera.canvasToWorldCoords({
       x: canvasX,
-      y: canvasY,
+      y: canvasY
     });
     this.props.onMouseMoveOverCoords(worldCoords);
     if (!!this.props.mouseDown) {
@@ -162,7 +162,7 @@ class ScrollableBoard extends React.Component<
     const canvasY = e.clientY - rect.top;
     const worldCoords: Coordinates = this.camera.canvasToWorldCoords({
       x: canvasX,
-      y: canvasY,
+      y: canvasY
     });
     this.props.onMouseUpOverCoords(worldCoords);
     this.camera.stopPan();
@@ -311,7 +311,7 @@ class ScrollableBoard extends React.Component<
             x: chunkCenterX,
             y: chunkCenterY,
             width: CHUNK_SIZE + 0.1,
-            height: CHUNK_SIZE + 0.1,
+            height: CHUNK_SIZE + 0.1
           });
           for (const planetLoc of chunk.planetLocations) {
             planetLocs.push(planetLoc);
@@ -327,7 +327,7 @@ class ScrollableBoard extends React.Component<
           hash: planetLoc.hash,
           type: this.PlanetViewTypes.UNOCCUPIED,
           population: 0,
-          destroyed: false,
+          destroyed: false
         });
       } else if (
         this.props.planets[planetLoc.hash].owner.toLowerCase() ===
@@ -341,7 +341,7 @@ class ScrollableBoard extends React.Component<
           population: Math.floor(
             getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100
           ),
-          destroyed: this.props.planets[planetLoc.hash].destroyed,
+          destroyed: this.props.planets[planetLoc.hash].destroyed
         });
       } else {
         this.drawPlanet({
@@ -352,7 +352,7 @@ class ScrollableBoard extends React.Component<
           population: Math.floor(
             getCurrentPopulation(this.props.planets[planetLoc.hash]) / 100
           ),
-          destroyed: this.props.planets[planetLoc.hash].destroyed,
+          destroyed: this.props.planets[planetLoc.hash].destroyed
         });
       }
     }
@@ -399,7 +399,7 @@ class ScrollableBoard extends React.Component<
           justifyContent: 'center',
           alignItems: 'center',
           width: '100%',
-          height: '100%',
+          height: '100%'
         }}
       >
         <canvas

@@ -78,11 +78,11 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
           gameManager.move(
             {
               coords: mouseDown,
-              hash: startPlanet.locationId,
+              hash: startPlanet.locationId
             },
             {
               coords,
-              hash: endPlanet.locationId,
+              hash: endPlanet.locationId
             }
           );
         }
@@ -133,7 +133,7 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
                 if (ownedPlanet.owner === gameManager.account) {
                   gameManager.cashOut({
                     coords: selected,
-                    hash: ownedPlanet.locationId,
+                    hash: ownedPlanet.locationId
                   });
                 }
               }
@@ -146,7 +146,7 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
       <ScrollableBoard
         xSize={gameManager.xSize}
         ySize={gameManager.ySize}
-        homeChunk={gameManager.localStorageManager.getHomeChunk()}
+        homeChunk={gameManager.getHomeChunk()}
         knownBoard={gameManager.inMemoryBoard}
         planets={gameManager.planets}
         myAddress={gameManager.account}

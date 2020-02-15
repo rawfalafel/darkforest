@@ -1,6 +1,8 @@
 import UIEmitter from '../../utils/UIEmitter';
 import GameUIManager from './GameUIManager';
 import { WorldCoords, CanvasCoords } from '../../utils/Coordinates';
+import GameManager from '../../api/GameManager';
+import { CHUNK_SIZE } from '../../utils/constants';
 
 class Viewport {
   // The sole listener for events from Canvas
@@ -52,15 +54,19 @@ class Viewport {
   }
 
   static initialize(
-    centerWorldCoords: WorldCoords,
     widthInWorldUnits: number,
     viewportWidth: number,
     viewportHeight: number
   ): Viewport {
+    const gameManager = GameManager.getInstance();
     const uiEmitter = UIEmitter.getInstance();
 
+    const homeChunk = gameManager.getHomeChunk();
+    const initialCenterX = (homeChunk.chunkX + 0.5) * CHUNK_SIZE;
+    const initialCenterY = (homeChunk.chunkY + 0.5) * CHUNK_SIZE;
+
     const viewport = new Viewport(
-      centerWorldCoords,
+      new WorldCoords(initialCenterX, initialCenterY),
       widthInWorldUnits,
       viewportWidth,
       viewportHeight,

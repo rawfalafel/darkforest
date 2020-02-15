@@ -2,7 +2,7 @@ import * as EventEmitter from 'events';
 import LocalStorageManager from './LocalStorageManager';
 import {
   getCurrentPopulation,
-  getPlanetTypeForLocationId,
+  getPlanetTypeForLocationId
 } from '../utils/Utils';
 import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
@@ -17,6 +17,7 @@ import {
   PlanetMap,
   Player,
   PlayerMap,
+  ChunkCoordinates
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -30,10 +31,11 @@ class GameManager extends EventEmitter {
   readonly players: PlayerMap;
   readonly planets: PlanetMap;
   readonly inMemoryBoard: BoardData;
+  readonly homeChunk: ChunkCoordinates | null;
 
   private readonly ethereumAPI: EthereumAPI;
   // TODO be able to make this private
-  readonly localStorageManager: LocalStorageManager;
+  private readonly localStorageManager: LocalStorageManager;
   private readonly snarkHelper: SnarkArgsHelper;
   private minerManager?: MinerManager;
 
@@ -71,6 +73,7 @@ class GameManager extends EventEmitter {
     this.players = players;
     this.planets = planets;
     this.inMemoryBoard = inMemoryBoard;
+    this.homeChunk = localStorageManager.getHomeChunk();
 
     this.xSize = xSize;
     this.ySize = ySize;
@@ -108,7 +111,7 @@ class GameManager extends EventEmitter {
       defaultGrowth,
       defaultCapacity,
       defaultHardiness,
-      defaultStalwartness,
+      defaultStalwartness
     } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
@@ -226,8 +229,22 @@ class GameManager extends EventEmitter {
       lastUpdated: Date.now(),
       locationId,
       population: 0,
-      coordinatesRevealed: false,
+      coordinatesRevealed: false
     };
+  }
+
+  planetToOwnedPlanet(planet: Planet): OwnedPlanet | null {
+    if (!!this.planets[planet.locationId]) {
+      return this.planets[planet.locationId];
+    }
+    return null;
+  }
+
+  getHomeChunk(): ChunkCoordinates | null {
+    if (this.homeChunk) {
+      return this.homeChunk;
+    }
+    return this.localStorageManager.getHomeChunk();
   }
 
   startExplore(): void {

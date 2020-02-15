@@ -1,7 +1,12 @@
 import { RefObject } from 'react';
 import GameUIManager from './GameUIManager';
 import Viewport from './Viewport';
-import { CanvasCoords } from '../../utils/Coordinates';
+import { CanvasCoords, WorldCoords } from '../../utils/Coordinates';
+import GameManager from '../../api/GameManager';
+import { Location, ChunkCoordinates } from '../../@types/global/global';
+import { CHUNK_SIZE } from '../../utils/constants';
+import bigInt from 'big-integer';
+import { getCurrentPopulation } from '../../utils/Utils';
 
 class CanvasRenderer {
   static instance: CanvasRenderer;
@@ -37,82 +42,167 @@ class CanvasRenderer {
 
   private frame() {
     const viewport = Viewport.getInstance();
+    const gameManager = GameManager.getInstance();
 
     this.ctx.clearRect(0, 0, viewport.viewportWidth, viewport.viewportHeight);
+    this.ctx.fillStyle = 'grey';
+    this.ctx.fillRect(0, 0, viewport.viewportWidth, viewport.viewportHeight);
 
-    this.drawCircle();
-    this.drawSquare();
-    this.drawCursorPath();
+    const board = gameManager.inMemoryBoard;
+    const knownChunks: ChunkCoordinates[] = [];
+    const planetLocations: Location[] = [];
+    for (let chunkX = 0; chunkX < board.length; chunkX += 1) {
+      for (let chunkY = 0; chunkY < board[chunkX].length; chunkY += 1) {
+        const exploredChunk = board[chunkX][chunkY];
+        if (exploredChunk) {
+          knownChunks.push(exploredChunk.id);
+          for (const planetLocation of exploredChunk.planetLocations) {
+            planetLocations.push(planetLocation);
+          }
+        }
+      }
+    }
+
+    this.drawKnownChunks(knownChunks);
+    this.drawPlanets(planetLocations);
 
     window.requestAnimationFrame(this.frame.bind(this));
   }
 
-  private drawCircle() {
-    const viewport = Viewport.getInstance();
-    const uiManager = GameUIManager.getInstance();
+  private drawKnownChunks(knownChunks: ChunkCoordinates[]) {
+    for (const chunk of knownChunks) {
+      const center = new WorldCoords(
+        (chunk.chunkX + 0.5) * CHUNK_SIZE,
+        (chunk.chunkY + 0.5) * CHUNK_SIZE
+      );
+      this.drawRectWithCenter(center, CHUNK_SIZE, CHUNK_SIZE, 'black');
+    }
+  }
 
-    const circleCenterCanvas = viewport.worldToCanvasCoords(
-      uiManager.circleCenter
+  private drawPlanets(planetLocations: Location[]) {
+    for (const location of planetLocations) {
+      this.drawPlanetAtLocation(location);
+    }
+  }
+
+  private drawPlanetAtLocation(location: Location) {
+    const gameManager = GameManager.getInstance();
+
+    const planet = gameManager.getPlanetWithId(location.hash);
+    const ownedPlanet = gameManager.planetToOwnedPlanet(planet);
+    const population = ownedPlanet
+      ? Math.floor(getCurrentPopulation(ownedPlanet) / 100)
+      : 0;
+    const center = new WorldCoords(location.coords.x, location.coords.y);
+    const radius = 2;
+    let color = bigInt(location.hash, 16)
+      .and(0xffffff)
+      .toString(16);
+    color = '#' + '0'.repeat(6 - color.length) + color;
+    if (ownedPlanet && ownedPlanet.destroyed) {
+      color = '#000000';
+    }
+
+    if (ownedPlanet) {
+      if (ownedPlanet.owner === gameManager.account) {
+        this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'blue');
+      } else {
+        this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'red');
+      }
+    }
+
+    this.drawCircleWithCenter(center, radius, color);
+
+    this.drawText(
+      ownedPlanet ? population.toString() : '0',
+      15,
+      new WorldCoords(center.x, center.y - (ownedPlanet ? 3 : 2.5)),
+      'white'
     );
-    const circleRadiusCanvas = uiManager.radius / viewport.scale();
+  }
 
-    this.ctx.fillStyle = 'blue';
+  private drawRectWithCenter(
+    center: WorldCoords,
+    width: number,
+    height: number,
+    color: string = 'white'
+  ) {
+    const viewport = Viewport.getInstance();
+
+    const centerCanvasCoords = viewport.worldToCanvasCoords(center);
+    const widthCanvasCoords = viewport.worldToCanvasDist(width);
+    const heightCanvasCoords = viewport.worldToCanvasDist(height);
+    this.ctx.fillStyle = color;
+    this.ctx.fillRect(
+      centerCanvasCoords.x - widthCanvasCoords / 2,
+      centerCanvasCoords.y - heightCanvasCoords / 2,
+      widthCanvasCoords,
+      heightCanvasCoords
+    );
+  }
+
+  private drawCircleWithCenter(
+    center: WorldCoords,
+    radius: number,
+    color: string = 'white'
+  ) {
+    const viewport = Viewport.getInstance();
+
+    const centerCanvasCoords = viewport.worldToCanvasCoords(center);
+    const radiusCanvasCoords = viewport.worldToCanvasDist(radius);
+    this.ctx.fillStyle = color;
     this.ctx.beginPath();
     this.ctx.arc(
-      circleCenterCanvas.x,
-      circleCenterCanvas.y,
-      circleRadiusCanvas,
+      centerCanvasCoords.x,
+      centerCanvasCoords.y,
+      radiusCanvasCoords,
       0,
       2 * Math.PI,
       false
     );
     this.ctx.fill();
-
-    if (uiManager.circleSelected) {
-      this.ctx.lineWidth = 4;
-      this.ctx.beginPath();
-      this.ctx.arc(
-        circleCenterCanvas.x,
-        circleCenterCanvas.y,
-        circleRadiusCanvas + 10,
-        0,
-        2 * Math.PI,
-        false
-      );
-      this.ctx.stroke();
-    }
   }
 
-  private drawSquare() {
+  private drawRingWithCenter(
+    center: WorldCoords,
+    radius: number,
+    width: number,
+    color: string = 'white'
+  ) {
     const viewport = Viewport.getInstance();
-    const uiManager = GameUIManager.getInstance();
 
-    const topY = viewport.worldToCanvasY(
-      uiManager.squareCenter.y + uiManager.sideLength / 2
+    const centerCanvasCoords = viewport.worldToCanvasCoords(center);
+    const radiusCanvasCoords = viewport.worldToCanvasDist(radius);
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = viewport.worldToCanvasDist(width);
+    this.ctx.beginPath();
+    this.ctx.arc(
+      centerCanvasCoords.x,
+      centerCanvasCoords.y,
+      radiusCanvasCoords,
+      0,
+      2 * Math.PI,
+      false
     );
-    const leftX = viewport.worldToCanvasX(
-      uiManager.squareCenter.x - uiManager.sideLength / 2
-    );
+    this.ctx.stroke();
+  }
 
-    this.ctx.fillStyle = 'red';
-    this.ctx.fillRect(
-      leftX,
-      topY,
-      viewport.worldToCanvasDist(uiManager.sideLength),
-      viewport.worldToCanvasDist(uiManager.sideLength)
-    );
+  private drawText(
+    text: string,
+    fontSize: number,
+    center: WorldCoords,
+    color: string = 'white'
+  ) {
+    const viewport = Viewport.getInstance();
 
-    if (uiManager.squareSelected) {
-      this.ctx.fillStyle = 'rgba(0, 0, 255, 0.2)';
-      this.ctx.strokeStyle = 'white';
-      this.ctx.lineWidth = 4;
-      this.ctx.strokeRect(
-        leftX - 5,
-        topY - 5,
-        viewport.worldToCanvasDist(uiManager.sideLength) + 10,
-        viewport.worldToCanvasDist(uiManager.sideLength) + 10
-      );
-    }
+    const centerCanvasCoords = viewport.worldToCanvasCoords(center);
+
+    this.ctx.font = `${fontSize}px sans-serif`;
+    this.ctx.textBaseline = 'top';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillStyle = color;
+    this.ctx.fillText(text, centerCanvasCoords.x, centerCanvasCoords.y);
   }
 
   private drawCursorPath() {
