@@ -38,7 +38,7 @@ class ControllableCanvas extends React.Component<
     this.canvas = this.canvasRef.current;
     this.ctx = this.canvas.getContext('2d');
 
-    Viewport.initialize(50, this.state.width, this.state.height);
+    Viewport.initialize(250, this.state.width, this.state.height);
 
     CanvasRenderer.initialize(this.canvasRef);
 
