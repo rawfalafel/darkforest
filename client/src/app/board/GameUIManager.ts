@@ -1,10 +1,12 @@
 import UIEmitter from '../../utils/UIEmitter';
 import { WorldCoords } from '../../utils/Coordinates';
+import { Planet } from '../../@types/global/global';
+import GameManager from '../../api/GameManager';
 
 class GameUIManager {
   static instance: GameUIManager;
 
-  readonly radius = 1.5;
+  readonly radius = 2;
   readonly sideLength = 2.5;
   squareCenter: WorldCoords;
   squareSelected = false;
@@ -13,12 +15,14 @@ class GameUIManager {
   circleSelected = false;
   mouseDownOverCircle = false;
 
-  mouseLastCoords: WorldCoords;
+  selectedPlanet: Planet | null = null;
+  selectedCoords: WorldCoords | null = null;
+  mouseDownOverPlanet: Planet | null = null;
+  mouseDownOverCoords: WorldCoords | null = null;
+  mouseHoveringOverPlanet: Planet | null = null;
+  mouseHoveringOverCoords: WorldCoords | null = null;
 
-  private constructor() {
-    this.squareCenter = new WorldCoords(10, 20);
-    this.circleCenter = new WorldCoords(-5, 12);
-  }
+  private constructor() {}
 
   static getInstance(): GameUIManager {
     if (!GameUIManager.instance) {
@@ -36,6 +40,7 @@ class GameUIManager {
     uiEmitter.on('WORLD_MOUSE_DOWN', uiManager.onMouseDown.bind(uiManager));
     uiEmitter.on('WORLD_MOUSE_MOVE', uiManager.onMouseMove.bind(uiManager));
     uiEmitter.on('WORLD_MOUSE_UP', uiManager.onMouseUp.bind(uiManager));
+    uiEmitter.on('WORLD_MOUSE_OUT', uiManager.onMouseOut.bind(uiManager));
 
     GameUIManager.instance = uiManager;
 
@@ -43,42 +48,105 @@ class GameUIManager {
   }
 
   onMouseDown(coords: WorldCoords) {
-    this.updateMouseLastCoords(coords);
-    if (this.isOverSquare(coords)) {
-      this.mouseDownOverSquare = true;
-    } else if (this.isOverCircle(coords)) {
-      this.mouseDownOverCircle = true;
-    }
+    const gameManager = GameManager.getInstance();
+
+    this.updateMouseHoveringOverCoords(coords);
+
+    this.mouseDownOverPlanet = gameManager.getPlanetIfExists(
+      this.mouseHoveringOverCoords
+    );
+    this.mouseDownOverCoords = this.mouseHoveringOverCoords;
   }
 
   onMouseMove(coords: WorldCoords) {
-    this.updateMouseLastCoords(coords);
+    this.updateMouseHoveringOverCoords(coords);
   }
 
   onMouseUp(coords: WorldCoords) {
-    this.updateMouseLastCoords(coords);
-    if (this.isOverSquare(coords)) {
-      if (this.mouseDownOverSquare) {
-        this.squareSelected = !this.squareSelected;
-      }
-    } else if (this.isOverCircle(coords)) {
-      if (this.mouseDownOverCircle) {
-        this.circleSelected = !this.circleSelected;
+    const gameManager = GameManager.getInstance();
+
+    this.updateMouseHoveringOverCoords(coords);
+
+    const mouseUpOverCoords = this.mouseHoveringOverCoords;
+    const mouseUpOverPlanet = gameManager.getPlanetIfExists(mouseUpOverCoords);
+    if (mouseUpOverPlanet) {
+      if (
+        mouseUpOverPlanet.locationId === this.mouseDownOverPlanet.locationId
+      ) {
+        // toggle select
+        if (
+          this.selectedPlanet &&
+          this.selectedPlanet.locationId === mouseUpOverPlanet.locationId
+        ) {
+          this.selectedPlanet = null;
+          this.selectedCoords = null;
+        } else {
+          this.selectedPlanet = mouseUpOverPlanet;
+          this.selectedCoords = mouseUpOverCoords;
+        }
+      } else if (this.mouseDownOverPlanet.owner === gameManager.account) {
+        // move initiated
+        gameManager.move(
+          {
+            coords: this.mouseDownOverCoords,
+            hash: this.mouseDownOverPlanet.locationId
+          },
+          {
+            coords: mouseUpOverCoords,
+            hash: mouseUpOverPlanet.locationId
+          }
+        );
       }
     }
 
-    this.mouseDownOverSquare = false;
-    this.mouseDownOverCircle = false;
+    this.mouseDownOverPlanet = null;
+    this.mouseDownOverCoords = null;
   }
 
-  updateMouseLastCoords(coords: WorldCoords) {
-    this.mouseLastCoords = coords;
+  onMouseOut() {
+    this.mouseDownOverPlanet = null;
+    this.mouseDownOverCoords = null;
+    this.mouseHoveringOverPlanet = null;
+    this.mouseHoveringOverCoords = null;
+  }
 
-    if (this.isOverSquare(coords)) {
-      this.mouseLastCoords = this.squareCenter;
-    } else if (this.isOverCircle(coords)) {
-      this.mouseLastCoords = this.circleCenter;
+  updateMouseHoveringOverCoords(coords: WorldCoords) {
+    const gameManager = GameManager.getInstance();
+
+    this.mouseHoveringOverCoords = coords;
+    this.mouseHoveringOverPlanet = null;
+
+    for (let dx = -1 * this.radius; dx < this.radius + 1; dx += 1) {
+      for (let dy = -1 * this.radius; dy < this.radius + 1; dy += 1) {
+        const x = Math.round(coords.x) + dx;
+        const y = Math.round(coords.y) + dy;
+        const planet = gameManager.getPlanetIfExists(new WorldCoords(x, y));
+        if (planet) {
+          this.mouseHoveringOverCoords = new WorldCoords(x, y);
+          this.mouseHoveringOverPlanet = planet;
+          return;
+        }
+      }
     }
+  }
+
+  isOverOwnPlanet(coords: WorldCoords): boolean {
+    const gameManager = GameManager.getInstance();
+
+    let planetInHitbox: Planet | null = null;
+    for (let dx = -1 * this.radius; dx < this.radius + 1; dx += 1) {
+      for (let dy = -1 * this.radius; dy < this.radius + 1; dy += 1) {
+        const x = Math.round(coords.x) + dx;
+        const y = Math.round(coords.y) + dy;
+        const planet = gameManager.getPlanetIfExists(new WorldCoords(x, y));
+        if (planet) {
+          planetInHitbox = planet;
+          break;
+        }
+      }
+    }
+
+    return planetInHitbox && planetInHitbox.owner === gameManager.account;
   }
 
   isOverGameObject(coords: WorldCoords) {

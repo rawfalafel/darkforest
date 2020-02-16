@@ -5,6 +5,7 @@ import ScrollableBoard from './board/ScrollableBoard';
 import GameManager from '../api/GameManager';
 import { Coordinates, Planet } from '../@types/global/global';
 import Button from '../components/Button';
+import { WorldCoords } from '../utils/Coordinates';
 
 interface GameSceneProps {
   gameManager: GameManager; // GameManager object, expect not null
@@ -36,16 +37,20 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
   function toggleSelect(coords: Coordinates): void {
     if (selected && selected.x === coords.x && selected.y === coords.y) {
       setSelected(null);
-    } else if (gameManager.getPlanetIfExists(coords)) {
+    } else if (
+      gameManager.getPlanetIfExists(new WorldCoords(coords.x, coords.y))
+    ) {
       setSelected(coords);
-      const planet = gameManager.getPlanetIfExists(coords);
+      const planet = gameManager.getPlanetIfExists(
+        new WorldCoords(coords.x, coords.y)
+      );
       console.log(planet);
     }
   }
 
   function onMouseDownOverCoords(coords: Coordinates): void {
     const mouseDownPlanet: Planet | null = gameManager.getPlanetIfExists(
-      coords
+      new WorldCoords(coords.x, coords.y)
     );
     setMouseDown(coords);
     setMouseDownPlanet(mouseDownPlanet);
@@ -66,7 +71,9 @@ const GameScene = ({ gameManager }: GameSceneProps) => {
       } else {
         // if the user dragged from a planet they owned to another planet, initiate a move
         const startPlanet: Planet | null = mouseDownPlanet;
-        const endPlanet: Planet | null = gameManager.getPlanetIfExists(coords);
+        const endPlanet: Planet | null = gameManager.getPlanetIfExists(
+          new WorldCoords(coords.x, coords.y)
+        );
         if (
           startPlanet &&
           endPlanet &&

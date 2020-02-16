@@ -64,6 +64,7 @@ class CanvasRenderer {
     this.drawHoveringRect();
     this.drawSelectedRect();
     this.drawMousePath();
+    this.drawBorders();
 
     window.requestAnimationFrame(this.frame.bind(this));
   }
@@ -94,13 +95,14 @@ class CanvasRenderer {
 
   private drawPlanetAtLocation(location: Location) {
     const gameManager = GameManager.getInstance();
+    const uiManager = GameUIManager.getInstance();
 
     const planet = gameManager.getPlanetWithId(location.hash);
     const population = planet
       ? Math.floor(getCurrentPopulation(planet) / 100)
       : 0;
     const center = new WorldCoords(location.coords.x, location.coords.y);
-    const radius = 2;
+    const radius = uiManager.radius;
     let color = bigInt(location.hash, 16)
       .and(0xffffff)
       .toString(16);
@@ -127,11 +129,75 @@ class CanvasRenderer {
     );
   }
 
-  private drawHoveringRect() {}
+  private drawHoveringRect() {
+    const uiManager = GameUIManager.getInstance();
 
-  private drawSelectedRect() {}
+    if (!uiManager.mouseHoveringOverCoords) {
+      return;
+    }
 
-  private drawMousePath() {}
+    const sideLength = uiManager.mouseHoveringOverPlanet
+      ? 2.4 * uiManager.radius
+      : 1;
+    this.drawRectBorderWithCenter(
+      uiManager.mouseHoveringOverCoords,
+      sideLength,
+      sideLength,
+      0.1 * sideLength,
+      'red'
+    );
+  }
+
+  private drawSelectedRect() {
+    const uiManager = GameUIManager.getInstance();
+
+    if (!uiManager.selectedPlanet) {
+      return;
+    }
+
+    const sideLength = 2.4 * uiManager.radius;
+    this.drawRectBorderWithCenter(
+      uiManager.selectedCoords,
+      sideLength,
+      sideLength,
+      0.1 * sideLength,
+      'red'
+    );
+  }
+
+  private drawMousePath() {
+    const viewport = Viewport.getInstance();
+    const uiManager = GameUIManager.getInstance();
+
+    if (uiManager.mouseDownOverCoords && uiManager.mouseHoveringOverCoords) {
+      if (
+        uiManager.isOverOwnPlanet(uiManager.mouseDownOverCoords) &&
+        uiManager.mouseHoveringOverCoords !== uiManager.mouseDownOverCoords
+      ) {
+        this.ctx.beginPath();
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeStyle = 'white';
+        const startCoords: CanvasCoords = viewport.worldToCanvasCoords(
+          uiManager.mouseDownOverCoords
+        );
+        this.ctx.moveTo(startCoords.x, startCoords.y);
+        const endCoords: CanvasCoords = viewport.worldToCanvasCoords(
+          uiManager.mouseHoveringOverCoords
+        );
+        this.ctx.lineTo(endCoords.x, endCoords.y);
+        this.ctx.stroke();
+      }
+    }
+  }
+
+  private drawBorders() {
+    const { xSize, ySize } = GameManager.getInstance();
+
+    this.drawRectWithCenter(new WorldCoords(xSize / 2, 0), xSize, 3);
+    this.drawRectWithCenter(new WorldCoords(0, ySize / 2), 3, ySize);
+    this.drawRectWithCenter(new WorldCoords(xSize / 2, ySize), xSize, 3);
+    this.drawRectWithCenter(new WorldCoords(xSize, ySize / 2), 3, ySize);
+  }
 
   private drawRectWithCenter(
     center: WorldCoords,
@@ -146,6 +212,29 @@ class CanvasRenderer {
     const heightCanvasCoords = viewport.worldToCanvasDist(height);
     this.ctx.fillStyle = color;
     this.ctx.fillRect(
+      centerCanvasCoords.x - widthCanvasCoords / 2,
+      centerCanvasCoords.y - heightCanvasCoords / 2,
+      widthCanvasCoords,
+      heightCanvasCoords
+    );
+  }
+
+  private drawRectBorderWithCenter(
+    center: WorldCoords,
+    width: number,
+    height: number,
+    strokeWidth: number,
+    color: string = 'white'
+  ) {
+    const viewport = Viewport.getInstance();
+
+    const centerCanvasCoords = viewport.worldToCanvasCoords(center);
+    const widthCanvasCoords = viewport.worldToCanvasDist(width);
+    const heightCanvasCoords = viewport.worldToCanvasDist(height);
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = viewport.worldToCanvasDist(strokeWidth);
+    this.ctx.strokeRect(
       centerCanvasCoords.x - widthCanvasCoords / 2,
       centerCanvasCoords.y - heightCanvasCoords / 2,
       widthCanvasCoords,
@@ -215,47 +304,6 @@ class CanvasRenderer {
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = color;
     this.ctx.fillText(text, centerCanvasCoords.x, centerCanvasCoords.y);
-  }
-
-  private drawCursorPath() {
-    const viewport = Viewport.getInstance();
-    const uiManager = GameUIManager.getInstance();
-
-    if (uiManager.mouseLastCoords) {
-      if (
-        uiManager.mouseDownOverCircle &&
-        uiManager.mouseLastCoords !== uiManager.circleCenter
-      ) {
-        this.ctx.beginPath();
-        this.ctx.lineWidth = 4;
-        this.ctx.strokeStyle = 'white';
-        const startCoords: CanvasCoords = viewport.worldToCanvasCoords(
-          uiManager.circleCenter
-        );
-        this.ctx.moveTo(startCoords.x, startCoords.y);
-        const endCoords: CanvasCoords = viewport.worldToCanvasCoords(
-          uiManager.mouseLastCoords
-        );
-        this.ctx.lineTo(endCoords.x, endCoords.y);
-        this.ctx.stroke();
-      } else if (
-        uiManager.mouseDownOverSquare &&
-        uiManager.mouseLastCoords !== uiManager.squareCenter
-      ) {
-        this.ctx.beginPath();
-        this.ctx.lineWidth = 4;
-        this.ctx.strokeStyle = 'white';
-        const startCoords: CanvasCoords = viewport.worldToCanvasCoords(
-          uiManager.squareCenter
-        );
-        this.ctx.moveTo(startCoords.x, startCoords.y);
-        const endCoords: CanvasCoords = viewport.worldToCanvasCoords(
-          uiManager.mouseLastCoords
-        );
-        this.ctx.lineTo(endCoords.x, endCoords.y);
-        this.ctx.stroke();
-      }
-    }
   }
 }
 

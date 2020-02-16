@@ -89,19 +89,16 @@ class Viewport {
     const uiManager = GameUIManager.getInstance();
 
     const worldCoords = this.canvasToWorldCoords(canvasCoords);
-    if (
-      uiManager.isOverCircle(worldCoords) ||
-      uiManager.isOverSquare(worldCoords)
-    ) {
-      this.uiEmitter.emit('WORLD_MOUSE_DOWN', worldCoords);
-    } else {
+    if (!uiManager.isOverOwnPlanet(worldCoords)) {
       this.isPanning = true;
     }
+    this.uiEmitter.emit('WORLD_MOUSE_DOWN', worldCoords);
     this.mouseLastCoords = canvasCoords;
   }
 
   onMouseMove(canvasCoords: CanvasCoords) {
     if (this.isPanning) {
+      // if panning, don't need to emit mouse move event
       const dx = canvasCoords.x - this.mouseLastCoords.x;
       const dy = canvasCoords.y - this.mouseLastCoords.y;
       this.centerWorldCoords.x -= dx * this.scale();
@@ -114,15 +111,14 @@ class Viewport {
   }
 
   onMouseUp(canvasCoords: CanvasCoords) {
-    if (!this.isPanning) {
-      const worldCoords = this.canvasToWorldCoords(canvasCoords);
-      this.uiEmitter.emit('WORLD_MOUSE_UP', worldCoords);
-    }
+    const worldCoords = this.canvasToWorldCoords(canvasCoords);
+    this.uiEmitter.emit('WORLD_MOUSE_UP', worldCoords);
     this.isPanning = false;
     this.mouseLastCoords = canvasCoords;
   }
 
   onMouseOut() {
+    this.uiEmitter.emit('WORLD_MOUSE_OUT');
     this.isPanning = false;
     this.mouseLastCoords = null;
   }

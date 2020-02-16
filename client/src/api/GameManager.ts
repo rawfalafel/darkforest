@@ -8,7 +8,6 @@ import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
 import {
   BoardData,
-  Coordinates,
   EthAddress,
   Location,
   LocationId,
@@ -22,6 +21,7 @@ import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
 import SnarkArgsHelper from './SnarkArgsHelper';
 import { locationIdToDecStr } from '../utils/CheckedTypeUtils';
+import { WorldCoords } from '../utils/Coordinates';
 
 class GameManager extends EventEmitter {
   static instance: any;
@@ -186,7 +186,7 @@ class GameManager extends EventEmitter {
     return <string>this.account in this.players;
   }
 
-  getPlanetIfExists(coords: Coordinates): Planet | null {
+  getPlanetIfExists(coords: WorldCoords): Planet | null {
     const { x, y } = coords;
     const knownBoard: BoardData = this.inMemoryBoard;
     const chunkX = Math.floor(x / CHUNK_SIZE);
