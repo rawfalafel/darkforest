@@ -2,7 +2,7 @@ import * as React from 'react';
 import { RefObject } from 'react';
 import UIEmitter from '../../utils/UIEmitter';
 import Viewport from './Viewport';
-import { WorldCoords } from '../../utils/Coordinates';
+import { WorldCoords, CanvasCoords } from '../../utils/Coordinates';
 import CanvasRenderer from './CanvasRenderer';
 
 interface ControllableCanvasProps {}
@@ -55,21 +55,27 @@ class ControllableCanvas extends React.Component<
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    this.uiEmitter.emit('CANVAS_MOUSE_DOWN', { x: canvasX, y: canvasY });
+    this.uiEmitter.emit(
+      'CANVAS_MOUSE_DOWN',
+      new CanvasCoords(canvasX, canvasY)
+    );
   }
 
   onMouseMove(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    this.uiEmitter.emit('CANVAS_MOUSE_MOVE', { x: canvasX, y: canvasY });
+    this.uiEmitter.emit(
+      'CANVAS_MOUSE_MOVE',
+      new CanvasCoords(canvasX, canvasY)
+    );
   }
 
   onMouseUp(e) {
     const rect = this.canvas.getBoundingClientRect();
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
-    this.uiEmitter.emit('CANVAS_MOUSE_UP', { x: canvasX, y: canvasY });
+    this.uiEmitter.emit('CANVAS_MOUSE_UP', new CanvasCoords(canvasX, canvasY));
   }
 
   onMouseOut() {
