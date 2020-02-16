@@ -7,13 +7,6 @@ class GameUIManager {
   static instance: GameUIManager;
 
   readonly radius = 2;
-  readonly sideLength = 2.5;
-  squareCenter: WorldCoords;
-  squareSelected = false;
-  mouseDownOverSquare = false;
-  circleCenter: WorldCoords;
-  circleSelected = false;
-  mouseDownOverCircle = false;
 
   selectedPlanet: Planet | null = null;
   selectedCoords: WorldCoords | null = null;
