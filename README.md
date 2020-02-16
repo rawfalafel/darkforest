@@ -26,7 +26,7 @@ if you are modifying anything SNARK-related, you may be interested in rebuilding
 we depend on a few packages which handle snark-related build processes.
 
 - global dependencies: first `npm install -g snarkjs` and `npm install -g circom` to install `snarkjs` and `circom` programs globally.
-- local dependencies: then, run `npm install` in the root directory. this ensures that you have a local copy of `circomlib` in `./node_modules`.
+- local dependencies: then, run `npm install` in the `./client` directory. this ensures that you have a local copy of `circomlib` in `./node_modules`.
 
 now you can run `./compile.sh` in `circuits/init` and `circuits/move` to rebuild `circuit.json`, `proving_key.json`, `verification_key.json`, and the `verifier.sol` solidity contract.
 
