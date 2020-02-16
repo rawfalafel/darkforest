@@ -141,25 +141,6 @@ class GameUIManager {
 
     return planetInHitbox && planetInHitbox.owner === gameManager.account;
   }
-
-  isOverGameObject(coords: WorldCoords) {
-    return this.isOverSquare(coords) || this.isOverCircle(coords);
-  }
-
-  isOverSquare(coords: WorldCoords) {
-    return (
-      Math.abs(coords.x - this.squareCenter.x) < this.sideLength / 2 &&
-      Math.abs(coords.y - this.squareCenter.y) < this.sideLength / 2
-    );
-  }
-
-  isOverCircle(coords: WorldCoords) {
-    return (
-      Math.pow(coords.x - this.circleCenter.x, 2) +
-        Math.pow(coords.y - this.circleCenter.y, 2) <
-      Math.pow(this.radius, 2)
-    );
-  }
 }
 
 export default GameUIManager;
