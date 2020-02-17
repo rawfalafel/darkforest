@@ -1,16 +1,12 @@
 import * as EventEmitter from 'events';
 import LocalStorageManager from './LocalStorageManager';
-import {
-  getCurrentPopulation,
-  getPlanetTypeForLocationId
-} from '../utils/Utils';
+import { getCurrentPopulation, getPlanetTypeForLocation } from '../utils/Utils';
 import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
 import {
   BoardData,
   EthAddress,
   Location,
-  LocationId,
   Planet,
   PlanetMap,
   Player,
@@ -205,19 +201,18 @@ class GameManager extends EventEmitter {
     }
     for (const location of chunk.planetLocations) {
       if (location.coords.x === x && location.coords.y === y) {
-        const locationId = location.hash;
-        return this.getPlanetWithId(locationId);
+        return this.getPlanetWithLocation(location);
       }
     }
     return null;
   }
 
-  getPlanetWithId(locationId: LocationId): Planet {
-    if (!!this.planets[locationId]) {
-      return this.planets[locationId];
+  getPlanetWithLocation(location: Location): Planet {
+    if (!!this.planets[location.hash]) {
+      return this.planets[location.hash];
     }
     // return a default unowned planet
-    const planetType = getPlanetTypeForLocationId(locationId);
+    const planetType = getPlanetTypeForLocation(location);
     return {
       owner: null,
       planetType: planetType,
@@ -226,7 +221,7 @@ class GameManager extends EventEmitter {
       hardiness: this.defaultHardiness[planetType],
       stalwartness: this.defaultStalwartness[planetType],
       lastUpdated: Date.now(),
-      locationId,
+      locationId: location.hash,
       destroyed: false,
       population: 0,
       coordinatesRevealed: false

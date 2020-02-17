@@ -63,8 +63,8 @@ class CanvasRenderer {
       viewport.isInOrAroundViewport(new WorldCoords(loc.coords.x, loc.coords.y))
     );
     planetLocations = planetLocations.sort((a, b) => {
-      const planetA = gameManager.getPlanetWithId(a.hash);
-      const planetB = gameManager.getPlanetWithId(b.hash);
+      const planetA = gameManager.getPlanetWithLocation(a);
+      const planetB = gameManager.getPlanetWithLocation(b);
       return planetB.planetType - planetA.planetType;
     });
 
@@ -107,7 +107,7 @@ class CanvasRenderer {
     const gameManager = GameManager.getInstance();
     const uiManager = GameUIManager.getInstance();
 
-    const planet = gameManager.getPlanetWithId(location.hash);
+    const planet = gameManager.getPlanetWithLocation(location);
     const population = planet
       ? Math.floor(getCurrentPopulation(planet) / 100)
       : 0;

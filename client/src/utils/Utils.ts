@@ -1,7 +1,7 @@
 import * as bigInt from 'big-integer';
 import { BigInteger } from 'big-integer';
 import { Witness } from 'snarkjs';
-import { LocationId, Planet } from '../@types/global/global';
+import { Location, Planet } from '../@types/global/global';
 import { PlanetType } from '../@types/global/enums';
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
@@ -69,10 +69,10 @@ export const getCurrentPopulation: (planet: Planet) => number = planet => {
   return planet.capacity / denominator;
 };
 
-export const getPlanetTypeForLocationId: (
-  locationId: LocationId
-) => PlanetType = locationId => {
-  const typeString = (<string>locationId).substring(8, 14);
+export const getPlanetTypeForLocation: (
+  location: Location
+) => PlanetType = location => {
+  const typeString = (<string>location.hash).substring(8, 14);
   const typeBigInt = bigInt(typeString, 16);
   if (typeBigInt.lt(bigInt(8))) {
     return PlanetType.HyperGiant;
