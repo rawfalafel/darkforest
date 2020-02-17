@@ -52,11 +52,17 @@ export interface RawPlanetMetadata
   1: string;
   2: number;
   3: boolean;
+  4: BigNumber;
+  5: any;
+  6: BigNumber;
 
   locationId: BigNumber;
   owner: string;
   version: number;
   destroyed: boolean;
+  lastBlockUpdated: BigNumber;
+  pending: any;
+  pendingCount: BigNumber;
 }
 
 /*export interface InitializePlayerArgs extends Array<any> {

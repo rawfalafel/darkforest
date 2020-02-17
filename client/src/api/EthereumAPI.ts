@@ -96,10 +96,26 @@ class EthereumAPI extends EventEmitter {
         this.emit('planetUpdate', newPlanet);
       })
       .on(
-        'PlayerMoved',
+        'TestEvent', async () => {
+          console.log('test event fired')
+        }
+      )
+      .on(
+        'PlayerArrived',
+        async (player, fromLocRaw, toLocRaw, maxDist, shipsMoved, event) => {
+          const fromPlanet: OwnedPlanet = await this.getPlanet(fromLocRaw);
+          const toPlanet: OwnedPlanet = await this.getPlanet(toLocRaw);
+          console.log('arrived', fromPlanet, toPlanet)
+          this.emit('planetUpdate', fromPlanet);
+          this.emit('planetUpdate', toPlanet);
+        }
+      )
+      .on(
+        'PlayerDeparted',
         async (player, fromLocRaw, toLocRaw, maxDist, shipsMoved) => {
           const fromPlanet: OwnedPlanet = await this.getPlanet(fromLocRaw);
           const toPlanet: OwnedPlanet = await this.getPlanet(toLocRaw);
+          console.log('departed', fromPlanet, toPlanet)
           this.emit('planetUpdate', fromPlanet);
           this.emit('planetUpdate', toPlanet);
         }
@@ -265,6 +281,10 @@ class EthereumAPI extends EventEmitter {
     const rawVersion = rawPlanetMetadata.version || rawPlanetMetadata[2];
     const rawDestroyed = rawPlanetMetadata.destroyed || rawPlanetMetadata[3];
 
+    const rawLastBlockUpdated = rawPlanetMetadata.lastBlockUpdated || rawPlanetMetadata[4];
+    const rawPending = rawPlanetMetadata.pending || rawPlanetMetadata[5];
+    const rawPendingCount = rawPlanetMetadata.pendingCount || rawPlanetMetadata[6];
+
     const planet: OwnedPlanet = {
       capacity: rawCapacity.toNumber(),
       growth: rawGrowth.toNumber(),
@@ -278,6 +298,9 @@ class EthereumAPI extends EventEmitter {
       population: rawPopulation.toNumber(),
       version: rawVersion,
       destroyed: rawDestroyed,
+      pending: rawPending,
+      pendingCount: rawPendingCount.toNumber(),
+      lastBlockUpdated: rawLastBlockUpdated.toNumber(),
     };
     if (planet.coordinatesRevealed) {
       const rawX = rawPlanet.x || rawPlanet[10];

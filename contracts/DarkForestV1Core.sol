@@ -58,12 +58,9 @@ contract DarkForestV1 is Verifier {
         uint stalwartness;
         uint population;
         uint lastUpdated;
-        uint lastUpdatedBlock;
         bool coordinatesRevealed;
         uint x;
         uint y;
-        mapping(uint => Transaction) pending;
-        uint pendingCount;
     }
 
     struct PlanetMetadata {
@@ -71,6 +68,9 @@ contract DarkForestV1 is Verifier {
         address owner;
         uint8 version;
         bool destroyed;
+        uint lastUpdatedBlock;
+        mapping(uint => Transaction) pending;
+        uint pendingCount;
     }
 
     struct Transaction {
@@ -83,6 +83,7 @@ contract DarkForestV1 is Verifier {
     }
 
     event PlayerInitialized(address player, uint loc);
+    event TestEvent();
     event PlayerArrived(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
     event PlayerDeparted(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
     event PlanetDestroyed(uint loc);
@@ -172,7 +173,6 @@ contract DarkForestV1 is Verifier {
         newPlanet.stalwartness = defaultStalwartness[uint(planetType)];
         newPlanet.population = _population;
         newPlanet.lastUpdated = now;
-        newPlanet.lastUpdatedBlock = block.number;
         newPlanet.coordinatesRevealed = false;
         planets[_loc] = newPlanet;
 
@@ -181,6 +181,7 @@ contract DarkForestV1 is Verifier {
         newPlanetMetadata.owner = _player;
         newPlanetMetadata.version = VERSION;
         newPlanetMetadata.destroyed = false;
+        newPlanetMetadata.lastUpdatedBlock = block.number;
         planetMetadatas[_loc] = newPlanetMetadata;
 
         planetIds.push(_loc);
@@ -245,6 +246,7 @@ contract DarkForestV1 is Verifier {
         initializePlanet(loc, player, 25000);
 
         emit PlayerInitialized(player, loc);
+        emit TestEvent();
     }
 
     function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private pure returns (uint) {
@@ -272,12 +274,14 @@ contract DarkForestV1 is Verifier {
         uint[4] memory _input
     ) public {
         Transaction memory _tx = depart(_a, _b, _c, _input);
-        enqueueTransactionOnPlanet(planets[_tx.newLoc], _tx);
+        executeReadyTransactions(planetMetadatas[_tx.oldLoc]);
+        executeReadyTransactions(planetMetadatas[_tx.newLoc]);
+        enqueueTransactionOnPlanet(planetMetadatas[_tx.newLoc], _tx);
     }
 
     //grossly slow right now, can write a sort and make it fast later.
-    function executeReadyTransactions(Planet storage _p) internal { 
-        for (uint currentBlock = _p.lastUpdatedBlock; currentBlock < block.number; currentBlock++) {
+    function executeReadyTransactions(PlanetMetadata storage _p) internal { 
+        for (uint currentBlock = _p.lastUpdatedBlock; currentBlock <= block.number; currentBlock++) {
             for (uint i = 0; i < _p.pendingCount; i++) {
                 if (_p.pending[i].blockNumber != 0 && _p.pending[i].blockNumber <= currentBlock) {
                     arrive(_p.pending[i]);
@@ -285,6 +289,8 @@ contract DarkForestV1 is Verifier {
                 }
             }
         }
+
+        _p.lastUpdatedBlock = block.number;
     }
 
     function depart (
@@ -301,6 +307,7 @@ contract DarkForestV1 is Verifier {
         }
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
 
+        trx.blockNumber = block.number + 3;
         trx.player = msg.sender;
         trx.oldLoc = _input[0];
         trx.newLoc = _input[1];
@@ -321,24 +328,23 @@ contract DarkForestV1 is Verifier {
         require(!planetMetadatas[tx_.newLoc].destroyed);
         updatePopulation(tx_.newLoc);
 
+        if (!planetIsInitialized(tx_.newLoc)) {
+            initializePlanet(tx_.newLoc, tx_.player, 0);
+        }
+
+        uint shipsLanded = moveShipsDecay(tx_.shipsMoved, planets[tx_.oldLoc].hardiness, tx_.maxDist);
+
         if (!planetIsOccupied(tx_.newLoc)) {
             // colonizing an uninhabited planet
-            if (!planetIsInitialized(tx_.newLoc)) {
-                initializePlanet(tx_.newLoc, tx_.player, 0);
-            }
-            uint shipsLanded = moveShipsDecay(tx_.shipsMoved, planets[tx_.oldLoc].hardiness, tx_.maxDist);
             planets[tx_.newLoc].population += shipsLanded;
             if (planets[tx_.newLoc].population > planets[tx_.newLoc].capacity) {
                 planets[tx_.newLoc].population = planets[tx_.newLoc].capacity;
             }
         } else if (ownerIfOccupiedElseZero(tx_.newLoc) == tx_.player) {
             // moving forces between my planets
-            uint shipsLanded = moveShipsDecay(tx_.shipsMoved, planets[tx_.oldLoc].hardiness, tx_.maxDist);
             planets[tx_.newLoc].population += shipsLanded;
         } else {
             // attacking enemy
-            uint shipsLanded = moveShipsDecay(tx_.shipsMoved, planets[tx_.oldLoc].hardiness, tx_.maxDist);
-
             if (planets[tx_.newLoc].population > (shipsLanded * 100 / planets[tx_.newLoc].stalwartness)) {
                 // attack reduces target planet's garrison but doesn't conquer it
                 planets[tx_.newLoc].population -= (shipsLanded * 100 / planets[tx_.newLoc].stalwartness);
@@ -351,19 +357,15 @@ contract DarkForestV1 is Verifier {
         emit PlayerArrived(tx_.player, tx_.oldLoc, tx_.newLoc, tx_.maxDist, tx_.shipsMoved);
     }
 
-    function enqueueTransactionOnPlanet(Planet storage _p, Transaction memory _tx) internal {
+    function enqueueTransactionOnPlanet(PlanetMetadata storage _p, Transaction memory _tx) internal {
         for (uint i = 0; i < _p.pendingCount; i++) {
             if (_p.pending[i].blockNumber == 0) {
                 _p.pending[i] = _tx;
                 return;
             }
         }
-        _p.pending[_p.pendingCount] = _tx;
+        _p.pending[_p.pendingCount - 1] = _tx;
         _p.pendingCount += 1;
-    }
-
-    function dequeueTransactionOnPlanet(Planet storage _p, uint _index) internal {
-        delete _p.pending[_index];
     }
 
     function cashOut(uint loc) external {

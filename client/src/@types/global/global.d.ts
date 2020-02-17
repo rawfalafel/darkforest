@@ -55,6 +55,9 @@ export interface Planet {
   coordinatesRevealed: boolean;
   x?: number;
   y?: number;
+  pending?: any;
+  pendingCount?: number;
+  lastBlockUpdated?: number;
 }
 
 export interface OwnedPlanet extends Planet {
