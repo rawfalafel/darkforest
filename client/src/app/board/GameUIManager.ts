@@ -7,8 +7,6 @@ import { PlanetType } from '../../@types/global/enums';
 class GameUIManager {
   static instance: GameUIManager;
 
-  readonly radius = 2;
-
   readonly radiusMap = {};
 
   selectedPlanet: Planet | null = null;
@@ -21,15 +19,15 @@ class GameUIManager {
   private constructor() {
     this.radiusMap[PlanetType.LittleAsteroid] = 1;
     this.radiusMap[PlanetType.BigAsteroid] = 1.5;
-    this.radiusMap[PlanetType.BrownDwarf] = 3;
-    this.radiusMap[PlanetType.RedDwarf] = 3.5;
-    this.radiusMap[PlanetType.WhiteDwarf] = 4;
-    this.radiusMap[PlanetType.YellowStar] = 6;
-    this.radiusMap[PlanetType.BlueStar] = 7;
-    this.radiusMap[PlanetType.SubGiant] = 8;
-    this.radiusMap[PlanetType.Giant] = 10;
-    this.radiusMap[PlanetType.SuperGiant] = 12;
-    this.radiusMap[PlanetType.HyperGiant] = 15;
+    this.radiusMap[PlanetType.BrownDwarf] = 4;
+    this.radiusMap[PlanetType.RedDwarf] = 5;
+    this.radiusMap[PlanetType.WhiteDwarf] = 6;
+    this.radiusMap[PlanetType.YellowStar] = 8;
+    this.radiusMap[PlanetType.BlueStar] = 10;
+    this.radiusMap[PlanetType.SubGiant] = 12;
+    this.radiusMap[PlanetType.Giant] = 15;
+    this.radiusMap[PlanetType.SuperGiant] = 20;
+    this.radiusMap[PlanetType.HyperGiant] = 25;
   }
 
   static getInstance(): GameUIManager {
@@ -119,42 +117,69 @@ class GameUIManager {
   }
 
   updateMouseHoveringOverCoords(coords: WorldCoords) {
-    const gameManager = GameManager.getInstance();
-
+    // if the mouse is inside hitbox of a planet, snaps the mouse to center of planet
     this.mouseHoveringOverCoords = coords;
     this.mouseHoveringOverPlanet = null;
 
-    for (let dx = -1 * this.radius; dx < this.radius + 1; dx += 1) {
-      for (let dy = -1 * this.radius; dy < this.radius + 1; dy += 1) {
-        const x = Math.round(coords.x) + dx;
-        const y = Math.round(coords.y) + dy;
-        const planet = gameManager.getPlanetIfExists(new WorldCoords(x, y));
-        if (planet) {
-          this.mouseHoveringOverCoords = new WorldCoords(x, y);
-          this.mouseHoveringOverPlanet = planet;
-          return;
-        }
-      }
+    const res = this.planetHitboxForCoords(coords);
+    if (res) {
+      this.mouseHoveringOverPlanet = res[0];
+      this.mouseHoveringOverCoords = res[1];
     }
+
+    this.mouseHoveringOverCoords = new WorldCoords(
+      Math.round(this.mouseHoveringOverCoords.x),
+      Math.round(this.mouseHoveringOverCoords.y)
+    );
   }
 
   isOverOwnPlanet(coords: WorldCoords): boolean {
     const gameManager = GameManager.getInstance();
 
+    const res = this.planetHitboxForCoords(coords);
+    let planet: Planet | null = null;
+    if (res) {
+      planet = res[0];
+    }
+
+    return planet && planet.owner === gameManager.account;
+  }
+
+  private planetHitboxForCoords(
+    coords: WorldCoords
+  ): [Planet, WorldCoords] | null {
+    const gameManager = GameManager.getInstance();
+
+    const maxRadius = this.radiusMap[PlanetType.HyperGiant];
     let planetInHitbox: Planet | null = null;
-    for (let dx = -1 * this.radius; dx < this.radius + 1; dx += 1) {
-      for (let dy = -1 * this.radius; dy < this.radius + 1; dy += 1) {
+    let smallestPlanetRadius: number = maxRadius + 1;
+    let planetCoords: WorldCoords | null = null;
+
+    for (let dx = -1 * maxRadius; dx < maxRadius + 1; dx += 1) {
+      for (let dy = -1 * maxRadius; dy < maxRadius + 1; dy += 1) {
         const x = Math.round(coords.x) + dx;
         const y = Math.round(coords.y) + dy;
         const planet = gameManager.getPlanetIfExists(new WorldCoords(x, y));
-        if (planet) {
-          planetInHitbox = planet;
-          break;
+        if (
+          planet &&
+          this.radiusMap[planet.planetType] >
+            Math.max(Math.abs(x - coords.x), Math.abs(y - coords.y))
+        ) {
+          // coords is in hitbox
+          if (this.radiusMap[planet.planetType] < smallestPlanetRadius) {
+            // we want the smallest planet that we're in the hitbox of
+            planetInHitbox = planet;
+            smallestPlanetRadius = this.radiusMap[planet.planetType];
+            planetCoords = new WorldCoords(x, y);
+          }
         }
       }
     }
 
-    return planetInHitbox && planetInHitbox.owner === gameManager.account;
+    if (planetCoords && planetInHitbox) {
+      return [planetInHitbox, planetCoords];
+    }
+    return null;
   }
 }
 

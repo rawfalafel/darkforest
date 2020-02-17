@@ -5,9 +5,10 @@ import { BigInteger } from 'big-integer';
 import {
   ExploredChunkData,
   Location,
-  MinerWorkerMessage,
+  MinerWorkerMessage
 } from '../@types/global/global';
 import { locationIdFromBigInt } from '../utils/CheckedTypeUtils';
+import { WorldCoords } from '../utils/Coordinates';
 
 const ctx: Worker = self as any;
 
@@ -23,15 +24,15 @@ const exploreChunk: (
       const hash: BigInteger = mimcHash(x, y);
       if (hash.lesser(LOCATION_ID_UB.divide(planetRarityBI))) {
         planetLocations.push({
-          coords: { x, y },
-          hash: locationIdFromBigInt(hash),
+          coords: new WorldCoords(x, y),
+          hash: locationIdFromBigInt(hash)
         });
       }
     }
   }
   const chunkData: ExploredChunkData = {
     id: { chunkX, chunkY },
-    planetLocations,
+    planetLocations
   };
   ctx.postMessage(JSON.stringify(chunkData));
 };

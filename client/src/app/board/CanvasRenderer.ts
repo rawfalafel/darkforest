@@ -42,10 +42,11 @@ class CanvasRenderer {
 
   private frame() {
     const gameManager = GameManager.getInstance();
+    const viewport = Viewport.getInstance();
 
     const board = gameManager.inMemoryBoard;
     const knownChunks: ChunkCoordinates[] = [];
-    const planetLocations: Location[] = [];
+    let planetLocations: Location[] = [];
     for (let chunkX = 0; chunkX < board.length; chunkX += 1) {
       for (let chunkY = 0; chunkY < board[chunkX].length; chunkY += 1) {
         const exploredChunk = board[chunkX][chunkY];
@@ -57,6 +58,11 @@ class CanvasRenderer {
         }
       }
     }
+
+    planetLocations = planetLocations.filter(loc =>
+      viewport.isInOrAroundViewport(new WorldCoords(loc.coords.x, loc.coords.y))
+    );
+    planetLocations.sort((a, b) => a.hash.localeCompare(b.hash));
 
     this.drawCleanBoard();
     this.drawKnownChunks(knownChunks);
@@ -125,7 +131,10 @@ class CanvasRenderer {
       this.drawText(
         population.toString(),
         15,
-        new WorldCoords(center.x, center.y - (planet.owner ? 3 : 2.5)),
+        new WorldCoords(
+          center.x,
+          center.y - 1.1 * radius - (planet.owner ? 0.75 : 0.25)
+        ),
         'white'
       );
     }
@@ -139,14 +148,14 @@ class CanvasRenderer {
     }
 
     const sideLength = uiManager.mouseHoveringOverPlanet
-      ? 2.4 * uiManager.radius
+      ? 2.4 * uiManager.radiusMap[uiManager.mouseHoveringOverPlanet.planetType]
       : 1;
     this.drawRectBorderWithCenter(
       uiManager.mouseHoveringOverCoords,
       sideLength,
       sideLength,
       0.1 * sideLength,
-      'red'
+      'white'
     );
   }
 
@@ -157,7 +166,8 @@ class CanvasRenderer {
       return;
     }
 
-    const sideLength = 2.4 * uiManager.radius;
+    const sideLength =
+      2.4 * uiManager.radiusMap[uiManager.selectedPlanet.planetType];
     this.drawRectBorderWithCenter(
       uiManager.selectedCoords,
       sideLength,

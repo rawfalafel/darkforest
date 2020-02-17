@@ -1,5 +1,6 @@
 // web3 injected types, from metamask
 import { PlanetType } from './enums';
+import { WorldCoords } from '../../utils/Coordinates';
 
 interface Web3ProviderObject {}
 
@@ -39,7 +40,7 @@ export interface Coordinates {
 }
 
 export interface Location {
-  coords: Coordinates;
+  coords: WorldCoords;
   hash: LocationId;
 }
 

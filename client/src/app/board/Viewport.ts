@@ -197,6 +197,22 @@ class Viewport {
     );
   }
 
+  isInOrAroundViewport(coords: WorldCoords): boolean {
+    if (
+      Math.abs(coords.x - this.centerWorldCoords.x) >
+      0.6 * this.widthInWorldUnits
+    ) {
+      return false;
+    }
+    if (
+      Math.abs(coords.y - this.centerWorldCoords.y) >
+      0.6 * this.heightInWorldUnits
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   private setWorldWidth(width: number): void {
     // world scale width
     this.widthInWorldUnits = width;
