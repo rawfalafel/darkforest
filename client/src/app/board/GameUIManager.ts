@@ -89,6 +89,7 @@ class GameUIManager {
         } else {
           this.selectedPlanet = mouseUpOverPlanet;
           this.selectedCoords = mouseUpOverCoords;
+          console.log(this.selectedPlanet);
         }
       } else if (this.mouseDownOverPlanet.owner === gameManager.account) {
         // move initiated

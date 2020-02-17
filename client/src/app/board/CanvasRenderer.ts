@@ -62,13 +62,17 @@ class CanvasRenderer {
     planetLocations = planetLocations.filter(loc =>
       viewport.isInOrAroundViewport(new WorldCoords(loc.coords.x, loc.coords.y))
     );
-    planetLocations.sort((a, b) => b.hash.localeCompare(a.hash));
+    planetLocations = planetLocations.sort((a, b) => {
+      const planetA = gameManager.getPlanetWithId(a.hash);
+      const planetB = gameManager.getPlanetWithId(b.hash);
+      return planetB.planetType - planetA.planetType;
+    });
 
     this.drawCleanBoard();
     this.drawKnownChunks(knownChunks);
     this.drawPlanets(planetLocations);
-    this.drawHoveringRect();
     this.drawSelectedRect();
+    this.drawHoveringRect();
     this.drawMousePath();
     this.drawBorders();
 
