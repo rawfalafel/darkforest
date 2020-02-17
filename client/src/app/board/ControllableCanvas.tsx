@@ -49,6 +49,20 @@ class ControllableCanvas extends React.Component<
     this.canvas.addEventListener('mouseout', this.onMouseOut.bind(this));
     this.canvas.addEventListener('mousewheel', this.onScroll.bind(this));
     this.canvas.addEventListener('DOMMouseScroll', this.onScroll.bind(this));
+
+    window.addEventListener('resize', this.onResize.bind(this));
+
+    this.uiEmitter.on('WINDOW_RESIZE', this.resizeCanvas.bind(this));
+  }
+
+  resizeCanvas(e) {
+    this.setState({
+      width:window.innerWidth,
+      height:window.innerHeight
+    });
+  }
+  onResize(e) {
+    this.uiEmitter.emit('WINDOW_RESIZE');
   }
 
   onMouseDown(e) {
