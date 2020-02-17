@@ -6,6 +6,8 @@ import Button from '../components/Button';
 import ControllableCanvas from './board/ControllableCanvas';
 import GameUIManager from './board/GameUIManager';
 
+import ForcesWindow from './windows/ForcesWindow';
+
 const GameScene = () => {
   const [exploring, setExploring] = useState(true);
   const gameManager = GameManager.getInstance();
@@ -47,6 +49,11 @@ const GameScene = () => {
         >
           Cash out
         </Button>
+      </div>
+
+      <div className="absolute bottom-0 right-0">
+        {/* Wrapper */}
+        <WindowManager />
       </div>
       <ControllableCanvas />
     </React.Fragment>
