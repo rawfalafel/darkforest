@@ -57,13 +57,21 @@ export interface Planet {
   y?: number;
   pending?: any;
   pendingCount?: number;
-  lastBlockUpdated?: number;
 }
 
 export interface OwnedPlanet extends Planet {
   owner: EthAddress;
   version: number;
   destroyed: boolean;
+}
+
+export interface Transaction {
+  arrivalTime: number;
+  player: string;
+  oldLoc: LocationId;
+  newLoc: LocationId;
+  maxDist: number;
+  shipsMoved: number;
 }
 
 export interface PlanetMap {

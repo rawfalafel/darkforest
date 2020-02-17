@@ -68,13 +68,13 @@ contract DarkForestV1 is Verifier {
         address owner;
         uint8 version;
         bool destroyed;
-        uint lastUpdatedBlock;
         mapping(uint => Transaction) pending;
         uint pendingCount;
+        bool exists;
     }
 
     struct Transaction {
-        uint blockNumber;
+        uint arrivalTime;
         address player;
         uint oldLoc;
         uint newLoc;
@@ -87,6 +87,8 @@ contract DarkForestV1 is Verifier {
     event PlayerArrived(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
     event PlayerDeparted(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
     event PlanetDestroyed(uint loc);
+    event ViewTx(Transaction tx, uint index);
+    event EnqueuedTx(Transaction tx);
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
@@ -181,7 +183,7 @@ contract DarkForestV1 is Verifier {
         newPlanetMetadata.owner = _player;
         newPlanetMetadata.version = VERSION;
         newPlanetMetadata.destroyed = false;
-        newPlanetMetadata.lastUpdatedBlock = block.number;
+        newPlanetMetadata.exists = true;
         planetMetadatas[_loc] = newPlanetMetadata;
 
         planetIds.push(_loc);
@@ -224,7 +226,6 @@ contract DarkForestV1 is Verifier {
         uint64 new_pop = ABDKMath64x64.toUInt(ABDKMath64x64.div(numerator, denominator));
         planet.population = uint (new_pop);
 
-        planet.lastUpdated = now;
     }
 
     function initializePlayer(
@@ -274,23 +275,67 @@ contract DarkForestV1 is Verifier {
         uint[4] memory _input
     ) public {
         Transaction memory _tx = depart(_a, _b, _c, _input);
+        if (!planetIsInitialized(_tx.newLoc)) {
+            initializePlanet(_tx.newLoc, address(0), 0);
+        }
         executeReadyTransactions(planetMetadatas[_tx.oldLoc]);
         executeReadyTransactions(planetMetadatas[_tx.newLoc]);
         enqueueTransactionOnPlanet(planetMetadatas[_tx.newLoc], _tx);
     }
 
-    //grossly slow right now, can write a sort and make it fast later.
-    function executeReadyTransactions(PlanetMetadata storage _p) internal { 
-        for (uint currentBlock = _p.lastUpdatedBlock; currentBlock <= block.number; currentBlock++) {
-            for (uint i = 0; i < _p.pendingCount; i++) {
-                if (_p.pending[i].blockNumber != 0 && _p.pending[i].blockNumber <= currentBlock) {
-                    arrive(_p.pending[i]);
-                    delete _p.pending[i];
+    // function hashTx(Transaction memory _tx) internal returns (bytes32) {
+    //     return keccak256(abi.encodePacked(_tx));
+    // }
+
+    function getAllTxs() public view returns (Transaction[] memory) {
+        Transaction[] storage txs = new uint256[](1);
+        for (uint i = 0; i < planetIds.length; i++) {
+            //Planet memory p = planets[planetIds[i]];
+            PlanetMetadata storage p = planetMetadatas[planetIds[i]];
+            for (uint j = 0; j < p.pendingCount; j++) {
+                if (p.pending[j].arrivalTime != 0) {
+                    txs.push(p.pending[j]);
                 }
             }
         }
 
-        _p.lastUpdatedBlock = block.number;
+        Transaction[] memory out = txs;
+
+        return out;
+    }
+
+    function executeReadyTransactions(PlanetMetadata storage _p) internal {
+        while (true) {
+            uint idx;
+            bool found;
+            (found, idx) = findNextReadyTransaction(_p);
+
+            if (!found) break;
+
+            arrive(_p.pending[idx]);
+            delete _p.pending[idx];
+        }
+    }
+
+    function findNextReadyTransaction(PlanetMetadata storage _p) internal returns (bool, uint) {
+        uint earliestTime = now;
+        uint earliestIndex = 0;
+        bool found = false;
+        for (uint i = 0; i < _p.pendingCount; i++) {
+            emit ViewTx(_p.pending[i], i);
+            if (_p.pending[i].arrivalTime != 0 && _p.pending[i].arrivalTime <= earliestTime) {
+                earliestTime = _p.pending[i].arrivalTime;
+                earliestIndex = i;
+                found = true;
+            }
+        }
+
+        return (found, earliestIndex);
+    }
+
+    function updatePlanet(uint _locationId) internal {
+        updatePopulation(_locationId);
+        planets[_locationId].lastUpdated = now;
     }
 
     function depart (
@@ -307,7 +352,7 @@ contract DarkForestV1 is Verifier {
         }
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
 
-        trx.blockNumber = block.number + 3;
+        trx.arrivalTime = now + 15 seconds;
         trx.player = msg.sender;
         trx.oldLoc = _input[0];
         trx.newLoc = _input[1];
@@ -317,7 +362,7 @@ contract DarkForestV1 is Verifier {
         require(playerInitialized[trx.player]); // player exists
         require(ownerIfOccupiedElseZero(trx.oldLoc) == trx.player); // planet at oldLoc is occupied by player
         require(!planetMetadatas[trx.oldLoc].destroyed);
-        updatePopulation(trx.oldLoc);
+        updatePlanet(trx.oldLoc);
 
         require(planets[trx.oldLoc].population >= trx.shipsMoved); // player can move at most as many ships as exist on oldLoc
         planets[trx.oldLoc].population -= trx.shipsMoved;
@@ -326,7 +371,7 @@ contract DarkForestV1 is Verifier {
 
     function arrive(Transaction memory tx_) internal {
         require(!planetMetadatas[tx_.newLoc].destroyed);
-        updatePopulation(tx_.newLoc);
+        updatePlanet(tx_.newLoc);
 
         if (!planetIsInitialized(tx_.newLoc)) {
             initializePlanet(tx_.newLoc, tx_.player, 0);
@@ -336,6 +381,7 @@ contract DarkForestV1 is Verifier {
 
         if (!planetIsOccupied(tx_.newLoc)) {
             // colonizing an uninhabited planet
+            planets[tx_.newLoc].owner = tx_.player;
             planets[tx_.newLoc].population += shipsLanded;
             if (planets[tx_.newLoc].population > planets[tx_.newLoc].capacity) {
                 planets[tx_.newLoc].population = planets[tx_.newLoc].capacity;
@@ -359,20 +405,21 @@ contract DarkForestV1 is Verifier {
 
     function enqueueTransactionOnPlanet(PlanetMetadata storage _p, Transaction memory _tx) internal {
         for (uint i = 0; i < _p.pendingCount; i++) {
-            if (_p.pending[i].blockNumber == 0) {
-                _p.pending[i] = _tx;
-                return;
-            }
+            //if (_p.pending[i].arrivalTime == 0) {
+            //    _p.pending[i] = _tx;
+            //    return;
+            //}
         }
-        _p.pending[_p.pendingCount - 1] = _tx;
         _p.pendingCount += 1;
+        _p.pending[_p.pendingCount - 1] = _tx;
+        emit EnqueuedTx(_tx);
     }
 
     function cashOut(uint loc) external {
         require(msg.sender == planets[loc].owner);
         require(!planetMetadatas[loc].destroyed);
 
-        updatePopulation(loc);
+        updatePlanet(loc);
         planetMetadatas[loc].destroyed = true;
         uint oldCapacity = planets[loc].capacity;
         uint toWithdraw = (address(this)).balance * planets[loc].population / totalCap;

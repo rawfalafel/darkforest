@@ -5,6 +5,7 @@ import {
   PlanetMap,
   Player,
   PlayerMap,
+  Transaction,
   Web3Object,
 } from '../@types/global/global';
 import { Contract, Signer, providers, utils } from 'ethers';
@@ -106,6 +107,18 @@ class EthereumAPI extends EventEmitter {
           console.log('arrived', fromPlanet, toPlanet);
           this.emit('planetUpdate', fromPlanet);
           this.emit('planetUpdate', toPlanet);
+        }
+      )
+      .on(
+        'ViewTx',
+        async (data, index) => {
+          console.log(index, ' :: ', data);
+        }
+      )
+      .on(
+        'EnqueuedTx',
+        async (transaction, hash) => {
+          console.log(index, ' :: ', data);
         }
       )
       .on(
@@ -260,6 +273,28 @@ class EthereumAPI extends EventEmitter {
     return this.rawPlanetToObject(rawPlanet, rawPlanetMetadata);
   }
 
+  private rawTransactionToObject(
+    rawTx: RawTransactionData
+  ): Transaction {
+    const rawArrivalTime = rawTx.arrivalTime || rawTx[0];
+    const rawPlayer = rawTx.player || rawTx[1];
+    const rawOldLoc = rawTx.oldLoc || rawTx[2];
+    const rawNewLoc = rawTx.newLoc || rawTx[3];
+    const rawMaxDist = rawTx.maxDist || rawTx[4];
+    const rawShipsMoved = rawTx.shipsMoved || rawTx[5];
+
+    const transaction : Transaction = {
+      arrivalTime: rawArrivalTime.toNumber(),
+      player: address(rawPlayer),
+      oldLoc: locationIdFromDecStr(rawOldLoc.toString()),
+      newLoc: locationIdFromDecStr(rawNewLoc.toString()),
+      maxDist: rawMaxDist,
+      shipsMoved: rawShipsMoved
+    }
+
+    return transaction
+  }
+
   private rawPlanetToObject(
     rawPlanet: RawPlanetData,
     rawPlanetMetadata: RawPlanetMetadata
@@ -279,8 +314,6 @@ class EthereumAPI extends EventEmitter {
     const rawVersion = rawPlanetMetadata.version || rawPlanetMetadata[2];
     const rawDestroyed = rawPlanetMetadata.destroyed || rawPlanetMetadata[3];
 
-    const rawLastBlockUpdated =
-      rawPlanetMetadata.lastBlockUpdated || rawPlanetMetadata[4];
     const rawPending = rawPlanetMetadata.pending || rawPlanetMetadata[5];
     const rawPendingCount =
       rawPlanetMetadata.pendingCount || rawPlanetMetadata[6];
@@ -300,7 +333,6 @@ class EthereumAPI extends EventEmitter {
       destroyed: rawDestroyed,
       pending: rawPending,
       pendingCount: rawPendingCount.toNumber(),
-      lastBlockUpdated: rawLastBlockUpdated.toNumber(),
     };
     if (planet.coordinatesRevealed) {
       const rawX = rawPlanet.x || rawPlanet[10];

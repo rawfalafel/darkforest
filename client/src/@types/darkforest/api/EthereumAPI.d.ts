@@ -17,6 +17,29 @@ export interface ContractConstants {
   defaultStalwartness: number[];
 }
 
+export interface RawTransactionData extends Array<string | boolean | number | BigNumber> {
+  0: BigNumber;
+  1: string;
+  2: BigNumber;
+  3: BigNumber;
+  4: number;
+  5: number;
+
+  arrivalTime: BigNumber;
+  player: string;
+  oldLoc: BigNumber;
+  newLoc: BigNumber;
+  maxDist: number;
+  shipsMoved: number;
+
+        //uint arrivalTime;
+        //address player;
+        //uint oldLoc;
+        //uint newLoc;
+        //uint maxDist;
+        //uint shipsMoved;
+}
+
 export interface RawPlanetData
   extends Array<string | boolean | number | BigNumber> {
   0: BigNumber;
@@ -60,7 +83,6 @@ export interface RawPlanetMetadata
   owner: string;
   version: number;
   destroyed: boolean;
-  lastBlockUpdated: BigNumber;
   pending: any;
   pendingCount: BigNumber;
 }
