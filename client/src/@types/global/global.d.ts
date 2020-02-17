@@ -91,7 +91,7 @@ export interface ExploredChunkData {
   planetLocations: Location[];
 }
 
-export type BoardData = Array<Array<ExploredChunkData | null | undefined>>
+export type BoardData = Array<Array<ExploredChunkData | null | undefined>>;
 
 export interface MinerWorkerMessage {
   chunkX: number;
