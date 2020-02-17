@@ -19,15 +19,15 @@ class GameUIManager {
   private constructor() {
     this.radiusMap[PlanetType.LittleAsteroid] = 1;
     this.radiusMap[PlanetType.BigAsteroid] = 1.5;
-    this.radiusMap[PlanetType.BrownDwarf] = 4;
-    this.radiusMap[PlanetType.RedDwarf] = 5;
-    this.radiusMap[PlanetType.WhiteDwarf] = 6;
-    this.radiusMap[PlanetType.YellowStar] = 8;
-    this.radiusMap[PlanetType.BlueStar] = 10;
-    this.radiusMap[PlanetType.SubGiant] = 12;
-    this.radiusMap[PlanetType.Giant] = 15;
-    this.radiusMap[PlanetType.SuperGiant] = 20;
-    this.radiusMap[PlanetType.HyperGiant] = 25;
+    this.radiusMap[PlanetType.BrownDwarf] = 5;
+    this.radiusMap[PlanetType.RedDwarf] = 8;
+    this.radiusMap[PlanetType.WhiteDwarf] = 12;
+    this.radiusMap[PlanetType.YellowStar] = 20;
+    this.radiusMap[PlanetType.BlueStar] = 30;
+    this.radiusMap[PlanetType.SubGiant] = 40;
+    this.radiusMap[PlanetType.Giant] = 50;
+    this.radiusMap[PlanetType.SuperGiant] = 75;
+    this.radiusMap[PlanetType.HyperGiant] = 100;
   }
 
   static getInstance(): GameUIManager {

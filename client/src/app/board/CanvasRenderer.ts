@@ -62,7 +62,7 @@ class CanvasRenderer {
     planetLocations = planetLocations.filter(loc =>
       viewport.isInOrAroundViewport(new WorldCoords(loc.coords.x, loc.coords.y))
     );
-    planetLocations.sort((a, b) => a.hash.localeCompare(b.hash));
+    planetLocations.sort((a, b) => b.hash.localeCompare(a.hash));
 
     this.drawCleanBoard();
     this.drawKnownChunks(knownChunks);
