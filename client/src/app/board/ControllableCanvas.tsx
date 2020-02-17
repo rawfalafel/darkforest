@@ -2,7 +2,7 @@ import * as React from 'react';
 import { RefObject } from 'react';
 import UIEmitter from '../../utils/UIEmitter';
 import Viewport from './Viewport';
-import { WorldCoords, CanvasCoords } from '../../utils/Coordinates';
+import { CanvasCoords } from '../../utils/Coordinates';
 import CanvasRenderer from './CanvasRenderer';
 
 interface ControllableCanvasProps {}

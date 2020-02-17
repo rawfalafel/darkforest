@@ -102,7 +102,7 @@ class CanvasRenderer {
       ? Math.floor(getCurrentPopulation(planet) / 100)
       : 0;
     const center = new WorldCoords(location.coords.x, location.coords.y);
-    const radius = uiManager.radius;
+    const radius = uiManager.radiusMap[planet.planetType];
     let color = bigInt(location.hash, 16)
       .and(0xffffff)
       .toString(16);
@@ -121,12 +121,14 @@ class CanvasRenderer {
 
     this.drawCircleWithCenter(center, radius, color);
 
-    this.drawText(
-      population.toString(),
-      15,
-      new WorldCoords(center.x, center.y - (planet.owner ? 3 : 2.5)),
-      'white'
-    );
+    if (population > 0) {
+      this.drawText(
+        population.toString(),
+        15,
+        new WorldCoords(center.x, center.y - (planet.owner ? 3 : 2.5)),
+        'white'
+      );
+    }
   }
 
   private drawHoveringRect() {

@@ -2,11 +2,14 @@ import UIEmitter from '../../utils/UIEmitter';
 import { WorldCoords } from '../../utils/Coordinates';
 import { Planet } from '../../@types/global/global';
 import GameManager from '../../api/GameManager';
+import { PlanetType } from '../../@types/global/enums';
 
 class GameUIManager {
   static instance: GameUIManager;
 
   readonly radius = 2;
+
+  readonly radiusMap = {};
 
   selectedPlanet: Planet | null = null;
   selectedCoords: WorldCoords | null = null;
@@ -15,7 +18,19 @@ class GameUIManager {
   mouseHoveringOverPlanet: Planet | null = null;
   mouseHoveringOverCoords: WorldCoords | null = null;
 
-  private constructor() {}
+  private constructor() {
+    this.radiusMap[PlanetType.LittleAsteroid] = 1;
+    this.radiusMap[PlanetType.BigAsteroid] = 1.5;
+    this.radiusMap[PlanetType.BrownDwarf] = 3;
+    this.radiusMap[PlanetType.RedDwarf] = 3.5;
+    this.radiusMap[PlanetType.WhiteDwarf] = 4;
+    this.radiusMap[PlanetType.YellowStar] = 6;
+    this.radiusMap[PlanetType.BlueStar] = 7;
+    this.radiusMap[PlanetType.SubGiant] = 8;
+    this.radiusMap[PlanetType.Giant] = 10;
+    this.radiusMap[PlanetType.SuperGiant] = 12;
+    this.radiusMap[PlanetType.HyperGiant] = 15;
+  }
 
   static getInstance(): GameUIManager {
     if (!GameUIManager.instance) {
