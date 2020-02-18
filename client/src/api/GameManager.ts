@@ -19,7 +19,8 @@ import {
   ChunkCoordinates,
   PlanetArrivalMap,
   ArrivalWithTimer,
-  LocationId
+  LocationId,
+  PlanetLocationMap
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -36,6 +37,7 @@ class GameManager extends EventEmitter {
   readonly arrivalsMap: PlanetArrivalMap;
   readonly inMemoryBoard: BoardData;
   readonly homeChunk: ChunkCoordinates | null;
+  readonly planetLocationMap: PlanetLocationMap;
 
   private readonly ethereumAPI: EthereumAPI;
   // TODO be able to make this private
@@ -94,6 +96,18 @@ class GameManager extends EventEmitter {
     this.ethereumAPI = ethereumAPI;
     this.localStorageManager = localStorageManager;
     this.snarkHelper = snarkHelper;
+
+    this.planetLocationMap = {};
+    for (let chunkX = 0; chunkX < inMemoryBoard.length; chunkX += 1) {
+      for (let chunkY = 0; chunkY < inMemoryBoard[chunkX].length; chunkY += 1) {
+        const chunkData = inMemoryBoard[chunkX][chunkY];
+        if (chunkData) {
+          for (const planetLocation of chunkData.planetLocations) {
+            this.planetLocationMap[planetLocation.hash] = planetLocation;
+          }
+        }
+      }
+    }
   }
 
   static getInstance(): GameManager {
@@ -216,7 +230,10 @@ class GameManager extends EventEmitter {
       this.ySize,
       this.planetRarity
     );
-    this.minerManager.on('discoveredNewChunk', () => {
+    this.minerManager.on('discoveredNewChunk', chunk => {
+      for (const planetLocation of chunk.planetLocations) {
+        this.planetLocationMap[planetLocation.hash] = planetLocation;
+      }
       this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
       this.emit('discoveredNewChunk');
     });

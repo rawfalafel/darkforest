@@ -1,7 +1,7 @@
 import {
   BoardData,
   ChunkCoordinates,
-  ExploredChunkData,
+  ExploredChunkData
 } from '../@types/global/global';
 import { CHUNK_SIZE } from '../utils/constants';
 import Worker from 'worker-loader!../miner/miner.worker';
@@ -77,7 +77,7 @@ class MinerManager extends EventEmitter {
 
   private async discovered(chunk: ExploredChunkData): Promise<void> {
     this.inMemoryBoard[chunk.id.chunkX][chunk.id.chunkY] = chunk;
-    this.emit('discoveredNewChunk');
+    this.emit('discoveredNewChunk', chunk);
     if (this.isExploring) {
       // if this.isExploring, move on to the next chunk
       const nextChunk: ChunkCoordinates | null = await this.nextValidExploreTarget(
@@ -175,7 +175,7 @@ class MinerManager extends EventEmitter {
     if (currentChunkX === homeChunkX && currentChunkY === homeChunkY) {
       return {
         chunkX: homeChunkX,
-        chunkY: homeChunkY + 1,
+        chunkY: homeChunkY + 1
       };
     }
     if (
@@ -186,12 +186,12 @@ class MinerManager extends EventEmitter {
         // break the circle
         return {
           chunkX: currentChunkX,
-          chunkY: currentChunkY + 1,
+          chunkY: currentChunkY + 1
         };
       }
       return {
         chunkX: currentChunkX + 1,
-        chunkY: currentChunkY,
+        chunkY: currentChunkY
       };
     }
     if (
@@ -200,7 +200,7 @@ class MinerManager extends EventEmitter {
     ) {
       return {
         chunkX: currentChunkX,
-        chunkY: currentChunkY - 1,
+        chunkY: currentChunkY - 1
       };
     }
     if (
@@ -209,7 +209,7 @@ class MinerManager extends EventEmitter {
     ) {
       return {
         chunkX: currentChunkX - 1,
-        chunkY: currentChunkY,
+        chunkY: currentChunkY
       };
     }
     if (
@@ -218,7 +218,7 @@ class MinerManager extends EventEmitter {
     ) {
       return {
         chunkX: currentChunkX,
-        chunkY: currentChunkY + 1,
+        chunkY: currentChunkY + 1
       };
     }
   }
@@ -228,7 +228,7 @@ class MinerManager extends EventEmitter {
       JSON.stringify({
         chunkX: chunkToExplore.chunkX,
         chunkY: chunkToExplore.chunkY,
-        planetRarity: this.planetRarity,
+        planetRarity: this.planetRarity
       })
     );
   }

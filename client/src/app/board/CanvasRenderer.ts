@@ -3,7 +3,11 @@ import GameUIManager from './GameUIManager';
 import Viewport from './Viewport';
 import { CanvasCoords, WorldCoords } from '../../utils/Coordinates';
 import GameManager from '../../api/GameManager';
-import { Location, ChunkCoordinates } from '../../@types/global/global';
+import {
+  Location,
+  ChunkCoordinates,
+  QueuedArrival
+} from '../../@types/global/global';
 import { CHUNK_SIZE } from '../../utils/constants';
 import bigInt from 'big-integer';
 import { getCurrentPopulation, hasOwner } from '../../utils/Utils';
@@ -108,6 +112,10 @@ class CanvasRenderer {
     const uiManager = GameUIManager.getInstance();
 
     const planet = gameManager.getPlanetWithLocation(location);
+    const arrivals = gameManager.arrivalsMap[planet.locationId] || [];
+    for (const { arrivalData } of arrivals) {
+      this.drawArrival(arrivalData);
+    }
     const population = planet
       ? Math.floor(getCurrentPopulation(planet) / 100)
       : 0;
@@ -142,6 +150,39 @@ class CanvasRenderer {
         'white'
       );
     }
+  }
+
+  private drawArrival(arrival: QueuedArrival) {
+    const gameManager = GameManager.getInstance();
+
+    const fromLoc = gameManager.planetLocationMap[arrival.oldLoc];
+    const fromPlanet = gameManager.planets[arrival.oldLoc];
+    const toLoc = gameManager.planetLocationMap[arrival.newLoc];
+    if (
+      !fromPlanet ||
+      !fromLoc ||
+      !toLoc ||
+      Date.now() / 1000 > arrival.arrivalTime
+    ) {
+      return;
+    }
+    const myMove = fromPlanet.owner === gameManager.account;
+
+    this.drawLine(fromLoc.coords, toLoc.coords, 0.5, myMove ? 'blue' : 'red');
+
+    let proportion =
+      (Date.now() / 1000 - arrival.departureTime) /
+      (arrival.arrivalTime - arrival.departureTime);
+    proportion = Math.max(proportion, 0.01);
+    proportion = Math.min(proportion, 0.99);
+
+    const shipsLocationX =
+      (1 - proportion) * fromLoc.coords.x + proportion * toLoc.coords.x;
+    const shipsLocationY =
+      (1 - proportion) * fromLoc.coords.y + proportion * toLoc.coords.y;
+    const shipsLocation = new WorldCoords(shipsLocationX, shipsLocationY);
+
+    this.drawCircleWithCenter(shipsLocation, 1, myMove ? 'blue' : 'red');
   }
 
   private drawHoveringRect() {
@@ -182,7 +223,6 @@ class CanvasRenderer {
   }
 
   private drawMousePath() {
-    const viewport = Viewport.getInstance();
     const uiManager = GameUIManager.getInstance();
 
     if (uiManager.mouseDownOverCoords && uiManager.mouseHoveringOverCoords) {
@@ -190,18 +230,11 @@ class CanvasRenderer {
         uiManager.isOverOwnPlanet(uiManager.mouseDownOverCoords) &&
         uiManager.mouseHoveringOverCoords !== uiManager.mouseDownOverCoords
       ) {
-        this.ctx.beginPath();
-        this.ctx.lineWidth = 4;
-        this.ctx.strokeStyle = 'white';
-        const startCoords: CanvasCoords = viewport.worldToCanvasCoords(
-          uiManager.mouseDownOverCoords
+        this.drawLine(
+          uiManager.mouseDownOverCoords,
+          uiManager.mouseHoveringOverCoords,
+          1
         );
-        this.ctx.moveTo(startCoords.x, startCoords.y);
-        const endCoords: CanvasCoords = viewport.worldToCanvasCoords(
-          uiManager.mouseHoveringOverCoords
-        );
-        this.ctx.lineTo(endCoords.x, endCoords.y);
-        this.ctx.stroke();
       }
     }
   }
@@ -302,6 +335,28 @@ class CanvasRenderer {
       2 * Math.PI,
       false
     );
+    this.ctx.stroke();
+  }
+
+  private drawLine(
+    startCoords: WorldCoords,
+    endCoords: WorldCoords,
+    lineWidth: number,
+    color: string = 'white'
+  ) {
+    const viewport = Viewport.getInstance();
+
+    this.ctx.beginPath();
+    this.ctx.lineWidth = viewport.worldToCanvasDist(lineWidth);
+    this.ctx.strokeStyle = color;
+    const startCanvasCoords: CanvasCoords = viewport.worldToCanvasCoords(
+      startCoords
+    );
+    this.ctx.moveTo(startCanvasCoords.x, startCanvasCoords.y);
+    const endCanvasCoords: CanvasCoords = viewport.worldToCanvasCoords(
+      endCoords
+    );
+    this.ctx.lineTo(endCanvasCoords.x, endCanvasCoords.y);
     this.ctx.stroke();
   }
 

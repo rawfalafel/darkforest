@@ -66,6 +66,7 @@ export interface Planet {
 }
 
 export interface QueuedArrival {
+  departureTime: number;
   arrivalTime: number;
   player: string;
   oldLoc: LocationId;
@@ -81,6 +82,10 @@ export interface ArrivalWithTimer {
 
 export interface PlanetMap {
   [planetId: string]: Planet;
+}
+
+export interface PlanetLocationMap {
+  [planetId: string]: Location;
 }
 
 export interface PlanetArrivalMap {
