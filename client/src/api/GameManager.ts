@@ -300,6 +300,22 @@ class GameManager extends EventEmitter {
     };
   }
 
+  async getTotalBalance(): Promise<number> {
+    const eApi = EthereumAPI.getInstance();
+    const balance = await eApi.getBalance();
+
+    return balance;
+  }
+  getTotalCapacity(): number {
+    let totalCap : number = 0;
+
+    for(let key in this.planets) {
+      totalCap += this.planets[key].capacity;
+    }
+
+    return totalCap;
+  }
+
   getHomeChunk(): ChunkCoordinates | null {
     if (this.homeChunk) {
       return this.homeChunk;

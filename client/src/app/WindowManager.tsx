@@ -18,17 +18,64 @@ class WindowManager extends React.Component<WindowProps, WindowState> {
 		forces : 25,
 		activeTab: 'details',
 		planet : null,
+		totalBalance : 0,
+		totalCapacity : Infinity,
+		conversionRate: 268.19,
 	};
+	frameCount = 0;
 	uiManager = GameUIManager.getInstance();
 	gameManager = GameManager.getInstance();
 
+
+	async updateBalance() {
+		const balance = await this.gameManager.getTotalBalance();
+		this.setState({
+			totalBalance: balance,
+		});
+	}
+	updateCapacity() {
+		const capacity = this.gameManager.getTotalCapacity();
+		this.setState({
+			totalCapacity: capacity,
+		});
+	}
+	async updateConversion() {
+		return 268.19; // temporary
+		let myStr = await fetch("https://www.coinbase.com/price/ethereum", {mode:'no-cors'})
+			.then((r) => r.text())
+			.then((t) => t.match(/(?<="price":")(\d+.\d+)/g).slice(-1));
+
+		console.log(myStr);
+		this.setState({
+			conversionRate: parseFloat(myStr[0]),
+		});
+	}
 	updateInfo() {
 		if(this.uiManager.selectedPlanet != null) {
 			this.setState({planet: this.uiManager.selectedPlanet});
 		}
 	}
+	getEtherValue() {
+		if(this.state.planet == null) return 0;
+		else return (getCurrentPopulation(this.state.planet)/this.state.totalCapacity)*this.state.totalBalance;
+	}
+	getUsdValue() {
+		return this.getEtherValue()*this.state.conversionRate;
+	}
 	animate() {
-		this.updateInfo();
+		this.frameCount++;
+		if(this.frameCount % 3600 == 0) {
+			this.updateConversion();
+		}
+		if(this.frameCount % 150 == 0) {
+			this.updateBalance();
+		}
+		if(this.frameCount % 60 == 0) {
+			this.updateCapacity();
+		}
+		if(this.frameCount % 15 == 0) {
+			this.updateInfo();
+		}
 		window.requestAnimationFrame(this.animate.bind(this));
 	}
 	constructor(props: WindowProps) {
@@ -62,7 +109,7 @@ class WindowManager extends React.Component<WindowProps, WindowState> {
 					: "0");
 		} else if(prop == "scaledPopulation") {
 			return (this.state.planet
-					? ((this.state.forces/100.0)*Math.round(getCurrentPopulation(this.state.planet)/100.0)).toString() 
+					? (Math.round((this.state.forces/100.0)*getCurrentPopulation(this.state.planet)/100.0)).toString() 
 					: "0");
 
 		} else { 
@@ -115,11 +162,11 @@ class WindowManager extends React.Component<WindowProps, WindowState> {
 		              <tr>
 		              	<td>ETH:</td>
 		              	<td className="text-left">
-		              		100
+		              		{this.getEtherValue().toFixed(4)}
 		              	</td>
 		              	<td>USD:</td>
 		              	<td className="text-right">
-		              		100
+		              		{this.getUsdValue().toFixed(2)}
 		              	</td>
 		              </tr>
 		            </tbody>
@@ -148,8 +195,10 @@ class WindowManager extends React.Component<WindowProps, WindowState> {
 	              			</td>
 	            		</tr>
 	            		<tr>
-	            			<td colSpan={2}>{this.state.forces}% of current planet:
-	            			&nbsp;<b>{this.renderPlanetProp("scaledPopulation")}</b></td>
+	            			<td colSpan={2}>{this.state.forces}% of current planet:</td>
+	            		</tr>
+	            		<tr>
+	            			<td colSpan={2}><b>{this.renderPlanetProp("scaledPopulation")}</b></td>
 	            		</tr>
 	            	</tbody>
 	            </table>
