@@ -9,14 +9,18 @@ import {
   Web3Object,
 } from '../@types/global/global';
 import { Contract, Signer, providers, utils } from 'ethers';
-import _ from 'lodash'
+import _ from 'lodash';
 
 // NOTE: DO NOT IMPORT FROM ETHERS SUBPATHS. see https://github.com/ethers-io/ethers.js/issues/349 (these imports trip up webpack)
 // in particular, the below is bad!
 // import {TransactionReceipt, Provider, TransactionResponse, Web3Provider} from "ethers/providers";
 
 import { contractAddress } from '../utils/local_contract_addr';
-import { address, locationIdFromDecStr, locationIdToDecStr } from '../utils/CheckedTypeUtils';
+import {
+  address,
+  locationIdFromDecStr,
+  locationIdToDecStr,
+} from '../utils/CheckedTypeUtils';
 import {
   ContractConstants,
   InitializePlayerArgs,
@@ -108,14 +112,11 @@ class EthereumAPI extends EventEmitter {
           this.emit('planetUpdate', toPlanet);
         }
       )
-      .on(
-        'TransactionQueued',
-        async (transaction) => {
-          const txObject = this.rawTransactionToObject(transaction)
-          this.emit('newTransaction', txObject)
-          console.log('New transaction', transaction);
-        }
-      )
+      .on('TransactionQueued', async transaction => {
+        const txObject = this.rawTransactionToObject(transaction);
+        this.emit('newTransaction', txObject);
+        console.log('New transaction', transaction);
+      })
       .on('PlanetDestroyed', async locRaw => {
         const planet: OwnedPlanet = await this.getPlanet(locRaw);
         this.emit('planetUpdate', planet);
@@ -214,14 +215,17 @@ class EthereumAPI extends EventEmitter {
   }
 
   async getTransactions(planets): Promise<Transaction[]> {
-    const contract = this.contract
+    const contract = this.contract;
 
-    const txs = _.flatten(_.values(planets).map(planet => 
-      _.range(0, planet.pendingCount).map(txId => 
-        contract.getTransaction(locationIdToDecStr(planet.locationId), txId)
-        .then(this.rawTransactionToObject)
+    const txs = _.flatten(
+      _.values(planets).map(planet =>
+        _.range(0, planet.pendingCount).map(txId =>
+          contract
+            .getTransaction(locationIdToDecStr(planet.locationId), txId)
+            .then(this.rawTransactionToObject)
+        )
       )
-    ))
+    );
 
     return Promise.all(txs);
   }
@@ -271,9 +275,7 @@ class EthereumAPI extends EventEmitter {
     return this.rawPlanetToObject(rawPlanet, rawPlanetMetadata);
   }
 
-  private rawTransactionToObject(
-    rawTx: RawTransactionData
-  ): Transaction {
+  private rawTransactionToObject(rawTx: RawTransactionData): Transaction {
     const rawArrivalTime = rawTx.arrivalTime || rawTx[0];
     const rawPlayer = rawTx.player || rawTx[1];
     const rawOldLoc = rawTx.oldLoc || rawTx[2];
@@ -281,16 +283,16 @@ class EthereumAPI extends EventEmitter {
     const rawMaxDist = rawTx.maxDist || rawTx[4];
     const rawShipsMoved = rawTx.shipsMoved || rawTx[5];
 
-    const transaction : Transaction = {
+    const transaction: Transaction = {
       arrivalTime: rawArrivalTime.toNumber(),
       player: address(rawPlayer),
       oldLoc: locationIdFromDecStr(rawOldLoc.toString()),
       newLoc: locationIdFromDecStr(rawNewLoc.toString()),
       maxDist: rawMaxDist.toNumber(),
-      shipsMoved: rawShipsMoved.toNumber()
-    }
+      shipsMoved: rawShipsMoved.toNumber(),
+    };
 
-    return transaction
+    return transaction;
   }
 
   private rawPlanetToObject(

@@ -168,7 +168,7 @@ class GameManager extends EventEmitter {
   }
 
   private handleTransaction(t: Transaction): void {
-    console.log(t)
+    console.log(t);
   }
 
   private initMiningManager(): void {
