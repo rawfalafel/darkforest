@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import ControllableCanvas from './board/ControllableCanvas';
 import GameUIManager from './board/GameUIManager';
 
-import ForcesWindow from './windows/ForcesWindow';
+import WindowManager from './WindowManager';
 
 const GameScene = () => {
   const [exploring, setExploring] = useState(true);

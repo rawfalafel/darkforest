@@ -70,6 +70,7 @@ class GameUIManager {
 
   onMouseUp(coords: WorldCoords) {
     const gameManager = GameManager.getInstance();
+    const uiEmitter = UIEmitter.getInstance();
 
     this.updateMouseHoveringOverCoords(coords);
 
@@ -90,6 +91,7 @@ class GameUIManager {
           this.selectedPlanet = mouseUpOverPlanet;
           this.selectedCoords = mouseUpOverCoords;
           console.log(this.selectedPlanet);
+          uiEmitter.emit('GAME_PLANET_SELECTED');
         }
       } else if (this.mouseDownOverPlanet.owner === gameManager.account) {
         // move initiated
