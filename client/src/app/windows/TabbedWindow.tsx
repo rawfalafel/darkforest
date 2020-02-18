@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { RefObject } from 'react';
-import GameUIManager from './board/GameUIManager';
-import Viewport from './board/Viewport';
-import { CanvasCoords, WorldCoords } from '../utils/Coordinates';
-import GameManager from '../api/GameManager';
-import UIEmitter from '../utils/UIEmitter'
-import { Planet } from '../@types/global/global';
+import GameUIManager from '../board/GameUIManager';
+import Viewport from '../board/Viewport';
+import { CanvasCoords, WorldCoords } from '../../utils/Coordinates';
+import GameManager from '../../api/GameManager';
+import UIEmitter from '../../utils/UIEmitter'
+import { Planet } from '../../@types/global/global';
 
-import { getCurrentPopulation } from '../utils/Utils';
+import { getCurrentPopulation } from '../../utils/Utils';
 
 interface WindowProps {}
 interface WindowState {}
@@ -112,6 +112,10 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 					? (Math.round((this.state.forces/100.0)*getCurrentPopulation(this.state.planet)/100.0)).toString() 
 					: "0");
 
+		} else if(prop == "hardiness" || prop == "stalwartness"){ 
+			return (this.state.planet 
+					? (Math.round(this.state.planet[prop])).toString() 
+					: "0");
 		} else { 
 			return (this.state.planet 
 					? (Math.round(this.state.planet[prop]/100.0)).toString() 

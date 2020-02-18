@@ -6,7 +6,8 @@ import Button from '../components/Button';
 import ControllableCanvas from './board/ControllableCanvas';
 import GameUIManager from './board/GameUIManager';
 
-import TabbedWindow from './TabbedWindow';
+import TabbedWindow from './windows/TabbedWindow';
+import CoordsWindow from './windows/CoordsWindow';
 
 const GameScene = () => {
   const [exploring, setExploring] = useState(true);
@@ -52,7 +53,7 @@ const GameScene = () => {
       </div>
 
       <div className="absolute bottom-0 left-0">
-        <CoordsView />
+        <CoordsWindow />
       </div>
 
       <div className="absolute bottom-0 right-0">
