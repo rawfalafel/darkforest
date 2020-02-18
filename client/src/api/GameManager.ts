@@ -1,6 +1,10 @@
 import * as EventEmitter from 'events';
 import LocalStorageManager from './LocalStorageManager';
-import { getCurrentPopulation, getPlanetTypeForLocation } from '../utils/Utils';
+import {
+  getCurrentPopulation,
+  getPlanetTypeForLocation,
+  arrive,
+} from '../utils/Utils';
 import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
 import {
@@ -11,8 +15,9 @@ import {
   PlanetMap,
   Player,
   PlayerMap,
-  Transaction,
-  ChunkCoordinates
+  QueuedArrival,
+  ChunkCoordinates,
+  PlanetArrivalMap,
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -26,6 +31,7 @@ class GameManager extends EventEmitter {
   readonly account: EthAddress;
   readonly players: PlayerMap;
   readonly planets: PlanetMap;
+  readonly arrivals: PlanetArrivalMap;
   readonly inMemoryBoard: BoardData;
   readonly homeChunk: ChunkCoordinates | null;
 
@@ -49,6 +55,7 @@ class GameManager extends EventEmitter {
     account: EthAddress,
     players: PlayerMap,
     planets: PlanetMap,
+    arrivals: PlanetArrivalMap,
     inMemoryBoard: BoardData,
     xSize: number,
     ySize: number,
@@ -68,6 +75,7 @@ class GameManager extends EventEmitter {
     this.account = account;
     this.players = players;
     this.planets = planets;
+    this.arrivals = arrivals;
     this.inMemoryBoard = inMemoryBoard;
     this.homeChunk = localStorageManager.getHomeChunk();
 
@@ -113,7 +121,56 @@ class GameManager extends EventEmitter {
     const yChunks = ySize / CHUNK_SIZE;
     const players = await ethereumAPI.getPlayers();
     const planets = await ethereumAPI.getPlanets();
-    const transactions = await ethereumAPI.getTransactions(planets);
+    const arrivals: PlanetArrivalMap = {};
+    const arrivalPromises: Promise<null>[] = [];
+    for (const planetId in planets) {
+      if (planets.hasOwnProperty(planetId)) {
+        const planet = planets[planetId];
+        const planetArrivalPromise = ethereumAPI
+          .getArrivals(planet)
+          .then(arrivals => {
+            arrivals.sort((a, b) => a.arrivalTime - b.arrivalTime);
+            arrivals[planetId] = [];
+            const nowInSeconds = Date.now() / 1000;
+            for (const arrival of arrivals) {
+              if (
+                nowInSeconds - arrival.arrivalTime > 0 &&
+                planets[arrival.oldLoc] &&
+                planets[arrival.newLoc]
+              ) {
+                // run this arrival
+                arrive(
+                  planets[arrival.oldLoc],
+                  planets[arrival.newLoc],
+                  arrival
+                );
+              } else {
+                // set a timer to do this arrival in the future
+                // and append it to arrivals[planetId]
+                const applyFutureArrival = setTimeout(() => {
+                  arrive(
+                    planets[arrival.oldLoc],
+                    planets[arrival.newLoc],
+                    arrival
+                  );
+                }, arrival.arrivalTime * 1000 - Date.now());
+                const arrivalWithTimer = {
+                  arrivalData: arrival,
+                  timer: applyFutureArrival,
+                };
+                arrivals[planetId].push(arrivalWithTimer);
+              }
+            }
+            return null;
+          })
+          .catch(err => {
+            console.error(`error occurred in playing back arrival: ${err}`);
+            return null;
+          });
+        arrivalPromises.push(planetArrivalPromise);
+      }
+    }
+    await Promise.all(arrivalPromises);
 
     // then we initialize the local storage manager, which may depend on some of the contract constants
     const localStorageManager = await LocalStorageManager.initialize(
@@ -130,6 +187,7 @@ class GameManager extends EventEmitter {
       account,
       players,
       planets,
+      arrivals,
       inMemoryBoard,
       xSize,
       ySize,
@@ -151,8 +209,6 @@ class GameManager extends EventEmitter {
       gameManager.initMiningManager();
     }
 
-    transactions.map(gameManager.handleTransaction);
-
     // set up listeners: whenever EthereumAPI reports some game state update, do some logic
     gameManager.ethereumAPI
       .on('playerUpdate', (player: Player) => {
@@ -167,62 +223,16 @@ class GameManager extends EventEmitter {
     return gameManager;
   }
 
-  private handleTransaction(t: Transaction): void {
-    console.log('t', t);
+  private handleArrival(arrival: QueuedArrival): void {
+    console.log('t', arrival);
 
-    if (t.arrivalTime > Date.now()) {
-      setTimeout(() => this.handleTransaction(t), t.arrivalTime - Date.now())
-      return
-    } 
-
-  }
-
-  private moveShipsDecay(shipsMoved: number, hardiness: number, dist: number): number {
-    const decayRatio = hardiness / (hardiness + dist)
-    return decayRatio * shipsMoved
-  }
-
-  private arrive(tx: Transaction): void {
-    const planet = this.planets[tx.newLoc]
-    const oldPlanet = this.planets[tx.oldLoc]
-    if (planet.destroyed) {
-      console.error("Planet was destroyed upon arrival!")
+    if (arrival.arrivalTime > Date.now()) {
+      setTimeout(
+        () => this.handleArrival(arrival),
+        arrival.arrivalTime - Date.now()
+      );
+      return;
     }
-
-    const shipsLanded = this.moveShipsDecay(tx.shipsMoved, oldLoc)
-
-
-  //      require(!planetMetadatas[tx_.newLoc].destroyed);
-  //      updatePlanet(tx_.newLoc);
-
-  //      if (!planetIsInitialized(tx_.newLoc)) {
-  //          initializePlanet(tx_.newLoc, tx_.player, 0);
-  //      }
-
-  //      uint shipsLanded = moveShipsDecay(tx_.shipsMoved, planets[tx_.oldLoc].hardiness, tx_.maxDist);
-
-  //      if (!planetIsOccupied(tx_.newLoc)) {
-  //          // colonizing an uninhabited planet
-  //          planets[tx_.newLoc].owner = tx_.player;
-  //          planets[tx_.newLoc].population += shipsLanded;
-  //          if (planets[tx_.newLoc].population > planets[tx_.newLoc].capacity) {
-  //              planets[tx_.newLoc].population = planets[tx_.newLoc].capacity;
-  //          }
-  //      } else if (ownerIfOccupiedElseZero(tx_.newLoc) == tx_.player) {
-  //          // moving forces between my planets
-  //          planets[tx_.newLoc].population += shipsLanded;
-  //      } else {
-  //          // attacking enemy
-  //          if (planets[tx_.newLoc].population > (shipsLanded * 100 / planets[tx_.newLoc].stalwartness)) {
-  //              // attack reduces target planet's garrison but doesn't conquer it
-  //              planets[tx_.newLoc].population -= (shipsLanded * 100 / planets[tx_.newLoc].stalwartness);
-  //          } else {
-  //              // conquers planet
-  //              planets[tx_.newLoc].owner = tx_.player;
-  //              planets[tx_.newLoc].population = shipsLanded - (planets[tx_.newLoc].population * planets[tx_.newLoc].stalwartness / 100);
-  //          }
-  //      }
-  //  }
   }
 
   private initMiningManager(): void {

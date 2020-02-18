@@ -6,7 +6,7 @@ import GameManager from '../../api/GameManager';
 import { Location, ChunkCoordinates } from '../../@types/global/global';
 import { CHUNK_SIZE } from '../../utils/constants';
 import bigInt from 'big-integer';
-import { getCurrentPopulation } from '../../utils/Utils';
+import { getCurrentPopulation, hasOwner } from '../../utils/Utils';
 
 class CanvasRenderer {
   static instance: CanvasRenderer;
@@ -121,7 +121,7 @@ class CanvasRenderer {
       color = '#000000';
     }
 
-    if (planet.owner) {
+    if (hasOwner(planet)) {
       if (planet.owner === gameManager.account) {
         this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'blue');
       } else {
@@ -219,7 +219,7 @@ class CanvasRenderer {
     center: WorldCoords,
     width: number,
     height: number,
-    color: string = 'white'
+    color = 'white'
   ) {
     const viewport = Viewport.getInstance();
 
@@ -240,7 +240,7 @@ class CanvasRenderer {
     width: number,
     height: number,
     strokeWidth: number,
-    color: string = 'white'
+    color = 'white'
   ) {
     const viewport = Viewport.getInstance();
 
@@ -261,7 +261,7 @@ class CanvasRenderer {
   private drawCircleWithCenter(
     center: WorldCoords,
     radius: number,
-    color: string = 'white'
+    color = 'white'
   ) {
     const viewport = Viewport.getInstance();
 
@@ -284,7 +284,7 @@ class CanvasRenderer {
     center: WorldCoords,
     radius: number,
     width: number,
-    color: string = 'white'
+    color = 'white'
   ) {
     const viewport = Viewport.getInstance();
 
@@ -309,7 +309,7 @@ class CanvasRenderer {
     text: string,
     fontSize: number,
     center: WorldCoords,
-    color: string = 'white'
+    color = 'white'
   ) {
     const viewport = Viewport.getInstance();
 

@@ -63,11 +63,9 @@ export interface Planet {
   destroyed: boolean;
   x?: number;
   y?: number;
-  pending?: any;
-  pendingCount?: number;
 }
 
-export interface Transaction {
+export interface QueuedArrival {
   arrivalTime: number;
   player: string;
   oldLoc: LocationId;
@@ -76,8 +74,17 @@ export interface Transaction {
   shipsMoved: number;
 }
 
+export interface ArrivalWithTimer {
+  arrivalData: QueuedArrival;
+  timer: ReturnType<typeof setTimeout>;
+}
+
 export interface PlanetMap {
   [planetId: string]: Planet;
+}
+
+export interface PlanetArrivalMap {
+  [planetId: string]: ArrivalWithTimer[];
 }
 
 export interface Player {

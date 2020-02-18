@@ -17,7 +17,7 @@ export interface ContractConstants {
   defaultStalwartness: number[];
 }
 
-export interface RawTransactionData
+export interface RawArrivalData
   extends Array<string | boolean | number | BigNumber> {
   0: BigNumber;
   1: string;

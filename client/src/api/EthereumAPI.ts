@@ -4,7 +4,7 @@ import {
   PlanetMap,
   Player,
   PlayerMap,
-  Transaction,
+  QueuedArrival,
   Web3Object,
   Planet,
 } from '../@types/global/global';
@@ -26,7 +26,7 @@ import {
   InitializePlayerArgs,
   MoveArgs,
   RawPlanetData,
-  RawTransactionData,
+  RawArrivalData,
   RawPlanetMetadata,
 } from '../@types/darkforest/api/EthereumAPI';
 import { TransactionRequest } from 'ethers/providers';
@@ -116,13 +116,16 @@ class EthereumAPI extends EventEmitter {
         this.emit('planetUpdate', newPlanet);
       })
       .on(
-        'PlayerMoved',
-        async (_player, fromLocRaw, toLocRaw, _maxDist, _shipsMoved) => {
+        'ArrivalQueued',
+        async arrival => {
+          console.log(this.rawArrivalToObject(arrival));
+        }
+        /*async (_player, fromLocRaw, toLocRaw, _maxDist, _shipsMoved) => {
           const fromPlanet: Planet = await this.getPlanet(fromLocRaw);
           const toPlanet: Planet = await this.getPlanet(toLocRaw);
           this.emit('planetUpdate', fromPlanet);
           this.emit('planetUpdate', toPlanet);
-        }
+        }*/
       )
       .on('PlanetDestroyed', async locRaw => {
         const planet: Planet = await this.getPlanet(locRaw);
@@ -221,20 +224,16 @@ class EthereumAPI extends EventEmitter {
     return playerMap;
   }
 
-  async getTransactions(planets): Promise<Transaction[]> {
+  async getArrivals(planet): Promise<QueuedArrival[]> {
     const contract = this.contract;
 
-    const txs = _.flatten(
-      _.values(planets).map(planet =>
-        _.range(0, planet.pendingCount).map(txId =>
-          contract
-            .getTransaction(locationIdToDecStr(planet.locationId), txId)
-            .then(this.rawTransactionToObject)
-        )
-      )
+    const arrivals = _.range(0, planet.pendingCount).map(arrivalId =>
+      contract
+        .getArrival(locationIdToDecStr(planet.locationId), arrivalId)
+        .then(this.rawArrivalToObject)
     );
 
-    return Promise.all(txs);
+    return Promise.all(arrivals);
   }
 
   async getPlanets(): Promise<PlanetMap> {
@@ -282,15 +281,15 @@ class EthereumAPI extends EventEmitter {
     return this.rawPlanetToObject(rawPlanet, rawPlanetMetadata);
   }
 
-  private rawTransactionToObject(rawTx: RawTransactionData): Transaction {
-    const rawArrivalTime = rawTx.arrivalTime || rawTx[0];
-    const rawPlayer = rawTx.player || rawTx[1];
-    const rawOldLoc = rawTx.oldLoc || rawTx[2];
-    const rawNewLoc = rawTx.newLoc || rawTx[3];
-    const rawMaxDist = rawTx.maxDist || rawTx[4];
-    const rawShipsMoved = rawTx.shipsMoved || rawTx[5];
+  private rawArrivalToObject(rawArrival: RawArrivalData): QueuedArrival {
+    const rawArrivalTime = rawArrival.arrivalTime || rawArrival[0];
+    const rawPlayer = rawArrival.player || rawArrival[1];
+    const rawOldLoc = rawArrival.oldLoc || rawArrival[2];
+    const rawNewLoc = rawArrival.newLoc || rawArrival[3];
+    const rawMaxDist = rawArrival.maxDist || rawArrival[4];
+    const rawShipsMoved = rawArrival.shipsMoved || rawArrival[5];
 
-    const transaction: Transaction = {
+    const arrival: QueuedArrival = {
       arrivalTime: rawArrivalTime.toNumber(),
       player: address(rawPlayer),
       oldLoc: locationIdFromDecStr(rawOldLoc.toString()),
@@ -299,7 +298,7 @@ class EthereumAPI extends EventEmitter {
       shipsMoved: rawShipsMoved.toNumber(),
     };
 
-    return transaction;
+    return arrival;
   }
 
   private rawPlanetToObject(
