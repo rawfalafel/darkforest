@@ -72,19 +72,19 @@ class WindowManager extends React.Component<WindowProps, WindowState> {
 	              	<tbody className="width-full" style={{width:"100%"}}>
 		              <tr>
 		              	<td colSpan={2}>Capacity:</td>
-		              	<td colSpan={2} className="text-right">{this.state.planet.capacity}</td>
+		              	<td colSpan={2} className="text-right">{(Math.round(this.state.planet.capacity/100.0)).toString()}</td>
 		              </tr>
 		              <tr>
 		              	<td colSpan={2}>Growth:</td>
-		              	<td colSpan={2} className="text-right">{this.state.planet.growth}</td>
+		              	<td colSpan={2} className="text-right">{(Math.round(this.state.planet.growth/100.0)).toString()}</td>
 		              </tr>
 		              <tr>
 		              	<td colSpan={2}>Hardiness:</td>
-		              	<td colSpan={2} className="text-right">{this.state.planet.hardiness}</td>
+		              	<td colSpan={2} className="text-right">{(Math.round(this.state.planet.hardiness/100.0)).toString()}</td>
 		              </tr>
 		              <tr>
 		              	<td colSpan={2}>Stalwartness:</td>
-		              	<td colSpan={2} className="text-right">{this.state.planet.stalwartness}</td>
+		              	<td colSpan={2} className="text-right">{(Math.round(this.state.planet.stalwartness/100.0)).toString()}</td>
 		              </tr>
 		              <tr><td colSpan={4}></td></tr>
 		              <tr>
