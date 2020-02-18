@@ -17,6 +17,7 @@ import {
   PlanetMap,
   Player,
   PlayerMap,
+  Transaction
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -152,6 +153,8 @@ class GameManager extends EventEmitter {
       gameManager.initMiningManager();
     }
 
+    transactions.map(gameManager.handleTransaction);
+
     // set up listeners: whenever EthereumAPI reports some game state update, do some logic
     gameManager.ethereumAPI
       .on('playerUpdate', (player: Player) => {
@@ -168,7 +171,61 @@ class GameManager extends EventEmitter {
   }
 
   private handleTransaction(t: Transaction): void {
-    console.log(t);
+    console.log('t', t);
+
+    if (t.arrivalTime > Date.now()) {
+      setTimeout(() => this.handleTransaction(t), t.arrivalTime - Date.now())
+      return
+    } 
+
+  }
+
+  private moveShipsDecay(shipsMoved: number, hardiness: number, dist: number): number {
+    const decayRatio = hardiness / (hardiness + dist)
+    return decayRatio * shipsMoved
+  }
+
+  private arrive(tx: Transaction): void {
+    const planet = this.planets[tx.newLoc]
+    const oldPlanet = this.planets[tx.oldLoc]
+    if (planet.destroyed) {
+      console.error("Planet was destroyed upon arrival!")
+    }
+
+    const shipsLanded = this.moveShipsDecay(tx.shipsMoved, oldLoc)
+
+
+  //      require(!planetMetadatas[tx_.newLoc].destroyed);
+  //      updatePlanet(tx_.newLoc);
+
+  //      if (!planetIsInitialized(tx_.newLoc)) {
+  //          initializePlanet(tx_.newLoc, tx_.player, 0);
+  //      }
+
+  //      uint shipsLanded = moveShipsDecay(tx_.shipsMoved, planets[tx_.oldLoc].hardiness, tx_.maxDist);
+
+  //      if (!planetIsOccupied(tx_.newLoc)) {
+  //          // colonizing an uninhabited planet
+  //          planets[tx_.newLoc].owner = tx_.player;
+  //          planets[tx_.newLoc].population += shipsLanded;
+  //          if (planets[tx_.newLoc].population > planets[tx_.newLoc].capacity) {
+  //              planets[tx_.newLoc].population = planets[tx_.newLoc].capacity;
+  //          }
+  //      } else if (ownerIfOccupiedElseZero(tx_.newLoc) == tx_.player) {
+  //          // moving forces between my planets
+  //          planets[tx_.newLoc].population += shipsLanded;
+  //      } else {
+  //          // attacking enemy
+  //          if (planets[tx_.newLoc].population > (shipsLanded * 100 / planets[tx_.newLoc].stalwartness)) {
+  //              // attack reduces target planet's garrison but doesn't conquer it
+  //              planets[tx_.newLoc].population -= (shipsLanded * 100 / planets[tx_.newLoc].stalwartness);
+  //          } else {
+  //              // conquers planet
+  //              planets[tx_.newLoc].owner = tx_.player;
+  //              planets[tx_.newLoc].population = shipsLanded - (planets[tx_.newLoc].population * planets[tx_.newLoc].stalwartness / 100);
+  //          }
+  //      }
+  //  }
   }
 
   private initMiningManager(): void {

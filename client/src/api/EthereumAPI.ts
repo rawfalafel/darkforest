@@ -102,20 +102,20 @@ class EthereumAPI extends EventEmitter {
         const newPlanet: OwnedPlanet = await this.getPlanet(locRaw);
         this.emit('planetUpdate', newPlanet);
       })
-      .on(
-        'PlayerArrived',
-        async (player, fromLocRaw, toLocRaw, maxDist, shipsMoved, event) => {
-          const fromPlanet: OwnedPlanet = await this.getPlanet(fromLocRaw);
-          const toPlanet: OwnedPlanet = await this.getPlanet(toLocRaw);
-          console.log('arrived', fromPlanet, toPlanet);
-          this.emit('planetUpdate', fromPlanet);
-          this.emit('planetUpdate', toPlanet);
-        }
-      )
+      // .on(
+      //   'PlayerArrived',
+      //   async (player, fromLocRaw, toLocRaw, maxDist, shipsMoved, event) => {
+      //     const fromPlanet: OwnedPlanet = await this.getPlanet(fromLocRaw);
+      //     const toPlanet: OwnedPlanet = await this.getPlanet(toLocRaw);
+      //     console.log('arrived', fromPlanet, toPlanet);
+      //     this.emit('planetUpdate', fromPlanet);
+      //     this.emit('planetUpdate', toPlanet);
+      //   }
+      // )
       .on('TransactionQueued', async transaction => {
         const txObject = this.rawTransactionToObject(transaction);
         this.emit('newTransaction', txObject);
-        console.log('New transaction', transaction);
+        console.log('New transaction', txObject);
       })
       .on('PlanetDestroyed', async locRaw => {
         const planet: OwnedPlanet = await this.getPlanet(locRaw);
@@ -314,9 +314,9 @@ class EthereumAPI extends EventEmitter {
     const rawVersion = rawPlanetMetadata.version || rawPlanetMetadata[2];
     const rawDestroyed = rawPlanetMetadata.destroyed || rawPlanetMetadata[3];
 
-    const rawPending = rawPlanetMetadata.pending || rawPlanetMetadata[5];
+    const rawPending = rawPlanetMetadata.pending || rawPlanetMetadata[4];
     const rawPendingCount =
-      rawPlanetMetadata.pendingCount || rawPlanetMetadata[6];
+      rawPlanetMetadata.pendingCount || rawPlanetMetadata[5];
 
     const planet: OwnedPlanet = {
       capacity: rawCapacity.toNumber(),

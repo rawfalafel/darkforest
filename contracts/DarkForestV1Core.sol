@@ -343,7 +343,6 @@ contract DarkForestV1 is Verifier {
 
         require(planets[trx.oldLoc].population >= trx.shipsMoved); // player can move at most as many ships as exist on oldLoc
         planets[trx.oldLoc].population -= trx.shipsMoved;
-        emit PlayerDeparted(trx.player, trx.oldLoc, trx.newLoc, trx.maxDist, trx.shipsMoved);
     }
 
     function arrive(Transaction memory tx_) internal {
@@ -377,7 +376,6 @@ contract DarkForestV1 is Verifier {
                 planets[tx_.newLoc].population = shipsLanded - (planets[tx_.newLoc].population * planets[tx_.newLoc].stalwartness / 100);
             }
         }
-        emit PlayerArrived(tx_.player, tx_.oldLoc, tx_.newLoc, tx_.maxDist, tx_.shipsMoved);
     }
 
     function enqueueTransactionOnPlanet(PlanetMetadata storage _p, Transaction memory _tx) internal {
@@ -389,7 +387,7 @@ contract DarkForestV1 is Verifier {
         }
         _p.pendingCount += 1;
         _p.pending[_p.pendingCount - 1] = _tx;
-        emit EnqueuedTx(_tx);
+        emit TransactionQueued(_tx);
     }
 
     function cashOut(uint loc) external {
