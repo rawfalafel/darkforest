@@ -98,9 +98,6 @@ class EthereumAPI extends EventEmitter {
         const newPlanet: OwnedPlanet = await this.getPlanet(locRaw);
         this.emit('planetUpdate', newPlanet);
       })
-      .on('TestEvent', async () => {
-        console.log('test event fired');
-      })
       .on(
         'PlayerArrived',
         async (player, fromLocRaw, toLocRaw, maxDist, shipsMoved, event) => {
@@ -112,27 +109,11 @@ class EthereumAPI extends EventEmitter {
         }
       )
       .on(
-        'ViewTx',
-        async (data, index) => {
-          console.log(index, ' :: ', data);
-        }
-      )
-      .on(
-        'EnqueuedTx',
+        'TransactionQueued',
         async (transaction) => {
           const txObject = this.rawTransactionToObject(transaction)
           this.emit('newTransaction', txObject)
-          console.log('new enqueued transaction:', txObject);
-        }
-      )
-      .on(
-        'PlayerDeparted',
-        async (player, fromLocRaw, toLocRaw, maxDist, shipsMoved) => {
-          const fromPlanet: OwnedPlanet = await this.getPlanet(fromLocRaw);
-          const toPlanet: OwnedPlanet = await this.getPlanet(toLocRaw);
-          console.log('departed', fromPlanet, toPlanet);
-          this.emit('planetUpdate', fromPlanet);
-          this.emit('planetUpdate', toPlanet);
+          console.log('New transaction', transaction);
         }
       )
       .on('PlanetDestroyed', async locRaw => {
@@ -305,8 +286,8 @@ class EthereumAPI extends EventEmitter {
       player: address(rawPlayer),
       oldLoc: locationIdFromDecStr(rawOldLoc.toString()),
       newLoc: locationIdFromDecStr(rawNewLoc.toString()),
-      maxDist: rawMaxDist,
-      shipsMoved: rawShipsMoved
+      maxDist: rawMaxDist.toNumber(),
+      shipsMoved: rawShipsMoved.toNumber()
     }
 
     return transaction

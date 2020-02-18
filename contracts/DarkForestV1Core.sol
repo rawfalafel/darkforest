@@ -83,12 +83,8 @@ contract DarkForestV1 is Verifier {
     }
 
     event PlayerInitialized(address player, uint loc);
-    event TestEvent();
-    event PlayerArrived(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
-    event PlayerDeparted(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
     event PlanetDestroyed(uint loc);
-    event ViewTx(Transaction tx, uint index);
-    event EnqueuedTx(Transaction tx);
+    event TransactionQueued(Transaction tx);
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
@@ -247,7 +243,6 @@ contract DarkForestV1 is Verifier {
         initializePlanet(loc, player, 25000);
 
         emit PlayerInitialized(player, loc);
-        emit TestEvent();
     }
 
     function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private pure returns (uint) {
@@ -283,27 +278,6 @@ contract DarkForestV1 is Verifier {
         enqueueTransactionOnPlanet(planetMetadatas[_tx.newLoc], _tx);
     }
 
-    // function hashTx(Transaction memory _tx) internal returns (bytes32) {
-    //     return keccak256(abi.encodePacked(_tx));
-    // }
-
-    //function getAllTxs() public view returns (Transaction[] memory) {
-    //    Transaction[] storage txs = new uint256[](1);
-    //    for (uint i = 0; i < planetIds.length; i++) {
-    //        //Planet memory p = planets[planetIds[i]];
-    //        PlanetMetadata storage p = planetMetadatas[planetIds[i]];
-    //        for (uint j = 0; j < p.pendingCount; j++) {
-    //            if (p.pending[j].arrivalTime != 0) {
-    //                txs.push(p.pending[j]);
-    //            }
-    //        }
-    //    }
-
-    //    Transaction[] memory out = txs;
-
-    //    return out;
-    //}
-
     function executeReadyTransactions(PlanetMetadata storage _p) internal {
         while (true) {
             uint idx;
@@ -326,7 +300,6 @@ contract DarkForestV1 is Verifier {
         uint earliestIndex = 0;
         bool found = false;
         for (uint i = 0; i < _p.pendingCount; i++) {
-            emit ViewTx(_p.pending[i], i);
             if (_p.pending[i].arrivalTime != 0 && _p.pending[i].arrivalTime <= earliestTime) {
                 earliestTime = _p.pending[i].arrivalTime;
                 earliestIndex = i;

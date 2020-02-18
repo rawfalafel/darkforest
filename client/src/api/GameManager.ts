@@ -115,7 +115,6 @@ class GameManager extends EventEmitter {
     const players = await ethereumAPI.getPlayers();
     const planets = await ethereumAPI.getPlanets();
     const transactions = await ethereumAPI.getTransactions(planets);
-    console.log(transactions)
 
     // then we initialize the local storage manager, which may depend on some of the contract constants
     const localStorageManager = await LocalStorageManager.initialize(

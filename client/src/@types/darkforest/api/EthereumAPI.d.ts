@@ -22,22 +22,15 @@ export interface RawTransactionData extends Array<string | boolean | number | Bi
   1: string;
   2: BigNumber;
   3: BigNumber;
-  4: number;
-  5: number;
+  4: BigNumber;
+  5: BigNumber;
 
   arrivalTime: BigNumber;
   player: string;
   oldLoc: BigNumber;
   newLoc: BigNumber;
-  maxDist: number;
-  shipsMoved: number;
-
-        //uint arrivalTime;
-        //address player;
-        //uint oldLoc;
-        //uint newLoc;
-        //uint maxDist;
-        //uint shipsMoved;
+  maxDist: BigNumber;
+  shipsMoved: BigNumber;
 }
 
 export interface RawPlanetData
@@ -75,9 +68,8 @@ export interface RawPlanetMetadata
   1: string;
   2: number;
   3: boolean;
-  4: BigNumber;
-  5: any;
-  6: BigNumber;
+  4: any;
+  5: BigNumber;
 
   locationId: BigNumber;
   owner: string;
