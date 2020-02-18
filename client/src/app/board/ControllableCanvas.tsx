@@ -56,10 +56,13 @@ class ControllableCanvas extends React.Component<
   }
 
   resizeCanvas(e) {
+    const vp = Viewport.getInstance();
     this.setState({
       width:window.innerWidth,
       height:window.innerHeight
     });
+    vp.viewportHeight = window.innerHeight;
+    vp.viewportWidth = window.innerWidth;
   }
   onResize(e) {
     this.uiEmitter.emit('WINDOW_RESIZE');
