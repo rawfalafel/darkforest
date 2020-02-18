@@ -53,11 +53,15 @@ class EthereumAPI extends EventEmitter {
       throw new Error('EthereumAPI has already been initialized');
     }
 
+    // is there an injected web3 object?
     const web3: Web3Object = window.web3;
     if (typeof web3 === 'undefined') {
       throw new Error('No web3 object detected');
     }
+
+    // enable metamask if we haven't yet
     await window.ethereum.enable();
+
     const provider: providers.Web3Provider = new providers.Web3Provider(
       web3.currentProvider
     );
@@ -76,6 +80,14 @@ class EthereumAPI extends EventEmitter {
     );
     ethereumAPI.setupEventListeners();
     EthereumAPI.instance = ethereumAPI;
+
+    // start loop to refresh if account changes
+    setInterval(async () => {
+      const newAddress = await provider.getSigner().getAddress();
+      if (address(newAddress) !== ethereumAPI.account) {
+        location.reload();
+      }
+    }, 5000);
 
     return ethereumAPI;
   }
