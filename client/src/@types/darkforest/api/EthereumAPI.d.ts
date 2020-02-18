@@ -20,12 +20,14 @@ export interface ContractConstants {
 export interface RawArrivalData
   extends Array<string | boolean | number | BigNumber> {
   0: BigNumber;
-  1: string;
-  2: BigNumber;
+  1: BigNumber;
+  2: string;
   3: BigNumber;
   4: BigNumber;
   5: BigNumber;
+  6: BigNumber;
 
+  departureTime: BigNumber;
   arrivalTime: BigNumber;
   player: string;
   oldLoc: BigNumber;

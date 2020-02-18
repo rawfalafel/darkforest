@@ -75,6 +75,7 @@ contract DarkForestV1 is Verifier {
     }
 
     struct QueuedArrival {
+        uint departureTime;
         uint arrivalTime;
         address player;
         uint oldLoc;
@@ -350,7 +351,8 @@ contract DarkForestV1 is Verifier {
         }
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
 
-        arrival.arrivalTime = now + 5 seconds;
+        arrival.departureTime = now;
+        arrival.arrivalTime = now + 15 seconds;
         arrival.player = msg.sender;
         arrival.oldLoc = _input[0];
         arrival.newLoc = _input[1];

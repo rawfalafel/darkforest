@@ -118,26 +118,17 @@ class EthereumAPI extends EventEmitter {
         const newPlanet: Planet = await this.getPlanet(locRaw);
         this.emit('planetUpdate', newPlanet);
       })
-      .on(
-        'ArrivalQueued',
-        async rawArrival => {
-          const arrival = this.rawArrivalToObject(rawArrival);
-          const fromPlanet: Planet = await this.getPlanet(
-            locationIdToBigNumber(arrival.oldLoc)
-          );
-          const toPlanet: Planet = await this.getPlanet(
-            locationIdToBigNumber(arrival.newLoc)
-          );
-          this.emit('planetUpdate', toPlanet);
-          this.emit('planetUpdate', fromPlanet);
-        }
-        /*async (_player, fromLocRaw, toLocRaw, _maxDist, _shipsMoved) => {
-          const fromPlanet: Planet = await this.getPlanet(fromLocRaw);
-          const toPlanet: Planet = await this.getPlanet(toLocRaw);
-          this.emit('planetUpdate', fromPlanet);
-          this.emit('planetUpdate', toPlanet);
-        }*/
-      )
+      .on('ArrivalQueued', async rawArrival => {
+        const arrival = this.rawArrivalToObject(rawArrival);
+        const fromPlanet: Planet = await this.getPlanet(
+          locationIdToBigNumber(arrival.oldLoc)
+        );
+        const toPlanet: Planet = await this.getPlanet(
+          locationIdToBigNumber(arrival.newLoc)
+        );
+        this.emit('planetUpdate', toPlanet);
+        this.emit('planetUpdate', fromPlanet);
+      })
       .on('PlanetDestroyed', async locRaw => {
         const planet: Planet = await this.getPlanet(locRaw);
         this.emit('planetUpdate', planet);
@@ -310,14 +301,16 @@ class EthereumAPI extends EventEmitter {
   }
 
   private rawArrivalToObject(rawArrival: RawArrivalData): QueuedArrival {
-    const rawArrivalTime = rawArrival.arrivalTime || rawArrival[0];
-    const rawPlayer = rawArrival.player || rawArrival[1];
-    const rawOldLoc = rawArrival.oldLoc || rawArrival[2];
-    const rawNewLoc = rawArrival.newLoc || rawArrival[3];
-    const rawMaxDist = rawArrival.maxDist || rawArrival[4];
-    const rawShipsMoved = rawArrival.shipsMoved || rawArrival[5];
+    const rawDepartureTime = rawArrival.departureTime || rawArrival[0];
+    const rawArrivalTime = rawArrival.arrivalTime || rawArrival[1];
+    const rawPlayer = rawArrival.player || rawArrival[2];
+    const rawOldLoc = rawArrival.oldLoc || rawArrival[3];
+    const rawNewLoc = rawArrival.newLoc || rawArrival[4];
+    const rawMaxDist = rawArrival.maxDist || rawArrival[5];
+    const rawShipsMoved = rawArrival.shipsMoved || rawArrival[6];
 
     const arrival: QueuedArrival = {
+      departureTime: rawDepartureTime.toNumber(),
       arrivalTime: rawArrivalTime.toNumber(),
       player: address(rawPlayer),
       oldLoc: locationIdFromDecStr(rawOldLoc.toString()),
