@@ -120,8 +120,12 @@ class EthereumAPI extends EventEmitter {
       })
       .on(
         'ArrivalQueued',
-        async arrival => {
-          console.log(this.rawArrivalToObject(arrival));
+        async rawArrival => {
+          const arrival = this.rawArrivalToObject(rawArrival);
+          const fromPlanet: Planet = await this.getPlanet(rawArrival[2]);
+          const toPlanet: Planet = await this.getPlanet(rawArrival[3]);
+          this.emit('planetUpdate', toPlanet);
+          this.emit('planetUpdate', fromPlanet);
         }
         /*async (_player, fromLocRaw, toLocRaw, _maxDist, _shipsMoved) => {
           const fromPlanet: Planet = await this.getPlanet(fromLocRaw);
