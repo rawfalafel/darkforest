@@ -3,6 +3,7 @@ import { WorldCoords } from '../../utils/Coordinates';
 import { Planet } from '../../@types/global/global';
 import GameManager from '../../api/GameManager';
 import { PlanetType } from '../../@types/global/enums';
+import EthereumAPI from '../../api/EthereumAPI';
 
 class GameUIManager {
   static instance: GameUIManager;
@@ -38,15 +39,34 @@ class GameUIManager {
     return GameUIManager.instance;
   }
 
+  updatePlanets(myPlanet : Planet) {
+    console.log("planets are being updated!");
+    const eApi = EthereumAPI.getInstance();
+    const gameManager = GameManager.getInstance();
+
+    console.log("Before:");
+    console.log(this.selectedPlanet);
+    this.selectedPlanet = gameManager.planets[this.selectedPlanet.locationId];
+    console.log("After:");
+    console.log(this.selectedPlanet);
+    this.mouseDownOverPlanet = gameManager.planets[this.mouseDownOverPlanet.locationId];
+    this.mouseHoveringOverPlanet = gameManager.planets[this.mouseHoveringOverPlanet.locationId];
+    //update this.selectedPlanet, this.mouseDownOverPlanet, this.mouseHoveringOverPlanet
+    // let pid : BigNumber | null = ethers.utils.bigNumberify("0x00003ae93d16d5b530b26eb71f523227cf2c0483753dd99c90dd2a5cc358deb7"));
+  }
+
   static initialize() {
     const uiEmitter = UIEmitter.getInstance();
-
+    const eApi = EthereumAPI.getInstance();
     const uiManager = new GameUIManager();
+
 
     uiEmitter.on('WORLD_MOUSE_DOWN', uiManager.onMouseDown.bind(uiManager));
     uiEmitter.on('WORLD_MOUSE_MOVE', uiManager.onMouseMove.bind(uiManager));
     uiEmitter.on('WORLD_MOUSE_UP', uiManager.onMouseUp.bind(uiManager));
     uiEmitter.on('WORLD_MOUSE_OUT', uiManager.onMouseOut.bind(uiManager));
+
+    eApi.on('planetUpdate', uiManager.updatePlanets.bind(uiManager));
 
     GameUIManager.instance = uiManager;
 
