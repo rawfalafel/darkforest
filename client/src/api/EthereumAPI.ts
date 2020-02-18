@@ -10,6 +10,7 @@ import {
 } from '../@types/global/global';
 import { Contract, Signer, providers, utils } from 'ethers';
 import _ from 'lodash';
+import * as bigInt from 'big-integer';
 
 // NOTE: DO NOT IMPORT FROM ETHERS SUBPATHS. see https://github.com/ethers-io/ethers.js/issues/349 (these imports trip up webpack)
 // in particular, the below is bad!
@@ -31,6 +32,7 @@ import {
 } from '../@types/darkforest/api/EthereumAPI';
 import { TransactionRequest } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
+import { locationIdToHexStr } from '../utils/CheckedTypeUtils';
 const contractABI = require('../contracts/DarkForestV1.json').abi; // this is also gitignored and must be compiled
 
 // singleton class for managing all ethereum network calls
@@ -224,10 +226,17 @@ class EthereumAPI extends EventEmitter {
     return playerMap;
   }
 
-  async getArrivals(planet): Promise<QueuedArrival[]> {
+  async getArrivals(planet: Planet): Promise<QueuedArrival[]> {
     const contract = this.contract;
 
-    const arrivals = _.range(0, planet.pendingCount).map(arrivalId =>
+    const idx = utils.bigNumberify(
+      '0x' + locationIdToHexStr(planet.locationId)
+    );
+    const queuedArrivals = (await contract.planetMetadatas(
+      idx
+    )).pendingCount.toNumber();
+
+    const arrivals = _.range(0, queuedArrivals).map(arrivalId =>
       contract
         .getArrival(locationIdToDecStr(planet.locationId), arrivalId)
         .then(this.rawArrivalToObject)
