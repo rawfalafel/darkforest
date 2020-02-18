@@ -12,7 +12,7 @@ import { getCurrentPopulation } from '../utils/Utils';
 interface WindowProps {}
 interface WindowState {}
 
-class WindowManager extends React.Component<WindowProps, WindowState> {
+class TabbedWindow extends React.Component<WindowProps, WindowState> {
 
 	state = {
 		forces : 25,
@@ -84,7 +84,7 @@ class WindowManager extends React.Component<WindowProps, WindowState> {
 		
 
 
-		// WindowManager.instance = this
+		// TabbedWindow.instance = this
 
 	}
 	componentDidMount() {
@@ -210,4 +210,4 @@ class WindowManager extends React.Component<WindowProps, WindowState> {
 	}
 }
 
-export default WindowManager;
+export default TabbedWindow;

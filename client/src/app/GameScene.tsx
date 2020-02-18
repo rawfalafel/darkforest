@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import ControllableCanvas from './board/ControllableCanvas';
 import GameUIManager from './board/GameUIManager';
 
-import WindowManager from './WindowManager';
+import TabbedWindow from './TabbedWindow';
 
 const GameScene = () => {
   const [exploring, setExploring] = useState(true);
@@ -51,9 +51,13 @@ const GameScene = () => {
         </Button>
       </div>
 
+      <div className="absolute bottom-0 left-0">
+        <CoordsView />
+      </div>
+
       <div className="absolute bottom-0 right-0">
         {/* Wrapper */}
-        <WindowManager />
+        <TabbedWindow />
       </div>
       <ControllableCanvas />
     </React.Fragment>
