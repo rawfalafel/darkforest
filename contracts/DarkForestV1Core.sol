@@ -204,7 +204,7 @@ contract DarkForestV1 is Verifier {
         totalCap += newPlanet.capacity;
     }
 
-    function updatePopulation(uint _locationId) private {
+    function updatePopulation(uint _locationId, uint targetTime) private {
         // logistic growth: in T time, population p1 increases to population
         // p2 = capacity / (1 + e^{-4 * growth * T / capacity} * ((capacity / p1) - 1))
         if (!planetIsOccupied(_locationId)) {
@@ -215,7 +215,7 @@ contract DarkForestV1 is Verifier {
         if (planet.population == 0) {
             return;
         }
-        uint time_elapsed = now - planet.lastUpdated;
+        uint time_elapsed = targetTime - planet.lastUpdated;
 
         // 1
         int128 one = ABDKMath64x64.fromUInt(1);
@@ -328,9 +328,9 @@ contract DarkForestV1 is Verifier {
         return (found, earliestIndex);
     }
 
-    function updatePlanet(uint _locationId) internal {
-        updatePopulation(_locationId);
-        planets[_locationId].lastUpdated = now;
+    function updatePlanet(uint _locationId, uint targetTime) internal {
+        updatePopulation(_locationId, targetTime);
+        planets[_locationId].lastUpdated = targetTime;
     }
 
     function depart (
@@ -347,7 +347,7 @@ contract DarkForestV1 is Verifier {
         }
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
 
-        arrival.arrivalTime = now + 15 seconds;
+        arrival.arrivalTime = now + 5 seconds;
         arrival.player = msg.sender;
         arrival.oldLoc = _input[0];
         arrival.newLoc = _input[1];
@@ -357,7 +357,7 @@ contract DarkForestV1 is Verifier {
         require(playerInitialized[arrival.player]); // player exists
         require(ownerIfOccupiedElseZero(arrival.oldLoc) == arrival.player); // planet at oldLoc is occupied by player
         require(!planetMetadatas[arrival.oldLoc].destroyed);
-        updatePlanet(arrival.oldLoc);
+        updatePlanet(arrival.oldLoc, now);
 
         require(planets[arrival.oldLoc].population >= arrival.shipsMoved); // player can move at most as many ships as exist on oldLoc
         planets[arrival.oldLoc].population -= arrival.shipsMoved;
@@ -365,7 +365,7 @@ contract DarkForestV1 is Verifier {
 
     function arrive(QueuedArrival memory arrival) internal {
         require(!planetMetadatas[arrival.newLoc].destroyed);
-        updatePlanet(arrival.newLoc);
+        updatePlanet(arrival.newLoc, arrival.arrivalTime);
 
         if (!planetIsInitialized(arrival.newLoc)) {
             initializePlanet(arrival.newLoc, arrival.player, 0);
@@ -412,7 +412,7 @@ contract DarkForestV1 is Verifier {
         require(msg.sender == planets[loc].owner);
         require(!planetMetadatas[loc].destroyed);
 
-        updatePlanet(loc);
+        updatePlanet(loc, now);
         planetMetadatas[loc].destroyed = true;
         uint oldCapacity = planets[loc].capacity;
         uint toWithdraw = (address(this)).balance * planets[loc].population / totalCap;

@@ -319,10 +319,6 @@ class EthereumAPI extends EventEmitter {
 
     const rawDestroyed = rawPlanetMetadata.destroyed || rawPlanetMetadata[3];
 
-    const rawPending = rawPlanetMetadata.pending || rawPlanetMetadata[4];
-    const rawPendingCount =
-      rawPlanetMetadata.pendingCount || rawPlanetMetadata[5];
-
     const planet: Planet = {
       capacity: rawCapacity.toNumber(),
       growth: rawGrowth.toNumber(),
@@ -335,8 +331,6 @@ class EthereumAPI extends EventEmitter {
       owner: address(rawOwner),
       population: rawPopulation.toNumber(),
       destroyed: rawDestroyed,
-      pending: rawPending,
-      pendingCount: rawPendingCount.toNumber(),
     };
     if (planet.coordinatesRevealed) {
       const rawX = rawPlanet.x || rawPlanet[10];
