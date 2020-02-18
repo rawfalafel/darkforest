@@ -114,6 +114,8 @@ class GameManager extends EventEmitter {
     const yChunks = ySize / CHUNK_SIZE;
     const players = await ethereumAPI.getPlayers();
     const planets = await ethereumAPI.getPlanets();
+    const transactions = await ethereumAPI.getTransactions(planets);
+    console.log(transactions)
 
     // then we initialize the local storage manager, which may depend on some of the contract constants
     const localStorageManager = await LocalStorageManager.initialize(
@@ -164,6 +166,10 @@ class GameManager extends EventEmitter {
 
     GameManager.instance = gameManager;
     return gameManager;
+  }
+
+  private handleTransaction(t: Transaction): void {
+    console.log(t)
   }
 
   private initMiningManager(): void {

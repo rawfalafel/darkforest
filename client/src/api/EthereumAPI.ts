@@ -9,18 +9,20 @@ import {
   Web3Object,
 } from '../@types/global/global';
 import { Contract, Signer, providers, utils } from 'ethers';
+import _ from 'lodash'
 
 // NOTE: DO NOT IMPORT FROM ETHERS SUBPATHS. see https://github.com/ethers-io/ethers.js/issues/349 (these imports trip up webpack)
 // in particular, the below is bad!
 // import {TransactionReceipt, Provider, TransactionResponse, Web3Provider} from "ethers/providers";
 
 import { contractAddress } from '../utils/local_contract_addr';
-import { address, locationIdFromDecStr } from '../utils/CheckedTypeUtils';
+import { address, locationIdFromDecStr, locationIdToDecStr } from '../utils/CheckedTypeUtils';
 import {
   ContractConstants,
   InitializePlayerArgs,
   MoveArgs,
   RawPlanetData,
+  RawTransactionData,
   RawPlanetMetadata,
 } from '../@types/darkforest/api/EthereumAPI';
 import { TransactionRequest } from 'ethers/providers';
@@ -117,8 +119,10 @@ class EthereumAPI extends EventEmitter {
       )
       .on(
         'EnqueuedTx',
-        async (transaction, hash) => {
-          console.log(index, ' :: ', data);
+        async (transaction) => {
+          const txObject = this.rawTransactionToObject(transaction)
+          this.emit('newTransaction', txObject)
+          console.log('new enqueued transaction:', txObject);
         }
       )
       .on(
@@ -226,6 +230,19 @@ class EthereumAPI extends EventEmitter {
       playerMap[<string>player.address] = player;
     }
     return playerMap;
+  }
+
+  async getTransactions(planets): Promise<Transaction[]> {
+    const contract = this.contract
+
+    const txs = _.flatten(_.values(planets).map(planet => 
+      _.range(0, planet.pendingCount).map(txId => 
+        contract.getTransaction(locationIdToDecStr(planet.locationId), txId)
+        .then(this.rawTransactionToObject)
+      )
+    ))
+
+    return Promise.all(txs);
   }
 
   async getPlanets(): Promise<PlanetMap> {

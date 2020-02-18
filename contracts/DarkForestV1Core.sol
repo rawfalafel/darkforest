@@ -287,22 +287,22 @@ contract DarkForestV1 is Verifier {
     //     return keccak256(abi.encodePacked(_tx));
     // }
 
-    function getAllTxs() public view returns (Transaction[] memory) {
-        Transaction[] storage txs = new uint256[](1);
-        for (uint i = 0; i < planetIds.length; i++) {
-            //Planet memory p = planets[planetIds[i]];
-            PlanetMetadata storage p = planetMetadatas[planetIds[i]];
-            for (uint j = 0; j < p.pendingCount; j++) {
-                if (p.pending[j].arrivalTime != 0) {
-                    txs.push(p.pending[j]);
-                }
-            }
-        }
+    //function getAllTxs() public view returns (Transaction[] memory) {
+    //    Transaction[] storage txs = new uint256[](1);
+    //    for (uint i = 0; i < planetIds.length; i++) {
+    //        //Planet memory p = planets[planetIds[i]];
+    //        PlanetMetadata storage p = planetMetadatas[planetIds[i]];
+    //        for (uint j = 0; j < p.pendingCount; j++) {
+    //            if (p.pending[j].arrivalTime != 0) {
+    //                txs.push(p.pending[j]);
+    //            }
+    //        }
+    //    }
 
-        Transaction[] memory out = txs;
+    //    Transaction[] memory out = txs;
 
-        return out;
-    }
+    //    return out;
+    //}
 
     function executeReadyTransactions(PlanetMetadata storage _p) internal {
         while (true) {
@@ -315,6 +315,10 @@ contract DarkForestV1 is Verifier {
             arrive(_p.pending[idx]);
             delete _p.pending[idx];
         }
+    }
+
+    function getTransaction(uint _planetLoc, uint _transactionIdx) public view returns (Transaction memory) {
+        return planetMetadatas[_planetLoc].pending[_transactionIdx];
     }
 
     function findNextReadyTransaction(PlanetMetadata storage _p) internal returns (bool, uint) {
