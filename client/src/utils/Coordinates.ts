@@ -2,7 +2,7 @@ export class WorldCoords {
   x: number;
   y: number;
 
-  constructor(x, y) {
+  constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
   }
@@ -16,7 +16,7 @@ export class CanvasCoords {
   x: number;
   y: number;
 
-  constructor(x, y) {
+  constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
   }

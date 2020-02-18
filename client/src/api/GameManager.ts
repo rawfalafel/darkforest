@@ -11,7 +11,7 @@ import {
   PlanetMap,
   Player,
   PlayerMap,
-  ChunkCoordinates
+  ChunkCoordinates,
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -20,7 +20,7 @@ import { locationIdToDecStr } from '../utils/CheckedTypeUtils';
 import { WorldCoords } from '../utils/Coordinates';
 
 class GameManager extends EventEmitter {
-  static instance: any;
+  static instance: GameManager;
 
   readonly account: EthAddress;
   readonly players: PlayerMap;
@@ -106,7 +106,7 @@ class GameManager extends EventEmitter {
       defaultGrowth,
       defaultCapacity,
       defaultHardiness,
-      defaultStalwartness
+      defaultStalwartness,
     } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
@@ -152,10 +152,10 @@ class GameManager extends EventEmitter {
     // set up listeners: whenever EthereumAPI reports some game state update, do some logic
     gameManager.ethereumAPI
       .on('playerUpdate', (player: Player) => {
-        gameManager.players[<string>player.address] = player;
+        gameManager.players[player.address as string] = player;
       })
       .on('planetUpdate', (planet: Planet) => {
-        gameManager.planets[<string>planet.locationId] = planet;
+        gameManager.planets[planet.locationId as string] = planet;
         gameManager.emit('planetUpdate');
       });
 
@@ -179,7 +179,7 @@ class GameManager extends EventEmitter {
   }
 
   hasJoinedGame(): boolean {
-    return <string>this.account in this.players;
+    return (this.account as string) in this.players;
   }
 
   getPlanetIfExists(coords: WorldCoords): Planet | null {
@@ -224,7 +224,7 @@ class GameManager extends EventEmitter {
       locationId: location.hash,
       destroyed: false,
       population: 0,
-      coordinatesRevealed: false
+      coordinatesRevealed: false,
     };
   }
 
@@ -248,10 +248,38 @@ class GameManager extends EventEmitter {
   }
 
   joinGame(): GameManager {
+    this.getRandomHomePlanetCoords().then(coords => {
+      const { x, y } = coords;
+      const chunkX = Math.floor(x / CHUNK_SIZE);
+      const chunkY = Math.floor(y / CHUNK_SIZE);
+      this.localStorageManager.setHomeChunk({ chunkX, chunkY }); // set this before getting the call result, in case user exits before tx confirmed
+      this.snarkHelper
+        .getInitArgs(x, y)
+        .then(callArgs => {
+          return this.ethereumAPI.initializePlayer(callArgs);
+        })
+        .then(() => {
+          this.initMiningManager();
+          this.emit('initializedPlayer');
+        })
+        .catch(() => {
+          this.emit('initializedPlayerError');
+        });
+    });
+
+    return this;
+  }
+
+  private async getRandomHomePlanetCoords(): Promise<WorldCoords> {
+    let count = 100;
     let validHomePlanet = false;
-    let x, y, hash;
-    // search for a valid home planet
-    while (!validHomePlanet) {
+    let x = Math.floor(Math.random() * this.xSize);
+    let y = Math.floor(Math.random() * this.ySize);
+    let hash = mimcHash(x, y);
+    if (hash.lesser(LOCATION_ID_UB.divide(this.planetRarity))) {
+      validHomePlanet = true;
+    }
+    while (!validHomePlanet && count > 0) {
       x = Math.floor(Math.random() * this.xSize);
       y = Math.floor(Math.random() * this.ySize);
 
@@ -259,29 +287,23 @@ class GameManager extends EventEmitter {
       if (hash.lesser(LOCATION_ID_UB.divide(this.planetRarity))) {
         validHomePlanet = true;
       }
+      count -= 1;
     }
-    const chunkX = Math.floor(x / CHUNK_SIZE);
-    const chunkY = Math.floor(y / CHUNK_SIZE);
-    this.localStorageManager.setHomeChunk({ chunkX, chunkY }); // set this before getting the call result, in case user exits before tx confirmed
-    this.snarkHelper
-      .getInitArgs(x, y)
-      .then(callArgs => {
-        return this.ethereumAPI.initializePlayer(callArgs);
-      })
-      .then(() => {
-        this.initMiningManager();
-        this.emit('initializedPlayer');
-      })
-      .catch(() => {
-        this.emit('initializedPlayerError');
-      });
-    return this;
+    if (validHomePlanet) {
+      return new WorldCoords(x, y);
+    }
+    return new Promise(resolve => {
+      setTimeout(async () => {
+        const coords = await this.getRandomHomePlanetCoords();
+        resolve(coords);
+      }, 1);
+    });
   }
 
   move(from: Location, to: Location): GameManager {
     const oldX = from.coords.x;
     const oldY = from.coords.y;
-    const fromPlanet = this.planets[<string>from.hash];
+    const fromPlanet = this.planets[from.hash as string];
     const newX = to.coords.x;
     const newY = to.coords.y;
     const distMax = Math.abs(newX - oldX) + Math.abs(newY - oldY);
