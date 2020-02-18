@@ -10,6 +10,7 @@ interface Web3Object {
 
 declare global {
   interface Window {
+    ethereum: any;
     web3: Web3Object;
     // from websnark's function injected into window
     genZKSnarkProof: (

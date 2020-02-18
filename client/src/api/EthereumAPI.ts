@@ -57,6 +57,7 @@ class EthereumAPI extends EventEmitter {
     if (typeof web3 === 'undefined') {
       throw new Error('No web3 object detected');
     }
+    await window.ethereum.enable();
     const provider: providers.Web3Provider = new providers.Web3Provider(
       web3.currentProvider
     );
