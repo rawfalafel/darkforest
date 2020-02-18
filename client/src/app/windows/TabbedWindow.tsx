@@ -15,7 +15,7 @@ interface WindowState {}
 class TabbedWindow extends React.Component<WindowProps, WindowState> {
 
 	state = {
-		forces : 25,
+		forces : 50,
 		activeTab: 'details',
 		planet : null,
 		totalBalance : 0,
@@ -100,7 +100,9 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		window.requestAnimationFrame(this.animate.bind(this));
 	}
 	handleForcesChange = (e) => {
+		const uiManager = GameUIManager.getInstance();
 		this.setState({forces: e.target.value});
+		uiManager.setForces(e.target.value);
 	}
 	renderPlanetProp(prop : string):string {
 		if(prop == "population") {

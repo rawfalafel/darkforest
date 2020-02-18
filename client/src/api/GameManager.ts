@@ -305,7 +305,9 @@ class GameManager extends EventEmitter {
 
     return totalCap;
   }
+  setNumberForces() {
 
+  }
   getHomeChunk(): ChunkCoordinates | null {
     if (this.homeChunk) {
       return this.homeChunk;
@@ -439,14 +441,15 @@ class GameManager extends EventEmitter {
     });
   }
 
-  move(from: Location, to: Location): GameManager {
+  move(from: Location, to: Location, forces: number): GameManager {
     const oldX = from.coords.x;
     const oldY = from.coords.y;
     const fromPlanet = this.planets[from.hash as string];
     const newX = to.coords.x;
     const newY = to.coords.y;
     const distMax = Math.abs(newX - oldX) + Math.abs(newY - oldY);
-    const shipsMoved = Math.floor(getCurrentPopulation(fromPlanet) / 2);
+
+    const shipsMoved = Math.floor(getCurrentPopulation(fromPlanet) * (forces / 100));
 
     if (0 > newX || 0 > newY || this.xSize <= newX || this.ySize <= newY) {
       throw new Error('attempted to move out of bounds');

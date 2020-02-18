@@ -17,6 +17,8 @@ class GameUIManager {
   mouseHoveringOverPlanet: Planet | null = null;
   mouseHoveringOverCoords: WorldCoords | null = null;
 
+  forces: number = 50;
+
   private constructor() {
     this.radiusMap[PlanetType.LittleAsteroid] = 1;
     this.radiusMap[PlanetType.BigAsteroid] = 1.5;
@@ -87,6 +89,10 @@ class GameUIManager {
     this.updateMouseHoveringOverCoords(coords);
   }
 
+  setForces(myForces: number) {
+    this.forces=myForces;
+  }
+
   onMouseUp(coords: WorldCoords) {
     const gameManager = GameManager.getInstance();
     const uiEmitter = UIEmitter.getInstance();
@@ -121,7 +127,8 @@ class GameUIManager {
           {
             coords: mouseUpOverCoords,
             hash: mouseUpOverPlanet.locationId
-          }
+          },
+          this.forces
         );
       }
     }
