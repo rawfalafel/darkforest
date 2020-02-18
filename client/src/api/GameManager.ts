@@ -3,7 +3,7 @@ import LocalStorageManager from './LocalStorageManager';
 import {
   getCurrentPopulation,
   getPlanetTypeForLocation,
-  arrive,
+  arrive
 } from '../utils/Utils';
 import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
@@ -19,7 +19,7 @@ import {
   ChunkCoordinates,
   PlanetArrivalMap,
   ArrivalWithTimer,
-  LocationId,
+  LocationId
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -117,7 +117,7 @@ class GameManager extends EventEmitter {
       defaultGrowth,
       defaultCapacity,
       defaultHardiness,
-      defaultStalwartness,
+      defaultStalwartness
     } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
@@ -191,33 +191,21 @@ class GameManager extends EventEmitter {
         gameManager.players[player.address as string] = player;
       })
       .on('planetUpdate', async (planet: Planet) => {
-        console.log(planet);
         gameManager.planets[planet.locationId as string] = planet;
         gameManager.clearOldArrivals(planet);
-        const arrivals = await ethereumAPI.getArrivals(planet);
-        const arrivalsWithTimers = GameManager.processArrivalsForPlanet(
-          planet.locationId,
-          arrivals,
-          planets
-        );
-        gameManager.arrivalsMap[planet.locationId] = arrivalsWithTimers;
-        gameManager.emit('planetUpdate');
+        ethereumAPI.getArrivals(planet).then(arrivals => {
+          const arrivalsWithTimers = GameManager.processArrivalsForPlanet(
+            planet.locationId,
+            arrivals,
+            planets
+          );
+          gameManager.arrivalsMap[planet.locationId] = arrivalsWithTimers;
+          gameManager.emit('planetUpdate');
+        });
       });
 
     GameManager.instance = gameManager;
     return gameManager;
-  }
-
-  private handleArrival(arrival: QueuedArrival): void {
-    console.log('t', arrival);
-
-    if (arrival.arrivalTime > Date.now()) {
-      setTimeout(
-        () => this.handleArrival(arrival),
-        arrival.arrivalTime - Date.now()
-      );
-      return;
-    }
   }
 
   private initMiningManager(): void {
@@ -281,7 +269,7 @@ class GameManager extends EventEmitter {
       locationId: location.hash,
       destroyed: false,
       population: 0,
-      coordinatesRevealed: false,
+      coordinatesRevealed: false
     };
   }
 
@@ -352,7 +340,7 @@ class GameManager extends EventEmitter {
           }, arrival.arrivalTime * 1000 - Date.now());
           const arrivalWithTimer = {
             arrivalData: arrival,
-            timer: applyFutureArrival,
+            timer: applyFutureArrival
           };
           arrivalsWithTimers.push(arrivalWithTimer);
         }
