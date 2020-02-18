@@ -2,6 +2,8 @@ import {EthAddress, LocationId} from "../@types/global/global";
 import * as bigInt from "big-integer";
 import {LOCATION_ID_UB} from "./constants";
 import {BigInteger} from "big-integer";
+import { utils } from 'ethers';
+import {BigNumber} from 'ethers/utils'
 
 // constructors for specific types
 // this pattern ensures that LocationIds and Addresses can only be initialized through constructors that do
@@ -38,6 +40,10 @@ export const locationIdToDecStr: (locationId: LocationId) => string = locationId
 export const locationIdToHexStr: (locationId: LocationId) => string = locationId => {
   return bigInt(locationId, 16).toString(16);
 };
+
+export const locationIdToBigNumber: (location: string) => BigNumber = location => {
+   return utils.bigNumberify( '0x' + locationIdToHexStr(<LocationId>location));
+}
 
 export const address: (str: string) => EthAddress = str => {
   let ret = str.toLowerCase();

@@ -21,6 +21,7 @@ import {
   address,
   locationIdFromDecStr,
   locationIdToDecStr,
+  locationIdToBigNumber,
 } from '../utils/CheckedTypeUtils';
 import {
   ContractConstants,
@@ -229,9 +230,12 @@ class EthereumAPI extends EventEmitter {
   async getArrivals(planet: Planet): Promise<QueuedArrival[]> {
     const contract = this.contract;
 
-    const idx = utils.bigNumberify(
-      '0x' + locationIdToHexStr(planet.locationId)
-    );
+    //const idx = utils.bigNumberify(
+    //  '0x' + locationIdToHexStr(planet.locationId)
+    //);
+
+    const idx = locationIdToBigNumber(planet.locationId)
+
     const queuedArrivals = (await contract.planetMetadatas(
       idx
     )).pendingCount.toNumber();
