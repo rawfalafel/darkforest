@@ -40,7 +40,7 @@ const App = () => {
   }
 
   if (joinedGame) {
-    return <GameScene gameManager={gameManagerRef.current} />;
+    return <GameScene />;
   } else {
     return <LandingPage onInitialize={initialize} />;
   }

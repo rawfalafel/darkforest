@@ -1,7 +1,12 @@
 // web3 injected types, from metamask
 import { PlanetType } from './enums';
+import { WorldCoords } from '../../utils/Coordinates';
 
 interface Web3ProviderObject {}
+
+interface WindowEthereumObject {
+  enable: () => void;
+}
 
 interface Web3Object {
   currentProvider: Web3ProviderObject;
@@ -9,6 +14,7 @@ interface Web3Object {
 
 declare global {
   interface Window {
+    ethereum: WindowEthereumObject;
     web3: Web3Object;
     // from websnark's function injected into window
     genZKSnarkProof: (
@@ -39,11 +45,12 @@ export interface Coordinates {
 }
 
 export interface Location {
-  coords: Coordinates;
+  coords: WorldCoords;
   hash: LocationId;
 }
 
 export interface Planet {
+  owner: EthAddress | null;
   planetType: PlanetType;
   capacity: number;
   growth: number;
@@ -53,16 +60,11 @@ export interface Planet {
   locationId: LocationId;
   population: number;
   coordinatesRevealed: boolean;
+  destroyed: boolean;
   x?: number;
   y?: number;
   pending?: any;
   pendingCount?: number;
-}
-
-export interface OwnedPlanet extends Planet {
-  owner: EthAddress;
-  version: number;
-  destroyed: boolean;
 }
 
 export interface Transaction {
@@ -75,7 +77,7 @@ export interface Transaction {
 }
 
 export interface PlanetMap {
-  [planetId: string]: OwnedPlanet;
+  [planetId: string]: Planet;
 }
 
 export interface Player {

@@ -71,6 +71,7 @@ contract DarkForestV1 is Verifier {
         mapping(uint => Transaction) pending;
         uint pendingCount;
         bool exists;
+        bytes32 entropySource;
     }
 
     struct Transaction {
@@ -96,6 +97,21 @@ contract DarkForestV1 is Verifier {
     function toBytes(uint256 x) private pure returns (bytes memory b) {
         b = new bytes(32);
         assembly { mstore(add(b, 32), x) }
+    }
+
+    // (1/x)y distribution. Not ready yet.
+    // function getMultiplier(uint8 _rand) private pure returns (int128) {
+    //     return ABDKMath64x64.divu(100, (uint256(_rand) + 10));
+    // }
+
+    // Uniform distribution
+    function getMultiplierInPercent(uint8 _rand) private pure returns (uint) {
+        return 100 + ((_rand % 32) - 16);
+    }
+
+    function perturbValue(uint _baseVal, uint8 _rand) private pure returns (uint) {
+        //return ABDKMath64x64.mulu(getMultiplier(_rand), _baseVal);
+        return _baseVal * getMultiplierInPercent(_rand) / 100;
     }
 
     function getPlanetType(uint _loc) private pure returns (PlanetType) {
@@ -160,15 +176,16 @@ contract DarkForestV1 is Verifier {
 
     function initializePlanet(uint _loc, address _player, uint _population) private {
         require (locationIdValid(_loc));
+        bytes32 entropy = blockhash(block.number - 1);
         PlanetType planetType = getPlanetType(_loc);
         Planet memory newPlanet;
         newPlanet.locationId = _loc;
         newPlanet.owner = _player;
         newPlanet.planetType = planetType;
-        newPlanet.capacity = defaultCapacity[uint(planetType)];
-        newPlanet.growth = defaultGrowth[uint(planetType)];
-        newPlanet.hardiness = defaultHardiness[uint(planetType)];
-        newPlanet.stalwartness = defaultStalwartness[uint(planetType)];
+        newPlanet.capacity = perturbValue(defaultCapacity[uint(planetType)], uint8(entropy[0]));
+        newPlanet.growth = perturbValue(defaultGrowth[uint(planetType)], uint8(entropy[1]));
+        newPlanet.hardiness = perturbValue(defaultHardiness[uint(planetType)], uint8(entropy[2]));
+        newPlanet.stalwartness = perturbValue(defaultStalwartness[uint(planetType)], uint8(entropy[3]));
         newPlanet.population = _population;
         newPlanet.lastUpdated = now;
         newPlanet.coordinatesRevealed = false;
@@ -180,6 +197,7 @@ contract DarkForestV1 is Verifier {
         newPlanetMetadata.version = VERSION;
         newPlanetMetadata.destroyed = false;
         newPlanetMetadata.exists = true;
+        newPlanetMetadata.entropySource = entropy;
         planetMetadatas[_loc] = newPlanetMetadata;
 
         planetIds.push(_loc);
