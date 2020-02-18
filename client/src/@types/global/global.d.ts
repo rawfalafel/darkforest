@@ -63,6 +63,17 @@ export interface Planet {
   destroyed: boolean;
   x?: number;
   y?: number;
+  pending?: any;
+  pendingCount?: number;
+}
+
+export interface Transaction {
+  arrivalTime: number;
+  player: string;
+  oldLoc: LocationId;
+  newLoc: LocationId;
+  maxDist: number;
+  shipsMoved: number;
 }
 
 export interface PlanetMap {

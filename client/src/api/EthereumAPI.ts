@@ -4,22 +4,29 @@ import {
   PlanetMap,
   Player,
   PlayerMap,
+  Transaction,
   Web3Object,
   Planet,
 } from '../@types/global/global';
 import { Contract, Signer, providers, utils } from 'ethers';
+import _ from 'lodash';
 
 // NOTE: DO NOT IMPORT FROM ETHERS SUBPATHS. see https://github.com/ethers-io/ethers.js/issues/349 (these imports trip up webpack)
 // in particular, the below is bad!
 // import {TransactionReceipt, Provider, TransactionResponse, Web3Provider} from "ethers/providers";
 
 import { contractAddress } from '../utils/local_contract_addr';
-import { address, locationIdFromDecStr } from '../utils/CheckedTypeUtils';
+import {
+  address,
+  locationIdFromDecStr,
+  locationIdToDecStr,
+} from '../utils/CheckedTypeUtils';
 import {
   ContractConstants,
   InitializePlayerArgs,
   MoveArgs,
   RawPlanetData,
+  RawTransactionData,
   RawPlanetMetadata,
 } from '../@types/darkforest/api/EthereumAPI';
 import { TransactionRequest } from 'ethers/providers';
@@ -214,6 +221,22 @@ class EthereumAPI extends EventEmitter {
     return playerMap;
   }
 
+  async getTransactions(planets): Promise<Transaction[]> {
+    const contract = this.contract;
+
+    const txs = _.flatten(
+      _.values(planets).map(planet =>
+        _.range(0, planet.pendingCount).map(txId =>
+          contract
+            .getTransaction(locationIdToDecStr(planet.locationId), txId)
+            .then(this.rawTransactionToObject)
+        )
+      )
+    );
+
+    return Promise.all(txs);
+  }
+
   async getPlanets(): Promise<PlanetMap> {
     const contract = this.contract;
     const nPlanets: number = await contract.getNPlanets();
@@ -259,6 +282,26 @@ class EthereumAPI extends EventEmitter {
     return this.rawPlanetToObject(rawPlanet, rawPlanetMetadata);
   }
 
+  private rawTransactionToObject(rawTx: RawTransactionData): Transaction {
+    const rawArrivalTime = rawTx.arrivalTime || rawTx[0];
+    const rawPlayer = rawTx.player || rawTx[1];
+    const rawOldLoc = rawTx.oldLoc || rawTx[2];
+    const rawNewLoc = rawTx.newLoc || rawTx[3];
+    const rawMaxDist = rawTx.maxDist || rawTx[4];
+    const rawShipsMoved = rawTx.shipsMoved || rawTx[5];
+
+    const transaction: Transaction = {
+      arrivalTime: rawArrivalTime.toNumber(),
+      player: address(rawPlayer),
+      oldLoc: locationIdFromDecStr(rawOldLoc.toString()),
+      newLoc: locationIdFromDecStr(rawNewLoc.toString()),
+      maxDist: rawMaxDist.toNumber(),
+      shipsMoved: rawShipsMoved.toNumber(),
+    };
+
+    return transaction;
+  }
+
   private rawPlanetToObject(
     rawPlanet: RawPlanetData,
     rawPlanetMetadata: RawPlanetMetadata
@@ -277,6 +320,10 @@ class EthereumAPI extends EventEmitter {
 
     const rawDestroyed = rawPlanetMetadata.destroyed || rawPlanetMetadata[3];
 
+    const rawPending = rawPlanetMetadata.pending || rawPlanetMetadata[4];
+    const rawPendingCount =
+      rawPlanetMetadata.pendingCount || rawPlanetMetadata[5];
+
     const planet: Planet = {
       capacity: rawCapacity.toNumber(),
       growth: rawGrowth.toNumber(),
@@ -289,6 +336,8 @@ class EthereumAPI extends EventEmitter {
       owner: address(rawOwner),
       population: rawPopulation.toNumber(),
       destroyed: rawDestroyed,
+      pending: rawPending,
+      pendingCount: rawPendingCount.toNumber(),
     };
     if (planet.coordinatesRevealed) {
       const rawX = rawPlanet.x || rawPlanet[10];

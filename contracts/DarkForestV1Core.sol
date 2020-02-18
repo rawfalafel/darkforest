@@ -68,12 +68,24 @@ contract DarkForestV1 is Verifier {
         address owner;
         uint8 version;
         bool destroyed;
+        mapping(uint => Transaction) pending;
+        uint pendingCount;
+        bool exists;
         bytes32 entropySource;
     }
 
+    struct Transaction {
+        uint arrivalTime;
+        address player;
+        uint oldLoc;
+        uint newLoc;
+        uint maxDist;
+        uint shipsMoved;
+    }
+
     event PlayerInitialized(address player, uint loc);
-    event PlayerMoved(address player, uint fromLoc, uint toLoc, uint maxDist, uint shipsMoved);
     event PlanetDestroyed(uint loc);
+    event TransactionQueued(Transaction tx);
 
     uint[] public planetIds;
     mapping (uint => Planet) public planets;
@@ -184,6 +196,7 @@ contract DarkForestV1 is Verifier {
         newPlanetMetadata.owner = _player;
         newPlanetMetadata.version = VERSION;
         newPlanetMetadata.destroyed = false;
+        newPlanetMetadata.exists = true;
         newPlanetMetadata.entropySource = entropy;
         planetMetadatas[_loc] = newPlanetMetadata;
 
@@ -227,7 +240,6 @@ contract DarkForestV1 is Verifier {
         uint64 new_pop = ABDKMath64x64.toUInt(ABDKMath64x64.div(numerator, denominator));
         planet.population = uint (new_pop);
 
-        planet.lastUpdated = now;
     }
 
     function initializePlayer(
@@ -269,12 +281,64 @@ contract DarkForestV1 is Verifier {
         require(verifyMoveProof(_a, _b, _c, input012));
     }
 
-    function move(
+    function move (
         uint[2] memory _a,
         uint[2][2] memory _b,
         uint[2] memory _c,
         uint[4] memory _input
     ) public {
+        Transaction memory _tx = depart(_a, _b, _c, _input);
+        if (!planetIsInitialized(_tx.newLoc)) {
+            initializePlanet(_tx.newLoc, address(0), 0);
+        }
+        executeReadyTransactions(planetMetadatas[_tx.oldLoc]);
+        executeReadyTransactions(planetMetadatas[_tx.newLoc]);
+        enqueueTransactionOnPlanet(planetMetadatas[_tx.newLoc], _tx);
+    }
+
+    function executeReadyTransactions(PlanetMetadata storage _p) internal {
+        while (true) {
+            uint idx;
+            bool found;
+            (found, idx) = findNextReadyTransaction(_p);
+
+            if (!found) break;
+
+            arrive(_p.pending[idx]);
+            delete _p.pending[idx];
+        }
+    }
+
+    function getTransaction(uint _planetLoc, uint _transactionIdx) public view returns (Transaction memory) {
+        return planetMetadatas[_planetLoc].pending[_transactionIdx];
+    }
+
+    function findNextReadyTransaction(PlanetMetadata storage _p) internal returns (bool, uint) {
+        uint earliestTime = now;
+        uint earliestIndex = 0;
+        bool found = false;
+        for (uint i = 0; i < _p.pendingCount; i++) {
+            if (_p.pending[i].arrivalTime != 0 && _p.pending[i].arrivalTime <= earliestTime) {
+                earliestTime = _p.pending[i].arrivalTime;
+                earliestIndex = i;
+                found = true;
+            }
+        }
+
+        return (found, earliestIndex);
+    }
+
+    function updatePlanet(uint _locationId) internal {
+        updatePopulation(_locationId);
+        planets[_locationId].lastUpdated = now;
+    }
+
+    function depart (
+        uint[2] memory _a,
+        uint[2][2] memory _b,
+        uint[2] memory _c,
+        uint[4] memory _input
+    ) internal returns (Transaction memory trx) {
         require (!gamePaused && !gameEnded);
         // check proof validity
         uint[3] memory moveCheckproofInput;
@@ -283,59 +347,72 @@ contract DarkForestV1 is Verifier {
         }
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
 
-        address player = msg.sender;
-        uint oldLoc = _input[0];
-        uint newLoc = _input[1];
-        uint maxDist = _input[2];
-        uint shipsMoved = _input[3];
+        trx.arrivalTime = now + 15 seconds;
+        trx.player = msg.sender;
+        trx.oldLoc = _input[0];
+        trx.newLoc = _input[1];
+        trx.maxDist = _input[2];
+        trx.shipsMoved = _input[3];
 
-        require(playerInitialized[player]); // player exists
-        require(ownerIfOccupiedElseZero(oldLoc) == player); // planet at oldLoc is occupied by player
-        require(!planetMetadatas[oldLoc].destroyed);
-        require(!planetMetadatas[newLoc].destroyed);
+        require(playerInitialized[trx.player]); // player exists
+        require(ownerIfOccupiedElseZero(trx.oldLoc) == trx.player); // planet at oldLoc is occupied by player
+        require(!planetMetadatas[trx.oldLoc].destroyed);
+        updatePlanet(trx.oldLoc);
 
-        updatePopulation(oldLoc);
-        updatePopulation(newLoc);
-        require(planets[oldLoc].population >= shipsMoved); // player can move at most as many ships as exist on oldLoc
+        require(planets[trx.oldLoc].population >= trx.shipsMoved); // player can move at most as many ships as exist on oldLoc
+        planets[trx.oldLoc].population -= trx.shipsMoved;
+    }
 
-        if (!planetIsOccupied(newLoc)) {
+    function arrive(Transaction memory tx_) internal {
+        require(!planetMetadatas[tx_.newLoc].destroyed);
+        updatePlanet(tx_.newLoc);
+
+        if (!planetIsInitialized(tx_.newLoc)) {
+            initializePlanet(tx_.newLoc, tx_.player, 0);
+        }
+
+        uint shipsLanded = moveShipsDecay(tx_.shipsMoved, planets[tx_.oldLoc].hardiness, tx_.maxDist);
+
+        if (!planetIsOccupied(tx_.newLoc)) {
             // colonizing an uninhabited planet
-            if (!planetIsInitialized(newLoc)) {
-                initializePlanet(newLoc, player, 0);
+            planets[tx_.newLoc].owner = tx_.player;
+            planets[tx_.newLoc].population += shipsLanded;
+            if (planets[tx_.newLoc].population > planets[tx_.newLoc].capacity) {
+                planets[tx_.newLoc].population = planets[tx_.newLoc].capacity;
             }
-            planets[oldLoc].population -= shipsMoved;
-            uint shipsLanded = moveShipsDecay(shipsMoved, planets[oldLoc].hardiness, maxDist);
-            planets[newLoc].population += shipsLanded;
-            if (planets[newLoc].population > planets[newLoc].capacity) {
-                planets[newLoc].population = planets[newLoc].capacity;
-            }
-        } else if (ownerIfOccupiedElseZero(newLoc) == player) {
+        } else if (ownerIfOccupiedElseZero(tx_.newLoc) == tx_.player) {
             // moving forces between my planets
-            planets[oldLoc].population -= shipsMoved;
-            uint shipsLanded = moveShipsDecay(shipsMoved, planets[oldLoc].hardiness, maxDist);
-            planets[newLoc].population += shipsLanded;
+            planets[tx_.newLoc].population += shipsLanded;
         } else {
             // attacking enemy
-            planets[oldLoc].population -= shipsMoved;
-            uint shipsLanded = moveShipsDecay(shipsMoved, planets[oldLoc].hardiness, maxDist);
-
-            if (planets[newLoc].population > (shipsLanded * 100 / planets[newLoc].stalwartness)) {
+            if (planets[tx_.newLoc].population > (shipsLanded * 100 / planets[tx_.newLoc].stalwartness)) {
                 // attack reduces target planet's garrison but doesn't conquer it
-                planets[newLoc].population -= (shipsLanded * 100 / planets[newLoc].stalwartness);
+                planets[tx_.newLoc].population -= (shipsLanded * 100 / planets[tx_.newLoc].stalwartness);
             } else {
                 // conquers planet
-                planets[newLoc].owner = player;
-                planets[newLoc].population = shipsLanded - (planets[newLoc].population * planets[newLoc].stalwartness / 100);
+                planets[tx_.newLoc].owner = tx_.player;
+                planets[tx_.newLoc].population = shipsLanded - (planets[tx_.newLoc].population * planets[tx_.newLoc].stalwartness / 100);
             }
         }
-        emit PlayerMoved(player, oldLoc, newLoc, maxDist, shipsMoved);
+    }
+
+    function enqueueTransactionOnPlanet(PlanetMetadata storage _p, Transaction memory _tx) internal {
+        for (uint i = 0; i < _p.pendingCount; i++) {
+            //if (_p.pending[i].arrivalTime == 0) {
+            //    _p.pending[i] = _tx;
+            //    return;
+            //}
+        }
+        _p.pendingCount += 1;
+        _p.pending[_p.pendingCount - 1] = _tx;
+        emit TransactionQueued(_tx);
     }
 
     function cashOut(uint loc) external {
         require(msg.sender == planets[loc].owner);
         require(!planetMetadatas[loc].destroyed);
 
-        updatePopulation(loc);
+        updatePlanet(loc);
         planetMetadatas[loc].destroyed = true;
         uint oldCapacity = planets[loc].capacity;
         uint toWithdraw = (address(this)).balance * planets[loc].population / totalCap;
