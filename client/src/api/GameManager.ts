@@ -3,7 +3,7 @@ import LocalStorageManager from './LocalStorageManager';
 import {
   getCurrentPopulation,
   getPlanetTypeForLocation,
-  arrive,
+  arrive
 } from '../utils/Utils';
 import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
@@ -18,6 +18,8 @@ import {
   QueuedArrival,
   ChunkCoordinates,
   PlanetArrivalMap,
+  ArrivalWithTimer,
+  LocationId
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -31,7 +33,7 @@ class GameManager extends EventEmitter {
   readonly account: EthAddress;
   readonly players: PlayerMap;
   readonly planets: PlanetMap;
-  readonly arrivals: PlanetArrivalMap;
+  readonly arrivalsMap: PlanetArrivalMap;
   readonly inMemoryBoard: BoardData;
   readonly homeChunk: ChunkCoordinates | null;
 
@@ -55,7 +57,7 @@ class GameManager extends EventEmitter {
     account: EthAddress,
     players: PlayerMap,
     planets: PlanetMap,
-    arrivals: PlanetArrivalMap,
+    arrivalsMap: PlanetArrivalMap,
     inMemoryBoard: BoardData,
     xSize: number,
     ySize: number,
@@ -75,7 +77,7 @@ class GameManager extends EventEmitter {
     this.account = account;
     this.players = players;
     this.planets = planets;
-    this.arrivals = arrivals;
+    this.arrivalsMap = arrivalsMap;
     this.inMemoryBoard = inMemoryBoard;
     this.homeChunk = localStorageManager.getHomeChunk();
 
@@ -115,59 +117,33 @@ class GameManager extends EventEmitter {
       defaultGrowth,
       defaultCapacity,
       defaultHardiness,
-      defaultStalwartness,
+      defaultStalwartness
     } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
     const players = await ethereumAPI.getPlayers();
     const planets = await ethereumAPI.getPlanets();
-    const arrivals: PlanetArrivalMap = {};
+    const arrivalsMap: PlanetArrivalMap = {};
     const arrivalPromises: Promise<null>[] = [];
     for (const planetId in planets) {
       if (planets.hasOwnProperty(planetId)) {
         const planet = planets[planetId];
-        const planetArrivalPromise = ethereumAPI
+        const planetArrivalsPromise = ethereumAPI
           .getArrivals(planet)
-          .then(arrivals => {
-            arrivals.sort((a, b) => a.arrivalTime - b.arrivalTime);
-            arrivals[planetId] = [];
-            const nowInSeconds = Date.now() / 1000;
-            for (const arrival of arrivals) {
-              if (
-                nowInSeconds - arrival.arrivalTime > 0 &&
-                planets[arrival.oldLoc] &&
-                planets[arrival.newLoc]
-              ) {
-                // run this arrival
-                arrive(
-                  planets[arrival.oldLoc],
-                  planets[arrival.newLoc],
-                  arrival
-                );
-              } else {
-                // set a timer to do this arrival in the future
-                // and append it to arrivals[planetId]
-                const applyFutureArrival = setTimeout(() => {
-                  arrive(
-                    planets[arrival.oldLoc],
-                    planets[arrival.newLoc],
-                    arrival
-                  );
-                }, arrival.arrivalTime * 1000 - Date.now());
-                const arrivalWithTimer = {
-                  arrivalData: arrival,
-                  timer: applyFutureArrival,
-                };
-                arrivals[planetId].push(arrivalWithTimer);
-              }
-            }
+          .then(arrivalsForPlanet => {
+            arrivalsForPlanet.sort((a, b) => a.arrivalTime - b.arrivalTime);
+            arrivalsMap[planetId] = GameManager.processArrivalsForPlanet(
+              planet.locationId,
+              arrivalsForPlanet,
+              planets
+            );
             return null;
           })
           .catch(err => {
-            console.error(`error occurred in playing back arrival: ${err}`);
+            console.error(`error occurred in processing arrivals: ${err}`);
             return null;
           });
-        arrivalPromises.push(planetArrivalPromise);
+        arrivalPromises.push(planetArrivalsPromise);
       }
     }
     await Promise.all(arrivalPromises);
@@ -187,7 +163,7 @@ class GameManager extends EventEmitter {
       account,
       players,
       planets,
-      arrivals,
+      arrivalsMap,
       inMemoryBoard,
       xSize,
       ySize,
@@ -214,25 +190,22 @@ class GameManager extends EventEmitter {
       .on('playerUpdate', (player: Player) => {
         gameManager.players[player.address as string] = player;
       })
-      .on('planetUpdate', (planet: Planet) => {
+      .on('planetUpdate', async (planet: Planet) => {
         gameManager.planets[planet.locationId as string] = planet;
-        gameManager.emit('planetUpdate');
+        gameManager.clearOldArrivals(planet);
+        ethereumAPI.getArrivals(planet).then(arrivals => {
+          const arrivalsWithTimers = GameManager.processArrivalsForPlanet(
+            planet.locationId,
+            arrivals,
+            planets
+          );
+          gameManager.arrivalsMap[planet.locationId] = arrivalsWithTimers;
+          gameManager.emit('planetUpdate');
+        });
       });
 
     GameManager.instance = gameManager;
     return gameManager;
-  }
-
-  private handleArrival(arrival: QueuedArrival): void {
-    console.log('t', arrival);
-
-    if (arrival.arrivalTime > Date.now()) {
-      setTimeout(
-        () => this.handleArrival(arrival),
-        arrival.arrivalTime - Date.now()
-      );
-      return;
-    }
   }
 
   private initMiningManager(): void {
@@ -296,7 +269,7 @@ class GameManager extends EventEmitter {
       locationId: location.hash,
       destroyed: false,
       population: 0,
-      coordinatesRevealed: false,
+      coordinatesRevealed: false
     };
   }
 
@@ -333,6 +306,67 @@ class GameManager extends EventEmitter {
     if (this.minerManager) {
       this.minerManager.stopExplore();
     }
+  }
+
+  private clearOldArrivals(planet: Planet) {
+    const planetId = planet.locationId;
+    // clear old timeouts
+    if (this.arrivalsMap[planetId]) {
+      // clear if the planet already had stored arrivals
+      for (const arrivalWithTimer of this.arrivalsMap[planetId]) {
+        clearTimeout(arrivalWithTimer.timer);
+      }
+    }
+    this.arrivalsMap[planetId] = [];
+  }
+
+  private static processArrivalsForPlanet(
+    planetId: LocationId,
+    arrivals: QueuedArrival[],
+    allPlanets: PlanetMap
+  ): ArrivalWithTimer[] {
+    // process the QueuedArrival[] for a single planet
+    const arrivalsWithTimers: ArrivalWithTimer[] = [];
+
+    // sort arrivals by timestamp
+    arrivals.sort((a, b) => a.arrivalTime - b.arrivalTime);
+    const nowInSeconds = Date.now() / 1000;
+    for (const arrival of arrivals) {
+      try {
+        if (
+          nowInSeconds - arrival.arrivalTime > 0 &&
+          allPlanets[arrival.oldLoc] &&
+          allPlanets[arrival.newLoc]
+        ) {
+          // if arrival happened in the past, run this arrival
+          arrive(
+            allPlanets[arrival.oldLoc],
+            allPlanets[arrival.newLoc],
+            arrival
+          );
+        } else {
+          // otherwise, set a timer to do this arrival in the future
+          // and append it to arrivalsWithTimers
+          const applyFutureArrival = setTimeout(() => {
+            arrive(
+              allPlanets[arrival.oldLoc],
+              allPlanets[arrival.newLoc],
+              arrival
+            );
+          }, arrival.arrivalTime * 1000 - Date.now());
+          const arrivalWithTimer = {
+            arrivalData: arrival,
+            timer: applyFutureArrival
+          };
+          arrivalsWithTimers.push(arrivalWithTimer);
+        }
+      } catch (e) {
+        console.error(
+          `error occurred processing arrival for updated planet ${planetId}: ${e}`
+        );
+      }
+    }
+    return arrivalsWithTimers;
   }
 
   joinGame(): GameManager {

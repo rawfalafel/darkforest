@@ -287,11 +287,14 @@ contract DarkForestV1 is Verifier {
         uint[2] memory _c,
         uint[4] memory _input
     ) public {
-        QueuedArrival memory arrival = depart(_a, _b, _c, _input);
+        QueuedArrival memory arrival = generateArrivalObject(_a, _b, _c, _input);
+        executeReadyArrivals(planetMetadatas[arrival.oldLoc]);
+        executeDeparture(arrival);
+
         if (!planetIsInitialized(arrival.newLoc)) {
             initializePlanet(arrival.newLoc, address(0), 0);
         }
-        executeReadyArrivals(planetMetadatas[arrival.oldLoc]);
+
         executeReadyArrivals(planetMetadatas[arrival.newLoc]);
         enqueueArrivalOnPlanet(planetMetadatas[arrival.newLoc], arrival);
     }
@@ -333,7 +336,7 @@ contract DarkForestV1 is Verifier {
         planets[_locationId].lastUpdated = targetTime;
     }
 
-    function depart (
+    function generateArrivalObject(
         uint[2] memory _a,
         uint[2][2] memory _b,
         uint[2] memory _c,
@@ -353,7 +356,9 @@ contract DarkForestV1 is Verifier {
         arrival.newLoc = _input[1];
         arrival.maxDist = _input[2];
         arrival.shipsMoved = _input[3];
+    }
 
+    function executeDeparture (QueuedArrival memory arrival) internal {
         require(playerInitialized[arrival.player]); // player exists
         require(ownerIfOccupiedElseZero(arrival.oldLoc) == arrival.player); // planet at oldLoc is occupied by player
         require(!planetMetadatas[arrival.oldLoc].destroyed);
@@ -398,10 +403,11 @@ contract DarkForestV1 is Verifier {
 
     function enqueueArrivalOnPlanet(PlanetMetadata storage _p, QueuedArrival memory arrival) internal {
         for (uint i = 0; i < _p.pendingCount; i++) {
-            //if (_p.pending[i].arrivalTime == 0) {
-            //    _p.pending[i] = arrival;
-            //    return;
-            //}
+            if (_p.pending[i].arrivalTime == 0) {
+                _p.pending[i] = arrival;
+                emit ArrivalQueued(arrival);
+                return;
+            }
         }
         _p.pendingCount += 1;
         _p.pending[_p.pendingCount - 1] = arrival;
