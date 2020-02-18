@@ -3,13 +3,13 @@ module.exports = {
   extends: [
     'plugin:@typescript-eslint/recommended',
     'prettier',
-    'plugin:react/recommended',
+    'plugin:react/recommended'
   ],
   plugins: ['@typescript-eslint', 'react', 'react-hooks'],
   env: {
     browser: true,
     node: true,
-    es6: true,
+    es6: true
   },
   globals: {
     // add as needed
@@ -20,24 +20,25 @@ module.exports = {
       'error',
       {
         varsIgnorePattern: '(^_)',
-        argsIgnorePattern: '(^_)',
-      },
+        argsIgnorePattern: '(^_)'
+      }
     ],
+    '@typescript-eslint/no-empty-interface': 0,
 
     eqeqeq: 'error',
     'react/jsx-no-undef': ['error', { allowGlobals: true }],
-    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/rules-of-hooks': 'error'
   },
   settings: {
     react: {
-      version: 'detect',
-    },
+      version: 'detect'
+    }
   },
   parserOptions: {
     ecmaFeatures: {
       modules: true,
-      legacyDecorators: true,
+      legacyDecorators: true
     },
-    sourceType: 'module',
-  },
+    sourceType: 'module'
+  }
 };

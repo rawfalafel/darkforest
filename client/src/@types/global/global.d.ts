@@ -4,13 +4,17 @@ import { WorldCoords } from '../../utils/Coordinates';
 
 interface Web3ProviderObject {}
 
+interface WindowEthereumObject {
+  enable: () => void;
+}
+
 interface Web3Object {
   currentProvider: Web3ProviderObject;
 }
 
 declare global {
   interface Window {
-    ethereum: any;
+    ethereum: WindowEthereumObject;
     web3: Web3Object;
     // from websnark's function injected into window
     genZKSnarkProof: (
