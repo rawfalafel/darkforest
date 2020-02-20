@@ -7,7 +7,6 @@ import {
 import { CHUNK_SIZE } from '../utils/constants';
 import Worker from 'worker-loader!../miner/miner.worker';
 import { EventEmitter } from 'events';
-import GameManager from './GameManager';
 import { MiningPatternType, GridPatternType } from '../@types/global/enums';
 import { 
   SpiralPattern, 
