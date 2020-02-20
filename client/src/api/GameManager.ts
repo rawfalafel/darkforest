@@ -28,6 +28,10 @@ import SnarkArgsHelper from './SnarkArgsHelper';
 import { locationIdToDecStr } from '../utils/CheckedTypeUtils';
 import { WorldCoords } from '../utils/Coordinates';
 
+import { MiningPattern } from '../@types/global/global';
+import { SpiralPattern, GridPattern  } from '../utils/MiningPatterns';
+import { GridPatternType } from '../@types/global/enums';
+
 class GameManager extends EventEmitter {
   static instance: GameManager;
 
@@ -43,7 +47,9 @@ class GameManager extends EventEmitter {
   // TODO be able to make this private
   private readonly localStorageManager: LocalStorageManager;
   private readonly snarkHelper: SnarkArgsHelper;
+
   private minerManager?: MinerManager;
+  private miningPattern: MiningPattern;
 
   readonly xSize: number;
   readonly ySize: number;
@@ -223,13 +229,17 @@ class GameManager extends EventEmitter {
   }
 
   private initMiningManager(): void {
+    this.miningPattern = new SpiralPattern(this.localStorageManager.getHomeChunk());
+    // this.miningPattern = new GridPattern(GridPatternType.Horizontal);
+
     this.minerManager = MinerManager.initialize(
       this.inMemoryBoard,
-      this.localStorageManager.getHomeChunk(),
+      this.miningPattern,
       this.xSize,
       this.ySize,
       this.planetRarity
     );
+
     this.minerManager.on('discoveredNewChunk', chunk => {
       for (const planetLocation of chunk.planetLocations) {
         this.planetLocationMap[planetLocation.hash] = planetLocation;
@@ -238,6 +248,14 @@ class GameManager extends EventEmitter {
       this.emit('discoveredNewChunk');
     });
     this.minerManager.startExplore();
+  }
+  getMiningPattern(): MiningPattern {
+    return this.miningPattern;
+  }
+  setMiningPattern(pattern : MiningPattern) {
+    this.miningPattern = pattern;
+    const minerManager = MinerManager.getInstance();
+    minerManager.setMiningPattern(this.miningPattern);
   }
 
   hasJoinedGame(): boolean {

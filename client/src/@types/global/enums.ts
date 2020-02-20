@@ -12,3 +12,13 @@ export enum PlanetType {
   SuperGiant,
   HyperGiant,
 }
+export enum MiningPatternType {
+  Spiral,
+  Target,
+  Cone,
+  Grid,
+}
+export enum GridPatternType {
+  Vertical,
+  Horizontal,
+}

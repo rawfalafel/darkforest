@@ -1,5 +1,5 @@
 // web3 injected types, from metamask
-import { PlanetType } from './enums';
+import { PlanetType, MiningPatternType } from './enums';
 import { WorldCoords } from '../../utils/Coordinates';
 
 interface Web3ProviderObject {}
@@ -63,6 +63,11 @@ export interface Planet {
   destroyed: boolean;
   x?: number;
   y?: number;
+}
+
+export interface MiningPattern {
+  type: MiningPatternType;
+  fromChunk : ChunkCoordinates;
 }
 
 export interface QueuedArrival {

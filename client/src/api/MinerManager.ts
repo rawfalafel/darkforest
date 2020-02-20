@@ -1,16 +1,25 @@
 import {
   BoardData,
   ChunkCoordinates,
-  ExploredChunkData
+  ExploredChunkData,
+  MiningPattern
 } from '../@types/global/global';
 import { CHUNK_SIZE } from '../utils/constants';
 import Worker from 'worker-loader!../miner/miner.worker';
 import { EventEmitter } from 'events';
+import GameManager from './GameManager';
+import { MiningPatternType, GridPatternType } from '../@types/global/enums';
+import { 
+  SpiralPattern, 
+  GridPattern, 
+  ConePattern, 
+  TargetPattern 
+} from '../utils/MiningPatterns';
 
 class MinerManager extends EventEmitter {
   private readonly inMemoryBoard: BoardData;
   private isExploring = false;
-  private discoveringFromChunk: ChunkCoordinates; // the "center" of the spiral. defaults to homeChunk
+  private miningPattern: MiningPattern;
   private worker: Worker;
   private readonly maxX: number;
   private readonly maxY: number;
@@ -20,7 +29,7 @@ class MinerManager extends EventEmitter {
 
   private constructor(
     inMemoryBoard: BoardData,
-    discoveringFromChunk: ChunkCoordinates,
+    miningPattern: MiningPattern,
     maxX: number,
     maxY: number,
     planetRarity: number
@@ -28,11 +37,16 @@ class MinerManager extends EventEmitter {
     super();
 
     this.inMemoryBoard = inMemoryBoard;
-    this.discoveringFromChunk = discoveringFromChunk;
-    this.maxX = maxX;
-    this.maxY = maxY;
+    this.miningPattern = miningPattern;
+    this.maxX = maxX / CHUNK_SIZE;
+    this.maxY = maxY / CHUNK_SIZE;
     this.planetRarity = planetRarity;
   }
+
+  setMiningPattern(pattern : MiningPattern) {
+    this.miningPattern = pattern;
+  }
+
 
   static getInstance(): MinerManager {
     if (!MinerManager.instance) {
@@ -44,7 +58,7 @@ class MinerManager extends EventEmitter {
 
   static initialize(
     inMemoryBoard: BoardData,
-    discoveringFromChunk: ChunkCoordinates,
+    miningPattern: MiningPattern,
     xSize: number,
     ySize: number,
     planetRarity: number
@@ -55,7 +69,7 @@ class MinerManager extends EventEmitter {
 
     const minerManager = new MinerManager(
       inMemoryBoard,
-      discoveringFromChunk,
+      miningPattern,
       xSize,
       ySize,
       planetRarity
@@ -93,13 +107,13 @@ class MinerManager extends EventEmitter {
     if (!this.isExploring) {
       this.isExploring = true;
       if (
-        !this.inMemoryBoard[this.discoveringFromChunk.chunkX][
-          this.discoveringFromChunk.chunkY
+        !this.inMemoryBoard[this.miningPattern.fromChunk.chunkX][
+          this.miningPattern.fromChunk.chunkY
         ]
       ) {
-        this.sendMessageToWorker(this.discoveringFromChunk);
+        this.sendMessageToWorker(this.miningPattern.fromChunk);
       } else {
-        this.nextValidExploreTarget(this.discoveringFromChunk).then(
+        this.nextValidExploreTarget(this.miningPattern.fromChunk).then(
           (firstChunk: ChunkCoordinates | null) => {
             if (!!firstChunk) {
               this.sendMessageToWorker(firstChunk);
@@ -126,16 +140,10 @@ class MinerManager extends EventEmitter {
     if (!this.isExploring) {
       return null;
     }
-    let nextChunk = this.nextChunkInExploreOrder(
-      chunk,
-      this.discoveringFromChunk
-    );
+    let nextChunk = this.nextChunkInExploreOrder(chunk);
     let count = 100;
     while (!this.isValidExploreTarget(nextChunk) && count > 0) {
-      nextChunk = this.nextChunkInExploreOrder(
-        nextChunk,
-        this.discoveringFromChunk
-      );
+      nextChunk = this.nextChunkInExploreOrder(nextChunk);
       count -= 1;
     }
     if (this.isValidExploreTarget(nextChunk)) {
@@ -151,8 +159,8 @@ class MinerManager extends EventEmitter {
 
   private isValidExploreTarget(chunk: ChunkCoordinates): boolean {
     const { chunkX, chunkY } = chunk;
-    const xChunks = this.maxX / CHUNK_SIZE;
-    const yChunks = this.maxY / CHUNK_SIZE;
+    const xChunks = this.maxX;
+    const yChunks = this.maxY;
     // should be inbounds, and unexplored
     return (
       chunkX >= 0 &&
@@ -163,63 +171,84 @@ class MinerManager extends EventEmitter {
     );
   }
 
-  private nextChunkInExploreOrder(
-    chunk: ChunkCoordinates,
-    homeChunk: ChunkCoordinates
-  ): ChunkCoordinates {
-    // spiral
-    const homeChunkX = homeChunk.chunkX;
-    const homeChunkY = homeChunk.chunkY;
-    const currentChunkX = chunk.chunkX;
-    const currentChunkY = chunk.chunkY;
-    if (currentChunkX === homeChunkX && currentChunkY === homeChunkY) {
+  private nextChunkInExploreOrder(chunk: ChunkCoordinates): ChunkCoordinates {
+    let pattern : MiningPattern = this.miningPattern;
+
+    if(pattern.type == MiningPatternType.Grid) {
+      const currentChunkX = chunk.chunkX;
+      const currentChunkY = chunk.chunkY;
+      let chunkX = currentChunkX;
+      let chunkY = currentChunkY;
+      if(currentChunkX + 1 >= this.maxX) {
+        chunkX = 0;
+        chunkY = chunkY + 1;
+      } else {
+        chunkX = chunkX + 1;
+      }
+
       return {
-        chunkX: homeChunkX,
-        chunkY: homeChunkY + 1
-      };
-    }
-    if (
-      currentChunkY - currentChunkX > homeChunkY - homeChunkX &&
-      currentChunkY + currentChunkX >= homeChunkX + homeChunkY
-    ) {
-      if (currentChunkY + currentChunkX == homeChunkX + homeChunkY) {
-        // break the circle
+        chunkX: chunkX,
+        chunkY: chunkY,
+      }
+    } else if(pattern.type == MiningPatternType.Cone) {
+
+    } else if(pattern.type == MiningPatternType.Target) {
+
+    } else { // 
+      // spiral
+      const homeChunkX = pattern.fromChunk.chunkX;
+      const homeChunkY = pattern.fromChunk.chunkY;
+      const currentChunkX = chunk.chunkX;
+      const currentChunkY = chunk.chunkY;
+      if (currentChunkX === homeChunkX && currentChunkY === homeChunkY) {
+        return {
+          chunkX: homeChunkX,
+          chunkY: homeChunkY + 1
+        };
+      }
+      if (
+        currentChunkY - currentChunkX > homeChunkY - homeChunkX &&
+        currentChunkY + currentChunkX >= homeChunkX + homeChunkY
+      ) {
+        if (currentChunkY + currentChunkX == homeChunkX + homeChunkY) {
+          // break the circle
+          return {
+            chunkX: currentChunkX,
+            chunkY: currentChunkY + 1
+          };
+        }
+        return {
+          chunkX: currentChunkX + 1,
+          chunkY: currentChunkY
+        };
+      }
+      if (
+        currentChunkX + currentChunkY > homeChunkX + homeChunkY &&
+        currentChunkY - currentChunkX <= homeChunkY - homeChunkX
+      ) {
+        return {
+          chunkX: currentChunkX,
+          chunkY: currentChunkY - 1
+        };
+      }
+      if (
+        currentChunkX + currentChunkY <= homeChunkX + homeChunkY &&
+        currentChunkY - currentChunkX < homeChunkY - homeChunkX
+      ) {
+        return {
+          chunkX: currentChunkX - 1,
+          chunkY: currentChunkY
+        };
+      }
+      if (
+        currentChunkX + currentChunkY < homeChunkX + homeChunkY &&
+        currentChunkY - currentChunkX >= homeChunkY - homeChunkX
+      ) {
         return {
           chunkX: currentChunkX,
           chunkY: currentChunkY + 1
         };
       }
-      return {
-        chunkX: currentChunkX + 1,
-        chunkY: currentChunkY
-      };
-    }
-    if (
-      currentChunkX + currentChunkY > homeChunkX + homeChunkY &&
-      currentChunkY - currentChunkX <= homeChunkY - homeChunkX
-    ) {
-      return {
-        chunkX: currentChunkX,
-        chunkY: currentChunkY - 1
-      };
-    }
-    if (
-      currentChunkX + currentChunkY <= homeChunkX + homeChunkY &&
-      currentChunkY - currentChunkX < homeChunkY - homeChunkX
-    ) {
-      return {
-        chunkX: currentChunkX - 1,
-        chunkY: currentChunkY
-      };
-    }
-    if (
-      currentChunkX + currentChunkY < homeChunkX + homeChunkY &&
-      currentChunkY - currentChunkX >= homeChunkY - homeChunkX
-    ) {
-      return {
-        chunkX: currentChunkX,
-        chunkY: currentChunkY + 1
-      };
     }
   }
 

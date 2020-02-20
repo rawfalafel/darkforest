@@ -1,6 +1,6 @@
 import UIEmitter from '../../utils/UIEmitter';
 import { WorldCoords } from '../../utils/Coordinates';
-import { Planet } from '../../@types/global/global';
+import { Planet, MiningPattern } from '../../@types/global/global';
 import GameManager from '../../api/GameManager';
 import { PlanetType } from '../../@types/global/enums';
 
@@ -17,6 +17,7 @@ class GameUIManager {
   mouseHoveringOverCoords: WorldCoords | null = null;
 
   forces: number = 50;
+
 
   private constructor() {
     this.radiusMap[PlanetType.LittleAsteroid] = 1;
