@@ -1,7 +1,5 @@
 import * as React from 'react';
-import { RefObject } from 'react';
 import GameUIManager from '../board/GameUIManager';
-import Viewport from '../board/Viewport';
 import { CanvasCoords, WorldCoords } from '../../utils/Coordinates';
 import GameManager from '../../api/GameManager';
 import UIEmitter from '../../utils/UIEmitter'

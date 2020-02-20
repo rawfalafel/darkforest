@@ -3,7 +3,6 @@ import { WorldCoords } from '../../utils/Coordinates';
 import { Planet } from '../../@types/global/global';
 import GameManager from '../../api/GameManager';
 import { PlanetType } from '../../@types/global/enums';
-import EthereumAPI from '../../api/EthereumAPI';
 
 class GameUIManager {
   static instance: GameUIManager;
