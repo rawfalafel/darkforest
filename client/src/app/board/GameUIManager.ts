@@ -59,7 +59,8 @@ class GameUIManager {
 
   static initialize() {
     const uiEmitter = UIEmitter.getInstance();
-    const eApi = EthereumAPI.getInstance();
+    const gameManager = GameManager.getInstance();
+
     const uiManager = new GameUIManager();
 
     uiEmitter.on('WORLD_MOUSE_DOWN', uiManager.onMouseDown.bind(uiManager));
@@ -67,7 +68,7 @@ class GameUIManager {
     uiEmitter.on('WORLD_MOUSE_UP', uiManager.onMouseUp.bind(uiManager));
     uiEmitter.on('WORLD_MOUSE_OUT', uiManager.onMouseOut.bind(uiManager));
 
-    eApi.on('planetUpdate', uiManager.updatePlanets.bind(uiManager));
+    gameManager.on('planetUpdate', uiManager.updatePlanets.bind(uiManager));
 
     GameUIManager.instance = uiManager;
 
