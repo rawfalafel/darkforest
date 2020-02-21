@@ -1,16 +1,25 @@
 import * as React from 'react';
-import { RefObject } from 'react';
 import GameUIManager from '../board/GameUIManager';
-import Viewport from '../board/Viewport';
-import { CanvasCoords, WorldCoords } from '../../utils/Coordinates';
 import GameManager from '../../api/GameManager';
 import UIEmitter from '../../utils/UIEmitter'
-import { Planet } from '../../@types/global/global';
+import { Planet, ChunkCoordinates, MiningPattern } from '../../@types/global/global';
+import { MiningPatternType } from '../../@types/global/enums';
+import { SpiralPattern, ConePattern, GridPattern } from '../../utils/MiningPatterns';
 
 import { getCurrentPopulation } from '../../utils/Utils';
+import { CHUNK_SIZE } from '../../utils/constants';
 
 interface WindowProps {}
-interface WindowState {}
+interface WindowState {
+	forces: number,
+	activeTab: string, // change to enum
+	planet: Planet | null,
+	totalBalance: number,
+	totalCapacity: number,
+	conversionRate: number,
+	patternType: MiningPatternType,
+	targetPatternChunk: ChunkCoordinates
+}
 
 class TabbedWindow extends React.Component<WindowProps, WindowState> {
 
@@ -21,12 +30,32 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		totalBalance : 0,
 		totalCapacity : Infinity,
 		conversionRate: 268.19,
+		patternType : MiningPatternType.Home,
+		targetPatternChunk : {chunkX: 0, chunkY: 0},
 	};
+
 	frameCount = 0;
 	uiManager = GameUIManager.getInstance();
 	gameManager = GameManager.getInstance();
 
+	/* BEGIN init stuff handlers */
+	constructor(props: WindowProps) {
+		super(props);
+	}
+	componentDidMount() {
+		const uiManager = GameUIManager.getInstance();
+		const uiEmitter = UIEmitter.getInstance();
 
+		if(this.uiManager.selectedPlanet != null) {
+			this.setState({planet: this.uiManager.selectedPlanet})
+		}
+
+		uiEmitter.on('GAME_PLANET_SELECTED', this.updateInfo.bind(this));
+
+		window.requestAnimationFrame(this.animate.bind(this));
+	}
+
+	/* BEGIN details handlers */
 	async updateBalance() {
 		const balance = await this.gameManager.getTotalBalance();
 		this.setState({
@@ -59,9 +88,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		if(this.state.planet == null) return 0;
 		else return (getCurrentPopulation(this.state.planet)/this.state.totalCapacity)*this.state.totalBalance;
 	}
-	getUsdValue() {
-		return this.getEtherValue()*this.state.conversionRate;
-	}
+	getUsdValue = () => this.getEtherValue()*this.state.conversionRate;
 	animate() {
 		this.frameCount++;
 		if(this.frameCount % 3600 == 0) {
@@ -77,32 +104,6 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 			this.updateInfo();
 		}
 		window.requestAnimationFrame(this.animate.bind(this));
-	}
-	constructor(props: WindowProps) {
-		super(props);
-
-		
-
-
-		// TabbedWindow.instance = this
-
-	}
-	componentDidMount() {
-		const uiManager = GameUIManager.getInstance();
-		const uiEmitter = UIEmitter.getInstance();
-
-		if(this.uiManager.selectedPlanet != null) {
-			this.setState({planet: this.uiManager.selectedPlanet})
-		}
-
-		uiEmitter.on('GAME_PLANET_SELECTED', this.updateInfo.bind(this));
-
-		window.requestAnimationFrame(this.animate.bind(this));
-	}
-	handleForcesChange = (e) => {
-		const uiManager = GameUIManager.getInstance();
-		this.setState({forces: e.target.value});
-		uiManager.setForces(e.target.value);
 	}
 	renderPlanetProp(prop : string):string {
 		if(prop == "population") {
@@ -124,6 +125,29 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 					: "0");
 		}
 	}
+
+	/* BEGIN forces handlers */
+	handleForcesChange = (e) => {
+		const uiManager = GameUIManager.getInstance();
+		this.setState({forces: e.target.value});
+		uiManager.setForces(e.target.value);
+	}
+	
+	/* BEGIN mining handlers */
+	doPatternChange() {
+		let myPattern : MiningPattern;
+		if(this.state.patternType == MiningPatternType.Home) {
+			myPattern = new SpiralPattern(this.gameManager.getLocalStorageManager().getHomeChunk());
+		} else if(this.state.patternType == MiningPatternType.Target) {
+			myPattern = new SpiralPattern(this.state.targetPatternChunk);
+		}
+		console.log(myPattern);
+		this.gameManager.setMiningPattern(myPattern);
+	}
+	handlePatternTypeChange = (e) => {
+		this.setState({patternType: e.target.value});
+		this.doPatternChange();
+	}
 	render() {
 		return (
 			<div className="flex flex-col
@@ -140,7 +164,8 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 	          </div>
 
 	          {/* Windows */}
-	          <div className="m-2">
+	          <div className="m-2 h-full">
+
 	            <div className={this.state.activeTab == 'details' ? "block" : "hidden"}>
 	              <table className="width-full" style={{width:"100%"}}>
 	              	<tbody className="width-full" style={{width:"100%"}}>
@@ -179,9 +204,95 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 	              </table>
 	            </div>
 
-	            <div className={this.state.activeTab == 'miners' ? "block" : "hidden"}>
-	              Manage Miners:
-	            </div>
+	            {/* BEGIN MINERS */}
+	            <div className={"flex flex-col h-full "
+	            	+(this.state.activeTab == 'miners' ? 'block' : 'hidden')
+	        	}>
+	        		{/* BEGIN top half */}
+	        		<div className="flex flex-row justify-between flex-grow-0">
+	                	<p>Mining pattern:</p>
+		             	<select value={this.state.patternType}
+			              	className="bg-gray-700 border border-white p-2 rounded-none" 
+			              	onChange={this.handlePatternTypeChange}>
+				                <option value={MiningPatternType.Home}>Home</option>
+				                <option value={MiningPatternType.Target}>Target</option>
+				                <option value={MiningPatternType.Cone}>Cone</option>
+				                <option value={MiningPatternType.Grid}>Grid</option>
+				                <option value={MiningPatternType.ETH}>ETH</option>
+		                </select>
+		            </div>
+
+		            <div className="flex-grow">
+		                <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Home ? "block" : "hidden")}>
+			                <p>You are currently exploring from HOME.</p>
+			                <p>Your home chunk is: {(()=>{
+			              		let myChunk = this.gameManager.getLocalStorageManager().getHomeChunk();
+			              		return `<${myChunk.chunkX}, ${myChunk.chunkY}>`;
+			              	})()}</p>
+		                </div>
+
+			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Target ? "block" : "hidden")}>
+			            	<div>
+					            <p>Target coords:</p>
+					            <p>(<input 
+					            	type="text" 
+					            	className="bg-gray-700 border border-white rounded-none"
+					            	onChange={(e)=>{
+					            		const p = parseInt(e.target.value);
+					            		let myVal: number = (p) ? p : 0;
+					            		this.setState({
+					            			targetPatternChunk: {
+					            				chunkX: Math.floor(myVal / CHUNK_SIZE),
+					            				chunkY: this.state.targetPatternChunk.chunkY,
+					            			}
+					            		});
+					            		this.doPatternChange();	
+					            	}}
+				              		style={{width: "3em"}}/>, 
+				              		<input 
+				              		type="text" 
+				              		className="bg-gray-700 border border-white rounded-none"
+				              		onChange={(e)=>{
+				              			const p = parseInt(e.target.value);
+				              			let myVal: number = (p) ? p : 0;
+					            		this.setState({
+					            			targetPatternChunk: {
+					            				chunkX: this.state.targetPatternChunk.chunkX,
+					            				chunkY: Math.floor(myVal / CHUNK_SIZE),
+					            			}
+					            		});
+					            		this.doPatternChange();	
+					            	}}
+				              		style={{width: "3em"}}/>)
+					            </p>
+				            </div>
+				            <div>
+					            <p>Targeting chunk: </p>
+								<p>{((c)=>(`<${c.chunkX}, ${c.chunkY}>`))(this.state.targetPatternChunk)}</p>
+							</div>
+			            </div>
+
+
+			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Cone ? "block" : "hidden")}>
+				            <p>Cone direction:</p>
+				            <p>Cone Angle:</p>
+			            </div>
+
+			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Grid ? "block" : "hidden")}>
+			            	<p>Start from: (1, 2)</p>
+			            	<p>Move direction: horizontal</p>
+				            <p>Grid {Math.random() > 0.5 ? "height" : "width"}: 500</p>
+			            </div>
+
+			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.ETH ? "block" : "hidden")}>
+				            <p>Welcome to the 2020 Ethereum workshop!</p>
+			            </div>
+			        </div>
+		        	{/* END top half */}
+			            
+
+		        {/* END MINERS */}
+		        </div>
 
 	            <div className={this.state.activeTab == 'forces' ? "block" : "hidden"}>
 	            <table>

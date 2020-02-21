@@ -13,10 +13,12 @@ export enum PlanetType {
   HyperGiant,
 }
 export enum MiningPatternType {
-  Spiral,
+  Home,
   Target,
+  Spiral,
   Cone,
   Grid,
+  ETH,
 }
 export enum GridPatternType {
   Vertical,

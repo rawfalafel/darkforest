@@ -68,6 +68,7 @@ export interface Planet {
 export interface MiningPattern {
   type: MiningPatternType;
   fromChunk : ChunkCoordinates;
+  nextChunk : (prevChunk: ChunkCoordinates) => ChunkCoordinates;
 }
 
 export interface QueuedArrival {

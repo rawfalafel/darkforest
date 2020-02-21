@@ -227,6 +227,9 @@ class GameManager extends EventEmitter {
     GameManager.instance = gameManager;
     return gameManager;
   }
+  getLocalStorageManager(): LocalStorageManager {
+    return this.localStorageManager;
+  }
 
   private initMiningManager(): void {
     this.miningPattern = new SpiralPattern(this.localStorageManager.getHomeChunk());
