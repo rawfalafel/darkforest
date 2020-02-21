@@ -76,11 +76,9 @@ class PlanetCanvas extends React.Component<CanvasProps, CanvasState> {
 		ctx.clearRect(0, 0, this.WIDTH, this.HEIGHT);
 
 		const myPlanet = GameUIManager.getInstance().selectedPlanet;
-		console.log(myPlanet);
 		this.seedRandom(myPlanet);
 
 		let colors = getPlanetColors(myPlanet);
-		console.log(colors);
 
 		//sky
 		ctx.fillStyle = colors.backgroundColor;
