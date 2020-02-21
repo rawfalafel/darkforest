@@ -260,8 +260,9 @@ class GameManager extends EventEmitter {
   }
   setMiningPattern(pattern: MiningPattern) {
     this.miningPattern = pattern;
-    const minerManager = MinerManager.getInstance();
-    minerManager.setMiningPattern(this.miningPattern);
+    if (this.minerManager) {
+      this.minerManager.setMiningPattern(this.miningPattern);
+    }
   }
 
   hasJoinedGame(): boolean {

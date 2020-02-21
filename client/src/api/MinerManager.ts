@@ -8,11 +8,11 @@ import { CHUNK_SIZE } from '../utils/constants';
 import Worker from 'worker-loader!../miner/miner.worker';
 import { EventEmitter } from 'events';
 import { MiningPatternType, GridPatternType } from '../@types/global/enums';
-import { 
-  SpiralPattern, 
-  GridPattern, 
-  ConePattern, 
-  TargetPattern 
+import {
+  SpiralPattern,
+  GridPattern,
+  ConePattern,
+  TargetPattern
 } from '../utils/MiningPatterns';
 
 class MinerManager extends EventEmitter {
@@ -43,11 +43,10 @@ class MinerManager extends EventEmitter {
     this.planetRarity = planetRarity;
   }
 
-  setMiningPattern(pattern : MiningPattern) {
+  setMiningPattern(pattern: MiningPattern) {
     this.miningPattern = pattern;
     this.resetChunk = true;
   }
-
 
   static getInstance(): MinerManager {
     if (!MinerManager.instance) {
@@ -97,27 +96,29 @@ class MinerManager extends EventEmitter {
       // if this.isExploring, move on to the next chunk
 
       let nextChunk: ChunkCoordinates | null;
-      if(this.resetChunk) {
+      if (this.resetChunk) {
         this.resetChunk = false;
-        if (!this.inMemoryBoard[
-           this.miningPattern.fromChunk.chunkX][
-           this.miningPattern.fromChunk.chunkY]) 
-        {
+        if (
+          !this.inMemoryBoard[this.miningPattern.fromChunk.chunkX][
+            this.miningPattern.fromChunk.chunkY
+          ]
+        ) {
           this.sendMessageToWorker(this.miningPattern.fromChunk);
         }
-        nextChunk = await this.nextValidExploreTarget({ 
-        chunkX: this.miningPattern.fromChunk.chunkX,
-        chunkY: this.miningPattern.fromChunk.chunkY 
-      });
+        nextChunk = await this.nextValidExploreTarget({
+          chunkX: this.miningPattern.fromChunk.chunkX,
+          chunkY: this.miningPattern.fromChunk.chunkY
+        });
       } else {
-        nextChunk = await this.nextValidExploreTarget(
-          { chunkX: chunk.id.chunkX, chunkY: chunk.id.chunkY }
-        );
+        nextChunk = await this.nextValidExploreTarget({
+          chunkX: chunk.id.chunkX,
+          chunkY: chunk.id.chunkY
+        });
       }
       // TERRIBLE solution that works
-      // const nextChunk: ChunkCoordinates | null = await this.nextValidExploreTarget({ 
+      // const nextChunk: ChunkCoordinates | null = await this.nextValidExploreTarget({
       //   chunkX: this.miningPattern.fromChunk.chunkX,
-      //   chunkY: this.miningPattern.fromChunk.chunkY 
+      //   chunkY: this.miningPattern.fromChunk.chunkY
       // });
       if (nextChunk) {
         this.sendMessageToWorker(nextChunk);
@@ -194,7 +195,7 @@ class MinerManager extends EventEmitter {
   }
 
   private nextChunkInExploreOrder(chunk: ChunkCoordinates): ChunkCoordinates {
-    let pattern : MiningPattern = this.miningPattern;
+    let pattern: MiningPattern = this.miningPattern;
     return pattern.nextChunk(chunk);
   }
 
