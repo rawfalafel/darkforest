@@ -15,8 +15,9 @@ const ctx: Worker = self as any;
 const exploreChunk: (
   chunkX: number,
   chunkY: number,
-  planetRarity: number
-) => void = (chunkX, chunkY, planetRarity) => {
+  planetRarity: number,
+  patternId: number,
+) => void = (chunkX, chunkY, planetRarity, patternId) => {
   const planetLocations: Location[] = [];
   const planetRarityBI: BigInteger = bigInt(planetRarity);
   for (let x = CHUNK_SIZE * chunkX; x < CHUNK_SIZE * (chunkX + 1); x++) {
@@ -32,6 +33,7 @@ const exploreChunk: (
   }
   const chunkData: ExploredChunkData = {
     id: { chunkX, chunkY },
+    patternId,
     planetLocations
   };
   ctx.postMessage(JSON.stringify(chunkData));
@@ -44,6 +46,7 @@ ctx.addEventListener('message', (e: MessageEvent) => {
   exploreChunk(
     exploreMessage.chunkX,
     exploreMessage.chunkY,
-    exploreMessage.planetRarity
+    exploreMessage.planetRarity,
+    exploreMessage.patternId,
   );
 });

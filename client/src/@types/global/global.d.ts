@@ -117,6 +117,7 @@ export interface ExploredChunkData {
     chunkX: number;
     chunkY: number;
   };
+  patternId?: number;
   planetLocations: Location[];
 }
 

@@ -23,7 +23,10 @@ class MinerManager extends EventEmitter {
   private readonly maxX: number;
   private readonly maxY: number;
   private readonly planetRarity: number;
+
   private resetChunk = false;
+  private patternId : number = 0;
+
 
   static instance: MinerManager;
 
@@ -46,6 +49,7 @@ class MinerManager extends EventEmitter {
   setMiningPattern(pattern: MiningPattern) {
     this.miningPattern = pattern;
     this.resetChunk = true;
+    this.patternId++;
   }
 
   static getInstance(): MinerManager {
@@ -85,11 +89,16 @@ class MinerManager extends EventEmitter {
     this.worker.onmessage = (e: MessageEvent) => {
       // worker explored some coords
       const data: ExploredChunkData = JSON.parse(e.data) as ExploredChunkData;
+      console.log(data);
+      console.log(this.patternId);
+      console.log(this.miningPattern);
       this.discovered(data);
     };
   }
 
   private async discovered(chunk: ExploredChunkData): Promise<void> {
+    // if(chunk.patternId != this.patternId) return;
+
     this.inMemoryBoard[chunk.id.chunkX][chunk.id.chunkY] = chunk;
     this.emit('discoveredNewChunk', chunk);
     if (this.isExploring) {
@@ -204,7 +213,8 @@ class MinerManager extends EventEmitter {
       JSON.stringify({
         chunkX: chunkToExplore.chunkX,
         chunkY: chunkToExplore.chunkY,
-        planetRarity: this.planetRarity
+        planetRarity: this.planetRarity,
+        patternId: this.patternId,
       })
     );
   }
