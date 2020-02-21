@@ -518,7 +518,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
           </div>
 
           <div
-            className={"h-full "+this.state.activeTab == 'forces' ? 'block' : 'hidden'}
+            className={"h-full "+(this.state.activeTab == 'forces' ? 'block' : 'hidden')}
           >
           <div className="h-full flex flex-col justify-around">
             <div className="flex flex-row justify-between">
