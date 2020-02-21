@@ -71,6 +71,7 @@ export interface MiningPattern {
   type: MiningPatternType;
   fromChunk: ChunkCoordinates;
   nextChunk: (prevChunk: ChunkCoordinates) => ChunkCoordinates;
+  patternId?: string;
 }
 
 export interface QueuedArrival {
@@ -118,8 +119,8 @@ export interface ExploredChunkData {
     chunkX: number;
     chunkY: number;
   };
-  patternId?: number;
   planetLocations: Location[];
+  patternId?: string;
 }
 
 export type BoardData = Array<Array<ExploredChunkData | null | undefined>>;
@@ -128,5 +129,5 @@ export interface MinerWorkerMessage {
   chunkX: number;
   chunkY: number;
   planetRarity: number;
-  patternId?: number;
+  patternId?: string;
 }

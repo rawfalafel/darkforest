@@ -7,10 +7,18 @@ import {
 import { ChunkCoordinates } from '../@types/global/global';
 import { WorldCoords } from './Coordinates';
 
-export class SpiralPattern {
+export class MiningPatternID {
+	patternId: string;
+	constructor() {
+		this.patternId=""+Date.now();
+	}
+}
+
+export class SpiralPattern extends MiningPatternID {
 	type: MiningPatternType = MiningPatternType.Spiral;
 	fromChunk : ChunkCoordinates;
 	constructor(homeChunk : ChunkCoordinates) {
+		super();
 		this.fromChunk = homeChunk;
 	}
 	nextChunk(chunk: ChunkCoordinates) : ChunkCoordinates {
@@ -70,7 +78,7 @@ export class SpiralPattern {
 		}
 	}
 }
-export class ConePattern {
+export class ConePattern extends MiningPatternID {
 	type: MiningPatternType = MiningPatternType.Cone;
 	fromChunk : ChunkCoordinates;
 	direction: ConePatternDirection;
@@ -157,13 +165,14 @@ export class ConePattern {
 		
 	}
 	constructor(fromChunk: ChunkCoordinates, direction: ConePatternDirection, angle: ConePatternAngle) {
+		super();
 		this.fromChunk = fromChunk;
 		this.direction = direction;
 		this.angle = angle;
 	}
 }
 
-export class GridPattern {
+export class GridPattern extends MiningPatternID {
 	type: MiningPatternType = MiningPatternType.Grid;
 	gridType: GridPatternType;
 	fromChunk : ChunkCoordinates = <ChunkCoordinates> {
@@ -193,12 +202,14 @@ export class GridPattern {
 		}
 	}
 	constructor(fromChunk: ChunkCoordinates, gridType: GridPatternType, maxDim: number) {
+		super();
 		this.fromChunk = fromChunk;
 		this.gridType = gridType;
 		this.maxDim = maxDim;
 	}
 }
-export class TargetPattern {
+/*
+export class TargetPattern extends MiningPatternID {
 	type: MiningPatternType = MiningPatternType.Target;
 	destination: WorldCoords;
 	fromChunk : ChunkCoordinates;
@@ -209,6 +220,8 @@ export class TargetPattern {
 		}
 	}
 	constructor(destination: WorldCoords) {
+		super();
 		this.destination = destination;
 	}
 }
+*/
