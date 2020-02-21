@@ -3,7 +3,7 @@ import GameUIManager from '../board/GameUIManager';
 import GameManager from '../../api/GameManager';
 import UIEmitter from '../../utils/UIEmitter'
 import { Planet, ChunkCoordinates, MiningPattern } from '../../@types/global/global';
-import { MiningPatternType, GridPatternType } from '../../@types/global/enums';
+import { MiningPatternType, GridPatternType, ConePatternDirection, ConePatternAngle } from '../../@types/global/enums';
 import { SpiralPattern, ConePattern, GridPattern } from '../../utils/MiningPatterns';
 
 import { getCurrentPopulation } from '../../utils/Utils';
@@ -21,6 +21,8 @@ interface WindowState {
 	miningPatternChunk: ChunkCoordinates,
 	gridPatternDirection: GridPatternType,
 	gridPatternDimension: number,
+	conePatternDirection: ConePatternDirection,
+	conePatternAngle: ConePatternAngle,
 }
 
 
@@ -68,7 +70,9 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		patternType : MiningPatternType.Home,
 		miningPatternChunk : {chunkX: 0, chunkY: 0},
 		gridPatternDirection: GridPatternType.Row,
-		gridPatternDimension: 1024
+		gridPatternDimension: 1024,
+		conePatternDirection: ConePatternDirection.Up,
+		conePatternAngle: ConePatternAngle.ONE,
 	};
 
 	frameCount = 0;
@@ -78,6 +82,9 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 	/* BEGIN init stuff handlers */
 	constructor(props: WindowProps) {
 		super(props);
+
+		const gameManager = GameManager.getInstance();
+		this.state.miningPatternChunk = gameManager.getLocalStorageManager().getHomeChunk();
 	}
 	componentDidMount() {
 		const uiManager = GameUIManager.getInstance();
@@ -181,6 +188,12 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 				this.state.gridPatternDirection, 
 				this.state.gridPatternDimension
 			);
+		} else if(this.state.patternType == MiningPatternType.Cone) {
+			myPattern = new ConePattern(
+				this.state.miningPatternChunk,
+				this.state.conePatternDirection,
+				this.state.conePatternAngle
+			);
 		} else /*(this.state.patternType == MiningPatternType.Home)*/ {
 			myPattern = new SpiralPattern(this.gameManager.getLocalStorageManager().getHomeChunk());
 		}
@@ -250,7 +263,6 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 	            <div className={"flex flex-col h-full "
 	            	+(this.state.activeTab == 'miners' ? 'block' : 'hidden')
 	        	}>
-	        		{/* BEGIN top half */}
 	        		<div className="flex flex-row justify-between flex-grow-0">
 	                	<p>Mining pattern:</p>
 		             	<select value={this.state.patternType}
@@ -286,8 +298,34 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 
 
 			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Cone ? "block" : "hidden")}>
-				            <p>Cone direction:</p>
-				            <p>Cone Angle:</p>
+			            	<p>Start from: {this.CoordInput()}</p>
+				            <p>Cone direction: 
+				            	<select value={this.state.conePatternDirection}
+				              		className="bg-gray-700 border border-white p-2 rounded-none" 
+					              	onChange={(e)=>{
+					              		this.setState(
+					              			{conePatternDirection: parseInt(e.target.value)},
+					              			this.doPatternChange
+					              		);
+					              	}}>
+					                <option value={ConePatternDirection.Up}>Up</option>
+					                <option value={ConePatternDirection.Down}>Down</option>
+					                <option value={ConePatternDirection.Left}>Left</option>
+					                <option value={ConePatternDirection.Right}>Right</option>
+			                	</select>
+			                </p>
+				            <p>Cone angle: <select value={this.state.conePatternAngle}
+			              		className="bg-gray-700 border border-white p-2 rounded-none" 
+				              	onChange={(e)=>{
+				              		this.setState(
+				              			{conePatternAngle: parseInt(e.target.value)},
+				              			this.doPatternChange
+				              		);
+				              	}}>
+				                <option value={ConePatternAngle.ONE}>90</option>
+				                <option value={ConePatternAngle.TWO}>120</option>
+				                <option value={ConePatternAngle.THREE}>140</option>
+		                	</select></p>
 			            </div>
 
 			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Grid ? "block" : "hidden")}>
@@ -324,7 +362,6 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 				            <p>Welcome to the 2020 Ethereum workshop!</p>
 			            </div>
 			        </div>
-		        	{/* END top half */}
 			            
 
 		        {/* END MINERS */}

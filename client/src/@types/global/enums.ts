@@ -24,3 +24,16 @@ export enum GridPatternType {
   Row,
   Column,
 }
+
+export enum ConePatternDirection {
+  Up,
+  Left,
+  Right,
+  Down,
+}
+export enum ConePatternAngle {
+  _ZERO_NEVER_USED, //not used, just for some hacky stuff
+  ONE,
+  TWO,
+  THREE,
+}
