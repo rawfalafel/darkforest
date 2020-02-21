@@ -73,6 +73,23 @@ export const getPopulationAtTime: (
   return planet.capacity / denominator;
 };
 
+export const hslStr: (h:number, s:number, l:number) => string = (h, s, l) => {
+    return `hsl(${h % 360},${s}%,${l}%)`;
+}
+export const getPlanetColors: (planet: Planet) => any = (planet) => {
+  let colors: any = {};
+  let color = bigInt(planet.locationId, 16).and(0xffffff).toString(16);
+  color = '0x'+'0'.repeat(6 - color.length) + color;
+    
+  if(planet && planet.destroyed) {
+    colors.baseColor = "#000000";
+  } else {
+    colors.baseColor = hslStr(parseInt(color) % 360, 50, 50);
+  }
+
+  return colors;
+};
+
 export const getCurrentPopulation: (planet: Planet) => number = planet => {
   const atTimeMillis = Date.now();
   return getPopulationAtTime(planet, atTimeMillis);

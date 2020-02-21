@@ -10,7 +10,7 @@ import {
 } from '../../@types/global/global';
 import { CHUNK_SIZE } from '../../utils/constants';
 import bigInt from 'big-integer';
-import { getCurrentPopulation, hasOwner } from '../../utils/Utils';
+import { getCurrentPopulation, hasOwner, getPlanetColors } from '../../utils/Utils';
 
 class CanvasRenderer {
   static instance: CanvasRenderer;
@@ -121,13 +121,9 @@ class CanvasRenderer {
       : 0;
     const center = new WorldCoords(location.coords.x, location.coords.y);
     const radius = uiManager.radiusMap[planet.planetType];
-    let color = bigInt(location.hash, 16)
-      .and(0xffffff)
-      .toString(16);
-    color = '#' + '0'.repeat(6 - color.length) + color;
-    if (planet && planet.destroyed) {
-      color = '#000000';
-    }
+
+    let colors = getPlanetColors(planet);
+    let color = colors.baseColor;
 
     if (hasOwner(planet)) {
       if (planet.owner === gameManager.account) {

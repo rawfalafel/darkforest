@@ -56,10 +56,9 @@ const GameScene = () => {
         <CoordsWindow />
       </div>
 
-      <div className="absolute bottom-0 right-0">
-        {/* Wrapper */}
-        <TabbedWindow />
-      </div>
+      {/* Wrapper */}
+      <TabbedWindow />
+      
       <ControllableCanvas />
     </React.Fragment>
   );

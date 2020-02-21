@@ -22,6 +22,8 @@ import {
 import { getCurrentPopulation } from '../../utils/Utils';
 import { CHUNK_SIZE } from '../../utils/constants';
 
+import PlanetCanvas from './PlanetCanvas';
+
 interface WindowProps {}
 interface WindowState {
   forces: number;
@@ -235,10 +237,17 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
   };
   render() {
     return (
+      <div className="absolute bottom-0 right-0 flex flex-col">
+      {/* PLANET PREVIEW */}
+      <div>
+        <PlanetCanvas />
+      </div>
+      {/* END PLANET PREVIEW */}
+      
       <div
         className="flex flex-col
                       bg-gray-900 border border-white m-2 rounded-sm"
-        style={{ width: '18rem', height: '14rem' }}
+        style={{ width: '320px', height: '15rem' }}
       >
         {/* Tabs */}
         <div className="flex flex-row justify-between m-2">
@@ -264,6 +273,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 
         {/* Windows */}
         <div className="m-2 h-full">
+          {/* BEGIN details */}
           <div
             className={this.state.activeTab == 'details' ? 'block' : 'hidden'}
           >
@@ -300,7 +310,10 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={4}></td>
+                  <td colSpan={2}>Show Planet:</td>
+                  <td colSpan={2} className="text-right">
+                    Yes
+                  </td>
                 </tr>
                 <tr>
                   <td>ETH:</td>
@@ -315,6 +328,8 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
               </tbody>
             </table>
           </div>
+
+          {/* END details */}
 
           {/* BEGIN MINERS */}
           <div
@@ -524,6 +539,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
             </table>
           </div>
         </div>
+      </div>
       </div>
     );
   }
