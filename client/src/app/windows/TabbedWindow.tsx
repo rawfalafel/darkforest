@@ -251,7 +251,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
       <div
         className="flex flex-col
                       bg-gray-900 border border-white m-2 rounded-sm"
-        style={{ width: '320px', height: '15rem' }}
+        style={{ width: '320px', height: '15rem' , marginTop: 0}}
       >
         {/* Tabs */}
         <div className="flex flex-row justify-between m-2">
