@@ -11,9 +11,9 @@ contract DarkForestV1 is Verifier {
     bool gameEnded = false;
 
     uint buyin = 1 ether / 20;
-    uint public xSize = 2048;
-    uint public ySize = 2048;
-    uint public planetRarity = 4096;
+    uint public xSize = 16384;
+    uint public ySize = 8192;
+    uint public planetRarity = 8192;
     uint public nPlanetTypes = 12;
     uint public totalCap = 0;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
