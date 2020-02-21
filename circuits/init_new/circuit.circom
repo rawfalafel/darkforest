@@ -1,70 +1,164 @@
-/*
-    Prove: I know (x,y) such that:
-    - 0 <= x,y < 2048
-    - MiMCSponge(x,y) = pub
-*/
+include "../../client/node_modules/circomlib/circuits/mimcsponge.circom"
+include "../../client/node_modules/circomlib/circuits/comparators.circom"
 
-include "../../node_modules/circomlib/circuits/mimcsponge.circom"
-include "../../node_modules/circomlib/circuits/comparators.circom"
-include "../difficulty/circuit.circom"
+template GetFinal(m) {
+   signal input c;
+   signal input x;
+   signal input y;
+   signal input xi;
+   signal input yi;
+   signal input w1;
+   signal input w2;
+   signal output final;
 
-template Main() {
-    signal private input x;
-    signal private input y;
+   signal hashx;
+   signal hashy;
+   signal val1;
+   signal val2;
+   signal dot;
 
-    signal output pub;
+   component mimc_addr = MiMCSponge(2, 10, 1);
+   mimc_addr.ins[0] <-- xi;
+   mimc_addr.ins[1] <-- yi;
+   mimc_addr.k <-- 0;
+   hashx <-- mimc_addr.outs[0] & (m - 1);
 
-    /* check 0 <= x,y < 2048 */
-    component ltxlower = LessThan(32);
-    component ltylower = LessThan(32);
+   component mimc_addr2 = MiMCSponge(2, 10, 1);
+   mimc_addr2.ins[0] <-- hashx;
+   mimc_addr2.ins[1] <-- 50;
+   mimc_addr2.k <-- 0;
+   hashy <-- mimc_addr2.outs[0] & (m - 1);
 
-    ltxlower.in[0] <== x;
-    ltxlower.in[1] <== 0;
-    ltxlower.out === 0;
-    ltylower.in[0] <== y;
-    ltylower.in[1] <== 0;
-    ltylower.out === 0;
+   val1 <-- x - c * xi;
+   val2 <-- y - c * yi;
 
-    component ltxupper = LessThan(32);
-    component ltyupper = LessThan(32);
+   signal dot1;
+   signal dot2;
+   dot1 <-- val1 * hashx;
+   dot2 <-- val2 * hashy;
+   dot <-- dot1 + dot2;
 
-    ltxupper.in[0] <== x;
-    ltxupper.in[1] <== 2048;
-    ltxupper.out === 1;
-    ltyupper.in[0] <== y;
-    ltyupper.in[1] <== 2048;
-    ltyupper.out === 1;
-
-    /* check MiMCSponge(x,y) = pub */
-    /*
-        220 = 2 * ceil(log_5 p), as specified by mimc paper, where
-        p = 21888242871839275222246405745257275088548364400416034343698204186575808495617
-    */
-    component mimc = MiMCSponge(2, 220, 1);
-
-    mimc.ins[0] <== x;
-    mimc.ins[1] <== y;
-    mimc.k <== 0;
-
-    component difficulty = DifficultyInvProb();
-    difficulty.in[0] <== x;
-    difficulty.in[1] <== y;
-
-    signal hashCutoff <-- 21888242871839275222246405745257275088548364400416034343698204186575808495616 \ difficulty.out;
-    signal remainder <-- 21888242871839275222246405745257275088548364400416034343698204186575808495616 - difficulty.out * hashCutoff;
-
-    difficulty.out * hashCutoff + remainder === 21888242871839275222246405745257275088548364400416034343698204186575808495616;
-    component ltRemainder = LessThan(128);
-    ltRemainder.in[0] <== remainder;
-    ltRemainder.in[1] <== difficulty.out;
-    ltRemainder.out === 1;
-
-    component ltPub = LessThan(128);
-    ltPub.in[0] <== pub;
-    ltPub.in[1] <== hashCutoff+1;
-    ltPub.out === 1;
-
-    pub <== mimc.outs[0];
+   signal w;
+   w <-- w1*w2;
+   final <-- w*dot;
 }
 
-component main = Main();
+template CheckPerlin() {
+    signal private input x;
+    signal private input y;
+    signal private input x0;
+    signal private input y0;
+    signal input c;
+    signal output out;
+    signal output addr;
+
+    component mimc_addr = MiMCSponge(2, 220, 1);
+
+    mimc_addr.ins[0] <-- x;
+    mimc_addr.ins[1] <-- y;
+    mimc_addr.k <-- 0;
+
+    addr <== mimc_addr.outs[0];
+
+    signal x1;
+    signal y1;
+
+    x1 <-- x0 + 1;
+    y1 <-- y0 + 1;
+
+    component cxltex = LessThan(32);
+    component cyltey = LessThan(32);
+
+    cxltex.in[0] <-- x;
+    cxltex.in[1] <-- c*x0;
+    cxltex.out === 0;
+
+    cyltey.in[0] <-- y;
+    cyltey.in[1] <-- c*y0;
+    cyltey.out === 0;
+
+    component xltcx = LessThan(32);
+    component yltcy = LessThan(32);
+
+    xltcx.in[0] <-- x;
+    xltcx.in[1] <-- c*x1;
+    xltcx.out === 1;
+
+    yltcy.in[0] <-- y;
+    yltcy.in[1] <-- c*y1;
+    yltcy.out === 1;
+
+    signal wx0;
+    signal wy0;
+    signal wx1;
+    signal wy1;
+
+    wx0 <-- x - c*x0;
+    wy0 <-- y - c*y0;
+    wx1 <-- c - wx0;
+    wy1 <-- c - wy0;
+
+    /* Begin 0, 0 */
+    component get_final00 = GetFinal(2**8);
+    get_final00.c <-- c;
+    get_final00.x <-- x;
+    get_final00.y <-- y;
+    get_final00.xi <-- x0;
+    get_final00.yi <-- y0;
+    get_final00.w1 <-- wx1;
+    get_final00.w2 <-- wy1;
+    signal final00;
+    final00 <-- get_final00.final;
+    /* End 0, 0 */
+
+    /* Begin 1, 0 */
+    component get_final10 = GetFinal(2**8);
+    get_final10.c <-- c;
+    get_final10.x <-- x;
+    get_final10.y <-- y;
+    get_final10.xi <-- x1;
+    get_final10.yi <-- y0;
+    get_final10.w1 <-- wx0;
+    get_final10.w2 <-- wy1;
+    signal final10;
+    final10 <-- get_final10.final;
+    /* End 1, 0 */
+
+    /* Begin 0, 1 */
+    component get_final01 = GetFinal(2**8);
+    get_final01.c <-- c;
+    get_final01.x <-- x;
+    get_final01.y <-- y;
+    get_final01.xi <-- x0;
+    get_final01.yi <-- y1;
+    get_final01.w1 <-- wx1;
+    get_final01.w2 <-- wy0;
+    signal final01;
+    final01 <-- get_final01.final;
+    /* End 0, 1 */
+
+    /* Begin 1, 1 */
+    component get_final11 = GetFinal(2**8);
+    get_final11.c <-- c;
+    get_final11.x <-- x;
+    get_final11.y <-- y;
+    get_final11.xi <-- x1;
+    get_final11.yi <-- y1;
+    get_final11.w1 <-- wx0;
+    get_final11.w2 <-- wy0;
+    signal final11;
+    final11 <-- get_final11.final;
+    /* End 1, 1 */
+
+    signal final1;
+    signal final2;
+    final1 <-- final00 + final01;
+    final2 <-- final10 + final11;
+
+    signal final;
+    final <-- final1 + final2;
+
+    out <== final;
+}
+
+component main = CheckPerlin();
