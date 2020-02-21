@@ -52,7 +52,6 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 				// clean input
 				let myVal: number = Math.max((p) ? p : 0, 0);
 				let myC = Math.floor(myVal / CHUNK_SIZE);
-				console.log(gameManager.getMaxChunks().chunkX-1);
 				this.setState({
 					miningPatternChunk: {
 						chunkX: Math.min(gameManager.getMaxChunks().chunkX-1, myC),
@@ -230,8 +229,6 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
         this.gameManager.getLocalStorageManager().getHomeChunk()
       );
     }
-    console.log("detected UI pattern update");
-    console.log(myPattern);
     this.gameManager.setMiningPattern(myPattern);
   }
   handlePatternTypeChange = (e) => {
