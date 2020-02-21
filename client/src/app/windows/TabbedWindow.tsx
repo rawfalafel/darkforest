@@ -7,7 +7,12 @@ import {
   ChunkCoordinates,
   MiningPattern
 } from '../../@types/global/global';
-import { MiningPatternType, GridPatternType } from '../../@types/global/enums';
+import { 
+	MiningPatternType, 
+	GridPatternType,
+	ConePatternDirection,
+	ConePatternAngle
+} from '../../@types/global/enums';
 import {
   SpiralPattern,
   ConePattern,
@@ -29,41 +34,46 @@ interface WindowState {
   miningPatternChunk: ChunkCoordinates;
   gridPatternDirection: GridPatternType;
   gridPatternDimension: number;
+  conePatternDirection: ConePatternDirection;
+  conePatternAngle: ConePatternAngle;
 }
 
 class TabbedWindow extends React.Component<WindowProps, WindowState> {
 	CoordInput = () => (
 		<span>(<input 
-		type="text" 
-		className="bg-gray-700 border border-white rounded-none"
-		onChange={(e)=>{
-			const gameManager = this.gameManager();
-			const p = parseInt(e.target.value);
-			let myVal: number = (p) ? p : 0;
-			let myC = Math.floor(myVal / CHUNK_SIZE);
-			this.setState({
-				miningPatternChunk: {
-					chunkX: Math.min(gameManager.getMaxChunks.chunkX-1, myC),
-					chunkY: this.state.miningPatternChunk.chunkY,
-				}
-			}, this.doPatternChange);
-		}}
-			style={{width: "3em"}}/>, 
-			<input 
 			type="text" 
 			className="bg-gray-700 border border-white rounded-none"
 			onChange={(e)=>{
-				const gameManager = this.gameManager();
+				const gameManager = this.gameManager;
 				const p = parseInt(e.target.value);
-				let myVal: number = (p) ? p : 0;
+				// clean input
+				let myVal: number = Math.max((p) ? p : 0, 0);
 				let myC = Math.floor(myVal / CHUNK_SIZE);
-			this.setState({
-				miningPatternChunk: {
-					chunkX: this.state.miningPatternChunk.chunkX,
-					chunkY: Math.min(gameManager.getMaxChunks().chunkY-1, myC),
-				}
-			}, this.doPatternChange);
-		}}
+				console.log(gameManager.getMaxChunks().chunkX-1);
+				this.setState({
+					miningPatternChunk: {
+						chunkX: Math.min(gameManager.getMaxChunks().chunkX-1, myC),
+						chunkY: this.state.miningPatternChunk.chunkY,
+					}
+				}, this.doPatternChange);
+			}}
+			style={{width: "3em"}}/>, 
+		<input 
+			type="text" 
+			className="bg-gray-700 border border-white rounded-none"
+			onChange={(e)=>{
+				const gameManager = this.gameManager;
+				const p = parseInt(e.target.value);
+				// clean input
+				let myVal: number = Math.max((p) ? p : 0, 0);
+				let myC = Math.floor(myVal / CHUNK_SIZE);
+				this.setState({
+					miningPatternChunk: {
+						chunkX: this.state.miningPatternChunk.chunkX,
+						chunkY: Math.min(gameManager.getMaxChunks().chunkY-1, myC),
+					}
+				}, this.doPatternChange);
+			}}
 			style={{width: "3em"}}/>)
 	</span>
 	);
@@ -93,22 +103,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		const gameManager = GameManager.getInstance();
 		this.state.miningPatternChunk = gameManager.getLocalStorageManager().getHomeChunk();
 	}
-	componentDidMount() {
-		const uiManager = GameUIManager.getInstance();
-		const uiEmitter = UIEmitter.getInstance();
 
-		if(this.uiManager.selectedPlanet != null) {
-			this.setState({planet: this.uiManager.selectedPlanet})
-		}
-
-  frameCount = 0;
-  uiManager = GameUIManager.getInstance();
-  gameManager = GameManager.getInstance();
-
-  /* BEGIN init stuff handlers */
-  constructor(props: WindowProps) {
-    super(props);
-  }
   componentDidMount() {
     const uiManager = GameUIManager.getInstance();
     const uiEmitter = UIEmitter.getInstance();
@@ -219,6 +214,12 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
         this.state.miningPatternChunk,
         this.state.gridPatternDirection,
         this.state.gridPatternDimension
+      );
+    }  else if (this.state.patternType == MiningPatternType.Cone) {
+      myPattern = new ConePattern(
+        this.state.miningPatternChunk,
+        this.state.conePatternDirection,
+        this.state.conePatternAngle
       );
     } /*(this.state.patternType == MiningPatternType.Home)*/ else {
       myPattern = new SpiralPattern(
@@ -390,8 +391,36 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
                     : 'hidden')
                 }
               >
-                <p>Cone direction:</p>
-                <p>Cone Angle:</p>
+                <p>Explore from: {this.CoordInput()}</p>
+                <p>Cone direction:<select
+                value={this.state.conePatternDirection}
+                className="bg-gray-700 border border-white p-2 rounded-none"
+                onChange={e => {
+                  this.setState(
+                    { conePatternDirection: parseInt(e.target.value) },
+                    this.doPatternChange
+                  );
+                }}
+              >
+                <option value={ConePatternDirection.Up}>Up</option>
+                <option value={ConePatternDirection.Down}>Down</option>
+                <option value={ConePatternDirection.Left}>Left</option>
+                <option value={ConePatternDirection.Right}>Right</option>
+              </select></p>
+                <p>Cone Angle: <select
+                value={this.state.conePatternAngle}
+                className="bg-gray-700 border border-white p-2 rounded-none"
+                onChange={e => {
+                  this.setState(
+                    { conePatternAngle: parseInt(e.target.value) },
+                    this.doPatternChange
+                  );
+                }}
+              >
+                <option value={ConePatternAngle.ONE}>90</option>
+                <option value={ConePatternAngle.TWO}>120</option>
+                <option value={ConePatternAngle.THREE}>140</option>
+              </select></p>
               </div>
 
               <div

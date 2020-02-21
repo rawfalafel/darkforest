@@ -50,6 +50,7 @@ class GameManager extends EventEmitter {
 
   private minerManager?: MinerManager;
   private miningPattern: MiningPattern;
+  private patternId: number;
 
   readonly xSize: number;
   readonly ySize: number;
@@ -234,19 +235,18 @@ class GameManager extends EventEmitter {
   getMaxChunks(): ChunkCoordinates {
     return <ChunkCoordinates>{
       chunkX: this.xChunks,
-      chunkY: this.yChunk,
+      chunkY: this.yChunks,
     }
   }
 
   private initMiningManager(): void {
-    this.miningPattern = new SpiralPattern(
+    let myPattern: MiningPattern = new SpiralPattern(
       this.localStorageManager.getHomeChunk()
     );
-    // this.miningPattern = new GridPattern(GridPatternType.Horizontal);
 
     this.minerManager = MinerManager.initialize(
       this.inMemoryBoard,
-      this.miningPattern,
+      myPattern,
       this.xSize,
       this.ySize,
       this.planetRarity
@@ -261,11 +261,7 @@ class GameManager extends EventEmitter {
     });
     this.minerManager.startExplore();
   }
-  getMiningPattern(): MiningPattern {
-    return this.miningPattern;
-  }
   setMiningPattern(pattern: MiningPattern) {
-    this.miningPattern = pattern;
     if (this.minerManager) {
       this.minerManager.setMiningPattern(this.miningPattern);
     }
@@ -336,7 +332,6 @@ class GameManager extends EventEmitter {
 
     return totalCap;
   }
-  setNumberForces() {}
   getHomeChunk(): ChunkCoordinates | null {
     if (this.homeChunk) {
       return this.homeChunk;

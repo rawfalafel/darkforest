@@ -128,4 +128,5 @@ export interface MinerWorkerMessage {
   chunkX: number;
   chunkY: number;
   planetRarity: number;
+  patternId?: number;
 }
