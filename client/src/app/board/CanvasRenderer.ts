@@ -123,7 +123,7 @@ class CanvasRenderer {
     const radius = uiManager.radiusMap[planet.planetType];
 
     let colors = getPlanetColors(planet);
-    let color = colors.baseColor;
+    let color = colors.previewColor;
 
     if (hasOwner(planet)) {
       if (planet.owner === gameManager.account) {

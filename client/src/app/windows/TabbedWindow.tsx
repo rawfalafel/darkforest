@@ -38,6 +38,7 @@ interface WindowState {
   gridPatternDimension: number;
   conePatternDirection: ConePatternDirection;
   conePatternAngle: ConePatternAngle;
+  showPlanet: boolean;
 }
 
 class TabbedWindow extends React.Component<WindowProps, WindowState> {
@@ -92,6 +93,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		gridPatternDimension: 1024,
 		conePatternDirection: ConePatternDirection.Up,
 		conePatternAngle: ConePatternAngle.ONE,
+    showPlanet: true,
 	};
 
 	frameCount = 0;
@@ -232,14 +234,19 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
     console.log(myPattern);
     this.gameManager.setMiningPattern(myPattern);
   }
-  handlePatternTypeChange = e => {
+  handlePatternTypeChange = (e) => {
     this.setState({ patternType: e.target.value }, this.doPatternChange);
   };
+
+  handlePlanetChange = (e) =>  {
+    //TODO this doesn't use e.target.value
+    this.setState({ showPlanet: !this.state.showPlanet });
+  }
   render() {
     return (
       <div className="absolute bottom-0 right-0 flex flex-col">
       {/* PLANET PREVIEW */}
-      <div>
+      <div className={this.state.showPlanet ? 'block' : 'hidden' }>
         <PlanetCanvas />
       </div>
       {/* END PLANET PREVIEW */}
@@ -312,7 +319,11 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
                 <tr>
                   <td colSpan={2}>Show Planet:</td>
                   <td colSpan={2} className="text-right">
-                    Yes
+                    <input
+                      type="checkbox"
+                      checked={this.state.showPlanet}
+                      onChange={this.handlePlanetChange}
+                    />
                   </td>
                 </tr>
                 <tr>

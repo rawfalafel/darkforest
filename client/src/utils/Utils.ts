@@ -78,14 +78,25 @@ export const hslStr: (h:number, s:number, l:number) => string = (h, s, l) => {
 }
 export const getPlanetColors: (planet: Planet) => any = (planet) => {
   let colors: any = {};
-  let color = bigInt(planet.locationId, 16).and(0xffffff).toString(16);
-  color = '0x'+'0'.repeat(6 - color.length) + color;
+  let seed = bigInt(planet.locationId, 16).and(0xffffff).toString(16);
+  seed = '0x'+'0'.repeat(6 - seed.length) + seed;
+
+  let baseHue = parseInt(seed) % 360;
+  colors.baseColor  = hslStr(baseHue % 360, 70, 60);
+  colors.baseColor2 = hslStr(baseHue % 360, 70, 70);
+  colors.baseColor3 = hslStr(baseHue % 360, 70, 80);
+
+  colors.secondaryColor  = hslStr(baseHue % 360, 60, 30);
+  colors.secondaryColor2 = hslStr(baseHue % 360, 60, 40);
+  colors.secondaryColor3 = hslStr(baseHue % 360, 60, 50);
+
+  colors.backgroundColor = hslStr((baseHue+180) % 360, 70, 60);
     
   if(planet && planet.destroyed) {
-    colors.baseColor = "#000000";
+    colors.previewColor = "#000000";
   } else {
-    colors.baseColor = hslStr(parseInt(color) % 360, 50, 50);
-  }
+    colors.previewColor = colors.baseColor;
+  } 
 
   return colors;
 };
