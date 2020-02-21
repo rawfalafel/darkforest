@@ -1,11 +1,11 @@
 /*
     Prove: I know (x,y) such that:
-    - 0 <= x,y < 2048
+    - 0 <= x,y < 8192
     - MiMCSponge(x,y) = pub
 */
 
-include "../../node_modules/circomlib/circuits/mimcsponge.circom"
-include "../../node_modules/circomlib/circuits/comparators.circom"
+include "../../client/node_modules/circomlib/circuits/mimcsponge.circom"
+include "../../client/node_modules/circomlib/circuits/comparators.circom"
 
 template Main() {
     signal private input x;
@@ -13,7 +13,7 @@ template Main() {
 
     signal output pub;
 
-    /* check 0 <= x,y < 2048 */
+    /* check 0 <= x,y < 8192 */
     component ltxlower = LessThan(32);
     component ltylower = LessThan(32);
 
@@ -28,10 +28,10 @@ template Main() {
     component ltyupper = LessThan(32);
 
     ltxupper.in[0] <== x;
-    ltxupper.in[1] <== 2048;
+    ltxupper.in[1] <== 8192;
     ltxupper.out === 1;
     ltyupper.in[0] <== y;
-    ltyupper.in[1] <== 2048;
+    ltyupper.in[1] <== 8192;
     ltyupper.out === 1;
 
     /* check MiMCSponge(x,y) = pub */
