@@ -13,6 +13,7 @@ export class SpiralPattern {
 		const homeChunkY = this.fromChunk.chunkY;
 		const currentChunkX = chunk.chunkX;
 		const currentChunkY = chunk.chunkY;
+		
 		if (currentChunkX === homeChunkX && currentChunkY === homeChunkY) {
 			return <ChunkCoordinates>{
 			  chunkX: homeChunkX,

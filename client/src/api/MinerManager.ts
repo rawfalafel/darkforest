@@ -23,6 +23,7 @@ class MinerManager extends EventEmitter {
   private readonly maxX: number;
   private readonly maxY: number;
   private readonly planetRarity: number;
+  private resetChunk = false;
 
   static instance: MinerManager;
 
@@ -44,6 +45,7 @@ class MinerManager extends EventEmitter {
 
   setMiningPattern(pattern : MiningPattern) {
     this.miningPattern = pattern;
+    this.resetChunk = true;
   }
 
 
@@ -93,9 +95,24 @@ class MinerManager extends EventEmitter {
     this.emit('discoveredNewChunk', chunk);
     if (this.isExploring) {
       // if this.isExploring, move on to the next chunk
-      const nextChunk: ChunkCoordinates | null = await this.nextValidExploreTarget(
-        { chunkX: chunk.id.chunkX, chunkY: chunk.id.chunkY }
-      );
+
+      let nextChunk: ChunkCoordinates | null;
+      if(this.resetChunk) {
+        this.resetChunk = false;
+        nextChunk = await this.nextValidExploreTarget({ 
+        chunkX: this.miningPattern.fromChunk.chunkX,
+        chunkY: this.miningPattern.fromChunk.chunkY 
+      });
+      } else {
+        nextChunk = await this.nextValidExploreTarget(
+          { chunkX: chunk.id.chunkX, chunkY: chunk.id.chunkY }
+        );
+      }
+      // TERRIBLE solution that works
+      // const nextChunk: ChunkCoordinates | null = await this.nextValidExploreTarget({ 
+      //   chunkX: this.miningPattern.fromChunk.chunkX,
+      //   chunkY: this.miningPattern.fromChunk.chunkY 
+      // });
       if (nextChunk) {
         this.sendMessageToWorker(nextChunk);
       }

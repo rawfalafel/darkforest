@@ -240,13 +240,13 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 					            	onChange={(e)=>{
 					            		const p = parseInt(e.target.value);
 					            		let myVal: number = (p) ? p : 0;
+					            		let myC = Math.floor(myVal / CHUNK_SIZE);
 					            		this.setState({
 					            			targetPatternChunk: {
-					            				chunkX: Math.floor(myVal / CHUNK_SIZE),
+					            				chunkX: Math.min(127, myC),
 					            				chunkY: this.state.targetPatternChunk.chunkY,
 					            			}
-					            		});
-					            		this.doPatternChange();	
+					            		}, this.doPatternChange);
 					            	}}
 				              		style={{width: "3em"}}/>, 
 				              		<input 
@@ -255,13 +255,13 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 				              		onChange={(e)=>{
 				              			const p = parseInt(e.target.value);
 				              			let myVal: number = (p) ? p : 0;
+				              			let myC = Math.floor(myVal / CHUNK_SIZE);
 					            		this.setState({
 					            			targetPatternChunk: {
 					            				chunkX: this.state.targetPatternChunk.chunkX,
-					            				chunkY: Math.floor(myVal / CHUNK_SIZE),
+					            				chunkY: Math.min(127, myC),
 					            			}
-					            		});
-					            		this.doPatternChange();	
+					            		}, this.doPatternChange);
 					            	}}
 				              		style={{width: "3em"}}/>)
 					            </p>
