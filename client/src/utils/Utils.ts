@@ -130,6 +130,10 @@ export const arrive: (
   // this function optimistically simulates an arrival
   // its logic must be identical to the logic on the blockchain
 
+  // TO DO: this should never happen. but for some reason it does, so we need to check
+  if (!fromPlanet || !toPlanet || !arrival) {
+    return;
+  }
   if (toPlanet.destroyed) {
     console.error('Planet was destroyed upon arrival!');
     return;

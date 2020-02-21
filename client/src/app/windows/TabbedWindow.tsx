@@ -281,7 +281,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 			                <p>You are currently exploring from HOME.</p>
 			                <p>Your home chunk is: {(()=>{
 			              		let myChunk = this.gameManager.getLocalStorageManager().getHomeChunk();
-			              		return `<${myChunk.chunkX}, ${myChunk.chunkY}>`;
+			              		return `<${myChunk ? myChunk.chunkX: "none"}, ${myChunk ? myChunk.chunkY : "none"}>`;
 			              	})()}</p>
 		                </div>
 
