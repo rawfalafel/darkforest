@@ -262,7 +262,7 @@ class GameManager extends EventEmitter {
   }
   setMiningPattern(pattern: MiningPattern) {
     if (this.minerManager) {
-      this.minerManager.setMiningPattern(this.miningPattern);
+      this.minerManager.setMiningPattern(pattern);
     }
   }
 
