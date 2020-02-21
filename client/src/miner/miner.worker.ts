@@ -9,6 +9,7 @@ import {
 } from '../@types/global/global';
 import { locationIdFromBigInt } from '../utils/CheckedTypeUtils';
 import { WorldCoords } from '../utils/Coordinates';
+import MinerManager from '../api/MinerManager';
 
 const ctx: Worker = self as any;
 
@@ -18,6 +19,7 @@ const exploreChunk: (
   planetRarity: number,
   patternId: string,
 ) => void = (chunkX, chunkY, planetRarity, patternId) => {
+
   const planetLocations: Location[] = [];
   const planetRarityBI: BigInteger = bigInt(planetRarity);
   for (let x = CHUNK_SIZE * chunkX; x < CHUNK_SIZE * (chunkX + 1); x++) {
@@ -43,6 +45,7 @@ ctx.addEventListener('message', (e: MessageEvent) => {
   const exploreMessage: MinerWorkerMessage = JSON.parse(
     e.data
   ) as MinerWorkerMessage;
+
   exploreChunk(
     exploreMessage.chunkX,
     exploreMessage.chunkY,

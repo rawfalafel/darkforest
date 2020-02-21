@@ -48,6 +48,9 @@ class MinerManager extends EventEmitter {
     this.miningPattern = pattern;
     this.resetChunk = true;
   }
+  getPatternId(): string {
+    return this.miningPattern.patternId;
+  }
 
   static getInstance(): MinerManager {
     if (!MinerManager.instance) {
@@ -94,6 +97,15 @@ class MinerManager extends EventEmitter {
     this.inMemoryBoard[chunk.id.chunkX][chunk.id.chunkY] = chunk;
     this.emit('discoveredNewChunk', chunk);
     if (this.isExploring) {
+      if(chunk.patternId != this.miningPattern.patternId) {
+        let nextChunk = await this.nextValidExploreTarget({
+          chunkX: this.miningPattern.fromChunk.chunkX,
+          chunkY: this.miningPattern.fromChunk.chunkY
+        });
+        this.sendMessageToWorker(nextChunk);
+        return;
+      }
+
       // if this.isExploring, move on to the next chunk
 
       let nextChunk: ChunkCoordinates | null;
