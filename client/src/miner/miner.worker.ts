@@ -16,7 +16,7 @@ const exploreChunk: (
   chunkX: number,
   chunkY: number,
   planetRarity: number,
-  patternId: number,
+  patternId: string,
 ) => void = (chunkX, chunkY, planetRarity, patternId) => {
   const planetLocations: Location[] = [];
   const planetRarityBI: BigInteger = bigInt(planetRarity);
@@ -33,7 +33,7 @@ const exploreChunk: (
   }
   const chunkData: ExploredChunkData = {
     id: { chunkX, chunkY },
-    patternId,
+    patternId: ""+patternId,
     planetLocations
   };
   ctx.postMessage(JSON.stringify(chunkData));

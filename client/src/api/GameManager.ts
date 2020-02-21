@@ -50,7 +50,6 @@ class GameManager extends EventEmitter {
 
   private minerManager?: MinerManager;
   private miningPattern: MiningPattern;
-  private patternId: number;
 
   readonly xSize: number;
   readonly ySize: number;
