@@ -227,7 +227,7 @@ class EthereumAPI extends EventEmitter {
   }
 
   async getBalance(): Promise<number> {
-    const rawBalance = (await this.contract.getBalance());
+    const rawBalance = await this.contract.getBalance();
     const myBalance = utils.formatEther(rawBalance);
     const numBalance = parseFloat(myBalance);
     // console.log("Raw balance:")
