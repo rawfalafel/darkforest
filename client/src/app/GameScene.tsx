@@ -25,7 +25,6 @@ class GameScene extends React.Component<SceneProps, SceneState> {
   render (){
     const gameManager = GameManager.getInstance();
     const uiManager = GameUIManager.getInstance();
-    console.log(gameManager.players);
     return (
     <React.Fragment>
     <div className={"absolute top-0 left-0 w-full h-full "+(this.state.showLeaderboard ? 'block' : 'hidden')} 
