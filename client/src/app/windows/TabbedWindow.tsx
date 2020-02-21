@@ -32,12 +32,13 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		type="text" 
 		className="bg-gray-700 border border-white rounded-none"
 		onChange={(e)=>{
+			const gameManager = this.gameManager();
 			const p = parseInt(e.target.value);
 			let myVal: number = (p) ? p : 0;
 			let myC = Math.floor(myVal / CHUNK_SIZE);
 			this.setState({
 				miningPatternChunk: {
-					chunkX: Math.min(127, myC),
+					chunkX: Math.min(gameManager.getMaxChunks.chunkX-1, myC),
 					chunkY: this.state.miningPatternChunk.chunkY,
 				}
 			}, this.doPatternChange);
@@ -47,13 +48,14 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 			type="text" 
 			className="bg-gray-700 border border-white rounded-none"
 			onChange={(e)=>{
+				const gameManager = this.gameManager();
 				const p = parseInt(e.target.value);
 				let myVal: number = (p) ? p : 0;
 				let myC = Math.floor(myVal / CHUNK_SIZE);
 			this.setState({
 				miningPatternChunk: {
 					chunkX: this.state.miningPatternChunk.chunkX,
-					chunkY: Math.min(127, myC),
+					chunkY: Math.min(gameManager.getMaxChunks().chunkY-1, myC),
 				}
 			}, this.doPatternChange);
 		}}

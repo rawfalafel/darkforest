@@ -231,6 +231,12 @@ class GameManager extends EventEmitter {
   getLocalStorageManager(): LocalStorageManager {
     return this.localStorageManager;
   }
+  getMaxChunks(): ChunkCoordinates {
+    return <ChunkCoordinates>{
+      chunkX: this.xChunks,
+      chunkY: this.yChunk,
+    }
+  }
 
   private initMiningManager(): void {
     this.miningPattern = new SpiralPattern(
