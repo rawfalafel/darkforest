@@ -29,7 +29,7 @@ import { locationIdToDecStr } from '../utils/CheckedTypeUtils';
 import { WorldCoords } from '../utils/Coordinates';
 
 import { MiningPattern } from '../@types/global/global';
-import { SpiralPattern, GridPattern  } from '../utils/MiningPatterns';
+import { SpiralPattern, GridPattern } from '../utils/MiningPatterns';
 import { GridPatternType } from '../@types/global/enums';
 
 class GameManager extends EventEmitter {
@@ -125,6 +125,7 @@ class GameManager extends EventEmitter {
   }
 
   static async initialize(): Promise<GameManager> {
+    window.mimcHash = mimcHash;
     // basically, we have a bunch of dependencies that need to be loaded according to a DAG
 
     // first we initialize the EthereumAPI and get the user's eth account, and load contract constants + state
@@ -232,7 +233,9 @@ class GameManager extends EventEmitter {
   }
 
   private initMiningManager(): void {
-    this.miningPattern = new SpiralPattern(this.localStorageManager.getHomeChunk());
+    this.miningPattern = new SpiralPattern(
+      this.localStorageManager.getHomeChunk()
+    );
     // this.miningPattern = new GridPattern(GridPatternType.Horizontal);
 
     this.minerManager = MinerManager.initialize(
@@ -255,7 +258,7 @@ class GameManager extends EventEmitter {
   getMiningPattern(): MiningPattern {
     return this.miningPattern;
   }
-  setMiningPattern(pattern : MiningPattern) {
+  setMiningPattern(pattern: MiningPattern) {
     this.miningPattern = pattern;
     const minerManager = MinerManager.getInstance();
     minerManager.setMiningPattern(this.miningPattern);
@@ -318,17 +321,15 @@ class GameManager extends EventEmitter {
     return balance;
   }
   getTotalCapacity(): number {
-    let totalCap : number = 0;
+    let totalCap: number = 0;
 
-    for(let key in this.planets) {
+    for (let key in this.planets) {
       totalCap += this.planets[key].capacity;
     }
 
     return totalCap;
   }
-  setNumberForces() {
-
-  }
+  setNumberForces() {}
   getHomeChunk(): ChunkCoordinates | null {
     if (this.homeChunk) {
       return this.homeChunk;
@@ -470,7 +471,9 @@ class GameManager extends EventEmitter {
     const newY = to.coords.y;
     const distMax = Math.abs(newX - oldX) + Math.abs(newY - oldY);
 
-    const shipsMoved = Math.floor(getCurrentPopulation(fromPlanet) * (forces / 100));
+    const shipsMoved = Math.floor(
+      getCurrentPopulation(fromPlanet) * (forces / 100)
+    );
 
     if (0 > newX || 0 > newY || this.xSize <= newX || this.ySize <= newY) {
       throw new Error('attempted to move out of bounds');

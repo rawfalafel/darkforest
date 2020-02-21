@@ -14,6 +14,7 @@ interface Web3Object {
 
 declare global {
   interface Window {
+    mimcHash: any;
     ethereum: WindowEthereumObject;
     web3: Web3Object;
     // from websnark's function injected into window
@@ -67,8 +68,8 @@ export interface Planet {
 
 export interface MiningPattern {
   type: MiningPatternType;
-  fromChunk : ChunkCoordinates;
-  nextChunk : (prevChunk: ChunkCoordinates) => ChunkCoordinates;
+  fromChunk: ChunkCoordinates;
+  nextChunk: (prevChunk: ChunkCoordinates) => ChunkCoordinates;
 }
 
 export interface QueuedArrival {
