@@ -3,7 +3,7 @@ import GameUIManager from '../board/GameUIManager';
 import GameManager from '../../api/GameManager';
 import UIEmitter from '../../utils/UIEmitter'
 import { Planet, ChunkCoordinates, MiningPattern } from '../../@types/global/global';
-import { MiningPatternType } from '../../@types/global/enums';
+import { MiningPatternType, GridPatternType } from '../../@types/global/enums';
 import { SpiralPattern, ConePattern, GridPattern } from '../../utils/MiningPatterns';
 
 import { getCurrentPopulation } from '../../utils/Utils';
@@ -18,11 +18,46 @@ interface WindowState {
 	totalCapacity: number,
 	conversionRate: number,
 	patternType: MiningPatternType,
-	targetPatternChunk: ChunkCoordinates
+	miningPatternChunk: ChunkCoordinates,
+	gridPatternDirection: GridPatternType,
+	gridPatternDimension: number,
 }
 
-class TabbedWindow extends React.Component<WindowProps, WindowState> {
 
+class TabbedWindow extends React.Component<WindowProps, WindowState> {
+	CoordInput = () => (
+		<span>(<input 
+		type="text" 
+		className="bg-gray-700 border border-white rounded-none"
+		onChange={(e)=>{
+			const p = parseInt(e.target.value);
+			let myVal: number = (p) ? p : 0;
+			let myC = Math.floor(myVal / CHUNK_SIZE);
+			this.setState({
+				miningPatternChunk: {
+					chunkX: Math.min(127, myC),
+					chunkY: this.state.miningPatternChunk.chunkY,
+				}
+			}, this.doPatternChange);
+		}}
+			style={{width: "3em"}}/>, 
+			<input 
+			type="text" 
+			className="bg-gray-700 border border-white rounded-none"
+			onChange={(e)=>{
+				const p = parseInt(e.target.value);
+				let myVal: number = (p) ? p : 0;
+				let myC = Math.floor(myVal / CHUNK_SIZE);
+			this.setState({
+				miningPatternChunk: {
+					chunkX: this.state.miningPatternChunk.chunkX,
+					chunkY: Math.min(127, myC),
+				}
+			}, this.doPatternChange);
+		}}
+			style={{width: "3em"}}/>)
+	</span>
+	);
 	state = {
 		forces : 50,
 		activeTab: 'details',
@@ -31,7 +66,9 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		totalCapacity : Infinity,
 		conversionRate: 268.19,
 		patternType : MiningPatternType.Home,
-		targetPatternChunk : {chunkX: 0, chunkY: 0},
+		miningPatternChunk : {chunkX: 0, chunkY: 0},
+		gridPatternDirection: GridPatternType.Row,
+		gridPatternDimension: 1024
 	};
 
 	frameCount = 0;
@@ -136,17 +173,22 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 	/* BEGIN mining handlers */
 	doPatternChange() {
 		let myPattern : MiningPattern;
-		if(this.state.patternType == MiningPatternType.Home) {
+		if(this.state.patternType == MiningPatternType.Target) {
+			myPattern = new SpiralPattern(this.state.miningPatternChunk);
+		} else if(this.state.patternType == MiningPatternType.Grid) {
+			myPattern = new GridPattern(
+				this.state.miningPatternChunk,
+				this.state.gridPatternDirection, 
+				this.state.gridPatternDimension
+			);
+		} else /*(this.state.patternType == MiningPatternType.Home)*/ {
 			myPattern = new SpiralPattern(this.gameManager.getLocalStorageManager().getHomeChunk());
-		} else if(this.state.patternType == MiningPatternType.Target) {
-			myPattern = new SpiralPattern(this.state.targetPatternChunk);
 		}
 		console.log(myPattern);
 		this.gameManager.setMiningPattern(myPattern);
 	}
 	handlePatternTypeChange = (e) => {
-		this.setState({patternType: e.target.value});
-		this.doPatternChange();
+		this.setState({patternType: e.target.value}, this.doPatternChange);
 	}
 	render() {
 		return (
@@ -234,41 +276,11 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Target ? "block" : "hidden")}>
 			            	<div>
 					            <p>Target coords:</p>
-					            <p>(<input 
-					            	type="text" 
-					            	className="bg-gray-700 border border-white rounded-none"
-					            	onChange={(e)=>{
-					            		const p = parseInt(e.target.value);
-					            		let myVal: number = (p) ? p : 0;
-					            		let myC = Math.floor(myVal / CHUNK_SIZE);
-					            		this.setState({
-					            			targetPatternChunk: {
-					            				chunkX: Math.min(127, myC),
-					            				chunkY: this.state.targetPatternChunk.chunkY,
-					            			}
-					            		}, this.doPatternChange);
-					            	}}
-				              		style={{width: "3em"}}/>, 
-				              		<input 
-				              		type="text" 
-				              		className="bg-gray-700 border border-white rounded-none"
-				              		onChange={(e)=>{
-				              			const p = parseInt(e.target.value);
-				              			let myVal: number = (p) ? p : 0;
-				              			let myC = Math.floor(myVal / CHUNK_SIZE);
-					            		this.setState({
-					            			targetPatternChunk: {
-					            				chunkX: this.state.targetPatternChunk.chunkX,
-					            				chunkY: Math.min(127, myC),
-					            			}
-					            		}, this.doPatternChange);
-					            	}}
-				              		style={{width: "3em"}}/>)
-					            </p>
+					            <p>{this.CoordInput()}</p>
 				            </div>
 				            <div>
 					            <p>Targeting chunk: </p>
-								<p>{((c)=>(`<${c.chunkX}, ${c.chunkY}>`))(this.state.targetPatternChunk)}</p>
+								<p>{((c)=>(`<${c.chunkX}, ${c.chunkY}>`))(this.state.miningPatternChunk)}</p>
 							</div>
 			            </div>
 
@@ -279,9 +291,33 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 			            </div>
 
 			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.Grid ? "block" : "hidden")}>
-			            	<p>Start from: (1, 2)</p>
-			            	<p>Move direction: horizontal</p>
-				            <p>Grid {Math.random() > 0.5 ? "height" : "width"}: 500</p>
+			            	<p>Start from: {this.CoordInput()}</p>
+			            	<p>Move direction: 
+			            	<select value={this.state.gridPatternDirection}
+			              		className="bg-gray-700 border border-white p-2 rounded-none" 
+				              	onChange={(e)=>{
+				              		this.setState(
+				              			{gridPatternDirection: parseInt(e.target.value)},
+				              			this.doPatternChange
+				              		);
+				              	}}>
+					                <option value={GridPatternType.Row}>Row</option>
+					                <option value={GridPatternType.Column}>Column</option>
+			                </select>
+			            	</p>
+				            <p>Grid {this.state.gridPatternDirection == GridPatternType.Column ? "height" : "width"}:
+				            <input 
+								type="text" 
+								className="bg-gray-700 border border-white rounded-none"
+								onChange={(e)=>{
+									const p = parseInt(e.target.value);
+									let myVal: number = (p) ? p : 0;
+									this.setState({
+										gridPatternDimension: Math.max(1, myVal)
+									}, this.doPatternChange);
+								}}
+								style={{width: "3em"}}
+							/></p>
 			            </div>
 
 			            <div className={"flex flex-col justify-around h-full "+(this.state.patternType == MiningPatternType.ETH ? "block" : "hidden")}>

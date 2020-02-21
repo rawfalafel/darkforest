@@ -13,7 +13,7 @@ export class SpiralPattern {
 		const homeChunkY = this.fromChunk.chunkY;
 		const currentChunkX = chunk.chunkX;
 		const currentChunkY = chunk.chunkY;
-		
+
 		if (currentChunkX === homeChunkX && currentChunkY === homeChunkY) {
 			return <ChunkCoordinates>{
 			  chunkX: homeChunkX,
@@ -68,7 +68,7 @@ export class SpiralPattern {
 export class ConePattern {
 	type: MiningPatternType = MiningPatternType.Cone;
 	fromChunk : ChunkCoordinates;
-	nextChunk() : ChunkCoordinates {
+	nextChunk(chunk : ChunkCoordinates) : ChunkCoordinates {
 		return <ChunkCoordinates>{
 			chunkX: 0,
 			chunkY: 0,
@@ -85,21 +85,39 @@ export class GridPattern {
 		chunkX:0,
 		chunkY:0,
 	};
-	nextChunk() : ChunkCoordinates {
-		return <ChunkCoordinates>{
-			chunkX: 0,
-			chunkY: 0,
+	maxDim : number;
+	nextChunk(chunk : ChunkCoordinates) : ChunkCoordinates {
+		const homeChunkX = this.fromChunk.chunkX;
+		const homeChunkY = this.fromChunk.chunkY;
+		const currentChunkX = chunk.chunkX;
+		const currentChunkY = chunk.chunkY;
+		const delChunkX = currentChunkX - homeChunkX;
+		const delChunkY = currentChunkY - homeChunkY;
+		const isRow = (this.gridType == GridPatternType.Row);
+
+		if((isRow ? delChunkX : delChunkY) > this.maxDim) {
+			return <ChunkCoordinates>{
+				chunkX: (isRow ? homeChunkX : currentChunkX+1),
+				chunkY: (isRow ? currentChunkY+1 : homeChunkY),
+			}
+		} else {
+			return <ChunkCoordinates>{
+				chunkX: (isRow ? currentChunkX+1 : currentChunkX),
+				chunkY: (isRow ? currentChunkY : currentChunkY+1),
+			}
 		}
 	}
-	constructor(gridType: GridPatternType) {
+	constructor(fromChunk: ChunkCoordinates, gridType: GridPatternType, maxDim: number) {
+		this.fromChunk = fromChunk;
 		this.gridType = gridType;
+		this.maxDim = maxDim;
 	}
 }
 export class TargetPattern {
 	type: MiningPatternType = MiningPatternType.Target;
 	destination: WorldCoords;
 	fromChunk : ChunkCoordinates;
-	nextChunk() : ChunkCoordinates {
+	nextChunk(chunk : ChunkCoordinates) : ChunkCoordinates {
 		return <ChunkCoordinates>{
 			chunkX: 0,
 			chunkY: 0,
