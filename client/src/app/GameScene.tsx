@@ -16,7 +16,8 @@ const GameScene = () => {
 
   return (
     <React.Fragment>
-      <div className="absolute top-0 left-0 flex flex-row items-center">
+      <div className="absolute top-0 left-0 flex flex-col">
+        <div className="flex flex-row items-center">
         <Button
           className="bg-gray-900 border border-white rounded-sm p-2 m-2"
           onClick={() => {
@@ -31,25 +32,39 @@ const GameScene = () => {
             <Spinner name="ball-clip-rotate-multiple" fadeIn="none" />
           </div>
         )}
+        </div>
+
+        <div className="flex flex-row items-center">
+          <Button
+            className="bg-gray-900 border border-white rounded-sm p-2 m-2"
+            onClick={() => {
+              const selectedPlanet = uiManager.selectedPlanet;
+              if (
+                selectedPlanet &&
+                selectedPlanet.owner === gameManager.account
+              ) {
+                gameManager.cashOut({
+                  coords: uiManager.selectedCoords,
+                  hash: selectedPlanet.locationId
+                });
+              }
+            }}
+          >
+            Cash out
+          </Button>
+        </div>
+
       </div>
-      <div className="absolute top-0 right-0 flex flex-row items-center">
+
+      <div className="absolute top-0 right-0">
         <Button
-          className="bg-gray-900 border border-white rounded-sm p-2 m-2"
-          onClick={() => {
-            const selectedPlanet = uiManager.selectedPlanet;
-            if (
-              selectedPlanet &&
-              selectedPlanet.owner === gameManager.account
-            ) {
-              gameManager.cashOut({
-                coords: uiManager.selectedCoords,
-                hash: selectedPlanet.locationId
-              });
-            }
-          }}
-        >
-          Cash out
-        </Button>
+            className="bg-gray-900 border border-white rounded-sm p-2 m-2"
+            onClick={() => {
+              window.location.href = "https://alan-luo.github.io/darkforest-tutorial/";
+            }}
+          >
+            Tutorial
+          </Button>
       </div>
 
       <div className="absolute bottom-0 left-0">
