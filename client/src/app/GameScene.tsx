@@ -9,29 +9,56 @@ import GameUIManager from './board/GameUIManager';
 import TabbedWindow from './windows/TabbedWindow';
 import CoordsWindow from './windows/CoordsWindow';
 
-const GameScene = () => {
-  const [exploring, setExploring] = useState(true);
-  const gameManager = GameManager.getInstance();
-  const uiManager = GameUIManager.getInstance();
+interface SceneProps{};
+interface SceneState {
+  exploring: boolean;
+};
 
-  return (
+class GameScene extends React.Component<SceneProps, SceneState> {
+  state = {
+    exploring:true,
+  }
+  
+
+  render (){
+    const gameManager = GameManager.getInstance();
+    const uiManager = GameUIManager.getInstance();
+    return (
     <React.Fragment>
+    <div className="absolute top-0 left-0 w-full h-full hidden" style={{
+      background: 'rgba(0, 0, 0, 0.6)',
+      zIndex: 999,
+    }}>
+    </div>
       <div className="absolute top-0 left-0 flex flex-col">
         <div className="flex flex-row items-center">
         <Button
           className="bg-gray-900 border border-white rounded-sm p-2 m-2"
           onClick={() => {
-            exploring ? gameManager.stopExplore() : gameManager.startExplore();
-            setExploring(!exploring);
+            this.state.exploring ? gameManager.stopExplore() : gameManager.startExplore();
+            this.setState({exploring: !this.state.exploring});
           }}
         >
-          {exploring ? 'Stop' : 'Start'} exploring
+          {this.state.exploring ? 'Stop' : 'Start'} exploring
         </Button>
-        {exploring && (
+        {this.state.exploring && (
           <div className="ml-6 mt-2">
             <Spinner name="ball-clip-rotate-multiple" fadeIn="none" />
           </div>
         )}
+        </div>
+
+        <div className="flex flex-row items-center">
+          <Button
+            className="bg-gray-900 border border-white rounded-sm p-2 mx-2 my-0"
+            onClick={
+              ()=>{
+
+              }
+            }
+          >
+            Leaderboard
+          </Button>
         </div>
 
         <div className="flex flex-row items-center">
@@ -76,7 +103,7 @@ const GameScene = () => {
       
       <ControllableCanvas />
     </React.Fragment>
-  );
+  )};
 };
 
 export default GameScene;
