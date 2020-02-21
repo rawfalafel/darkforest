@@ -16,6 +16,7 @@ const App = () => {
   useEffect(() => {
     (async (): Promise<void> => {
       const newGameManager = await GameManager.initialize();
+      window.gameManager = newGameManager;
       gameManagerRef.current = newGameManager;
       setLoading(false);
       setJoinedGame(newGameManager.hasJoinedGame());

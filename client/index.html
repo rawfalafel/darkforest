@@ -10,12 +10,24 @@
       Use websnark to generate ZK proofs
     -->
     <script src="public/websnark/websnark.js"></script>
+    <script>
+      fetch('./public/proving_key_init.bin');
+    </script>
+    <script>
+      fetch('./public/proving_key_move.bin');
+    </script>
     <title>Dark Forest</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <script src="./node_modules/react/umd/react.development.js"></script>
-    <script src="./node_modules/react-dom/umd/react-dom.development.js"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@16/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"
+    ></script>
   </body>
 </html>

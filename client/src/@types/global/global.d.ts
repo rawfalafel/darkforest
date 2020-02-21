@@ -14,6 +14,7 @@ interface Web3Object {
 
 declare global {
   interface Window {
+    gameManager: any;
     mimcHash: any;
     ethereum: WindowEthereumObject;
     web3: Web3Object;
