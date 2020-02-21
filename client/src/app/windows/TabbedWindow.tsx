@@ -226,6 +226,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
         this.gameManager.getLocalStorageManager().getHomeChunk()
       );
     }
+    console.log("detected UI pattern update");
     console.log(myPattern);
     this.gameManager.setMiningPattern(myPattern);
   }
@@ -348,17 +349,19 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
                 }
               >
                 <p>You are currently exploring from HOME.</p>
-                <p>
-                  Your home chunk is:{' '}
-                  {(() => {
-                    let myChunk = this.gameManager
-                      .getLocalStorageManager()
-                      .getHomeChunk();
-                    return `<${myChunk ? myChunk.chunkX : 'none'}, ${
-                      myChunk ? myChunk.chunkY : 'none'
-                    }>`;
-                  })()}
-                </p>
+                <div>
+	                <p>Your home chunk is:</p>
+	                <p>
+	                  {(() => {
+	                    let myChunk = this.gameManager
+	                      .getLocalStorageManager()
+	                      .getHomeChunk();
+	                    return `<${myChunk ? myChunk.chunkX : 'none'}, ${
+	                      myChunk ? myChunk.chunkY : 'none'
+	                    }>`;
+	                  })()}
+	                </p>
+                </div>
               </div>
 
               <div
