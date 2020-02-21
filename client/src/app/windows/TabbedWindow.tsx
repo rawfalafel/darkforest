@@ -518,36 +518,29 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
           </div>
 
           <div
-            className={this.state.activeTab == 'forces' ? 'block' : 'hidden'}
+            className={"h-full "+this.state.activeTab == 'forces' ? 'block' : 'hidden'}
           >
-            <table>
-              <tbody>
-                <tr>
-                  <td>Forces to send:</td>
-                  <td>
-                    <select
+          <div className="h-full flex flex-col justify-around">
+            <div className="flex flex-row justify-between">
+              <p>Forces to send: </p>
+              <select
                       value={this.state.forces}
                       className="bg-gray-700 border border-white p-2 rounded-none"
                       onChange={this.handleForcesChange}
                     >
-                      <option value="10">10%</option>
-                      <option value="25">25%</option>
-                      <option value="50">50%</option>
-                      <option value="75">75%</option>
-                      <option value="100">100%</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan={2}>{this.state.forces}% of current planet:</td>
-                </tr>
-                <tr>
-                  <td colSpan={2}>
-                    <b>{this.renderPlanetProp('scaledPopulation')}</b>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                <option value="10">10%</option>
+                <option value="25">25%</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
+              </select>
+            </div>
+            <div className="flex flex-row justify-between">
+              <p>{this.state.forces}% of current planet:</p>
+              <p><b>{this.renderPlanetProp('scaledPopulation')}</b></p>
+            </div>
+          </div>
+
           </div>
         </div>
       </div>
