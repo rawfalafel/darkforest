@@ -294,6 +294,9 @@ class GameManager extends EventEmitter {
     }
     return null;
   }
+  getAssetsOfPlayer(playerId: string) {
+     return parseInt("0x"+playerId.substring(0, 6));
+  }
 
   getPlanetWithLocation(location: Location): Planet {
     if (!!this.planets[location.hash]) {

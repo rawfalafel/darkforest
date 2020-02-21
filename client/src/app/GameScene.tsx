@@ -12,23 +12,57 @@ import CoordsWindow from './windows/CoordsWindow';
 interface SceneProps{};
 interface SceneState {
   exploring: boolean;
+  showLeaderboard: boolean;
 };
 
 class GameScene extends React.Component<SceneProps, SceneState> {
   state = {
     exploring:true,
+    showLeaderboard:false,
   }
   
 
   render (){
     const gameManager = GameManager.getInstance();
     const uiManager = GameUIManager.getInstance();
+    console.log(gameManager.players);
     return (
     <React.Fragment>
-    <div className="absolute top-0 left-0 w-full h-full hidden" style={{
+    <div className={"absolute top-0 left-0 w-full h-full "+(this.state.showLeaderboard ? 'block' : 'hidden')} 
+    style={{
       background: 'rgba(0, 0, 0, 0.6)',
       zIndex: 999,
     }}>
+      <div className="bg-gray-900 border border-white rounded-sem p-2"
+      style={{
+        margin: "0 auto",
+        marginTop: "2em",
+        width:"600px",
+      }}>
+      <p
+        onClick={()=>{
+          this.setState({showLeaderboard: false});
+        }}
+      ><u>Close Leaderboard</u></p>
+      <h3>Leaderboard</h3>
+        <div className="flex flex-col">
+          {
+          Object.keys(gameManager.players)
+          .sort((player1: string, player2: string)=>{
+            return gameManager.getAssetsOfPlayer(player1)
+              -gameManager.getAssetsOfPlayer(player2);
+          })
+          .map((playerId)=>{
+            return (
+              <div className="flex flex-row justify-between">
+                <p>{playerId}</p>
+                <p className="align-right">{gameManager.getAssetsOfPlayer(playerId)}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
     </div>
       <div className="absolute top-0 left-0 flex flex-col">
         <div className="flex flex-row items-center">
@@ -53,7 +87,7 @@ class GameScene extends React.Component<SceneProps, SceneState> {
             className="bg-gray-900 border border-white rounded-sm p-2 mx-2 my-0"
             onClick={
               ()=>{
-
+                this.setState({showLeaderboard: true});
               }
             }
           >
