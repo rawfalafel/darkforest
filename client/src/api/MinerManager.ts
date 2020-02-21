@@ -99,6 +99,12 @@ class MinerManager extends EventEmitter {
       let nextChunk: ChunkCoordinates | null;
       if(this.resetChunk) {
         this.resetChunk = false;
+        if (!this.inMemoryBoard[
+           this.miningPattern.fromChunk.chunkX][
+           this.miningPattern.fromChunk.chunkY]) 
+        {
+          this.sendMessageToWorker(this.miningPattern.fromChunk);
+        }
         nextChunk = await this.nextValidExploreTarget({ 
         chunkX: this.miningPattern.fromChunk.chunkX,
         chunkY: this.miningPattern.fromChunk.chunkY 

@@ -21,6 +21,6 @@ export enum MiningPatternType {
   ETH,
 }
 export enum GridPatternType {
-  Vertical,
-  Horizontal,
+  Row,
+  Column,
 }
