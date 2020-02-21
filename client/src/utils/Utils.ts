@@ -45,7 +45,7 @@ export const witnessObjToBuffer: (
 
   const h: DataViewWithOffset = {
     dataView: new DataView(buff),
-    offset: 0
+    offset: 0,
   };
 
   for (let i = 0; i < witness.length; i++) {

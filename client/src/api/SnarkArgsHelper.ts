@@ -1,7 +1,7 @@
 import {
   ContractCallArgs,
   InitializePlayerArgs,
-  MoveArgs
+  MoveArgs,
 } from '../@types/darkforest/api/EthereumAPI';
 import { Circuit, CircuitDef } from 'snarkjs';
 import { witnessObjToBuffer } from '../utils/Utils';
@@ -58,7 +58,7 @@ class SnarkArgsHelper {
   async getInitArgs(x: number, y: number): Promise<InitializePlayerArgs> {
     const input: any = {
       x: x.toString(),
-      y: y.toString()
+      y: y.toString(),
     };
     const witness: ArrayBuffer = witnessObjToBuffer(
       this.initCircuit.calculateWitness(input)
@@ -88,7 +88,7 @@ class SnarkArgsHelper {
       y1: y1.toString(),
       x2: x2.toString(),
       y2: y2.toString(),
-      distMax: distMax.toString()
+      distMax: distMax.toString(),
     };
     const witness: ArrayBuffer = witnessObjToBuffer(
       this.moveCircuit.calculateWitness(input)
@@ -102,7 +102,7 @@ class SnarkArgsHelper {
       mimcHash(x1, y1),
       mimcHash(x2, y2),
       bigInt(distMax),
-      bigInt(shipsMoved)
+      bigInt(shipsMoved),
     ];
     return this.callArgsFromProofAndSignals(
       snarkProof,
@@ -121,7 +121,7 @@ class SnarkArgsHelper {
       // genZKSnarkProof reverses values in the inner arrays of pi_b
       [snarkProof.pi_b[0].reverse(), snarkProof.pi_b[1].reverse()], // pi_b
       snarkProof.pi_c.slice(0, 2), // pi_c
-      publicSignals.map(signal => signal.toString(10)) // input
+      publicSignals.map(signal => signal.toString(10)), // input
     ];
   }
 }
