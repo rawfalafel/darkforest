@@ -61,7 +61,7 @@ class Viewport {
     const gameManager = GameManager.getInstance();
     const uiEmitter = UIEmitter.getInstance();
 
-    const homeChunk = gameManager.getHomeChunk();
+    const homeChunk = /*await*/ gameManager.getHomeChunk();
     const initialCenterX = (homeChunk.chunkX + 0.5) * CHUNK_SIZE;
     const initialCenterY = (homeChunk.chunkY + 0.5) * CHUNK_SIZE;
 

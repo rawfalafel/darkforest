@@ -3,7 +3,7 @@ import LocalStorageManager from './LocalStorageManager';
 import {
   getCurrentPopulation,
   getPlanetTypeForLocation,
-  arrive
+  arrive,
 } from '../utils/Utils';
 import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
@@ -20,7 +20,7 @@ import {
   PlanetArrivalMap,
   ArrivalWithTimer,
   LocationId,
-  PlanetLocationMap
+  PlanetLocationMap,
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -78,7 +78,8 @@ class GameManager extends EventEmitter {
     defaultStalwartness: number[],
     ethereumAPI: EthereumAPI,
     localStorageManager: LocalStorageManager,
-    snarkHelper: SnarkArgsHelper
+    snarkHelper: SnarkArgsHelper,
+    homeChunk: ChunkCoordinates | null
   ) {
     super();
 
@@ -87,7 +88,6 @@ class GameManager extends EventEmitter {
     this.planets = planets;
     this.arrivalsMap = arrivalsMap;
     this.inMemoryBoard = inMemoryBoard;
-    this.homeChunk = localStorageManager.getHomeChunk();
 
     this.xSize = xSize;
     this.ySize = ySize;
@@ -98,6 +98,7 @@ class GameManager extends EventEmitter {
     this.defaultCapacity = defaultCapacity;
     this.defaultHardiness = defaultHardiness;
     this.defaultStalwartness = defaultStalwartness;
+    this.homeChunk = homeChunk;
 
     this.ethereumAPI = ethereumAPI;
     this.localStorageManager = localStorageManager;
@@ -138,7 +139,7 @@ class GameManager extends EventEmitter {
       defaultGrowth,
       defaultCapacity,
       defaultHardiness,
-      defaultStalwartness
+      defaultStalwartness,
     } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
@@ -175,8 +176,9 @@ class GameManager extends EventEmitter {
       xChunks,
       yChunks
     );
-    const inMemoryBoard = localStorageManager.getKnownBoard();
+    const inMemoryBoard = await localStorageManager.getKnownBoard();
 
+    const homeChunk = await localStorageManager.getHomeChunk();
     // finally we initialize the snark helper; this doesn't actually have any dependencies
     const snarkHelper = await SnarkArgsHelper.initialize();
 
@@ -197,13 +199,14 @@ class GameManager extends EventEmitter {
       defaultStalwartness,
       ethereumAPI,
       localStorageManager,
-      snarkHelper
+      snarkHelper,
+      homeChunk
     );
 
     // we only want to initialize the mining manager if the player has already joined the game
     // if they haven't, we'll do this once the player has joined the game
-    if (!!localStorageManager.getHomeChunk() && account in players) {
-      gameManager.initMiningManager();
+    if (!!homeChunk && account in players) {
+      gameManager.initMiningManager(homeChunk);
     }
 
     // set up listeners: whenever EthereumAPI reports some game state update, do some logic
@@ -235,13 +238,11 @@ class GameManager extends EventEmitter {
     return <ChunkCoordinates>{
       chunkX: this.xChunks,
       chunkY: this.yChunks,
-    }
+    };
   }
 
-  private initMiningManager(): void {
-    let myPattern: MiningPattern = new SpiralPattern(
-      this.localStorageManager.getHomeChunk()
-    );
+  private initMiningManager(homeChunk): void {
+    const myPattern: MiningPattern = new SpiralPattern(homeChunk);
 
     this.minerManager = MinerManager.initialize(
       this.inMemoryBoard,
@@ -255,7 +256,10 @@ class GameManager extends EventEmitter {
       for (const planetLocation of chunk.planetLocations) {
         this.planetLocationMap[planetLocation.hash] = planetLocation;
       }
-      this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
+      if (Math.random() < 0.1) {
+        //TODO, make this nicer.
+        this.localStorageManager.updateKnownBoard(this.inMemoryBoard);
+      }
       this.emit('discoveredNewChunk');
     });
     this.minerManager.startExplore();
@@ -295,7 +299,7 @@ class GameManager extends EventEmitter {
     return null;
   }
   getAssetsOfPlayer(playerId: string) {
-     return parseInt("0x"+playerId.substring(0, 6));
+    return parseInt('0x' + playerId.substring(0, 6));
   }
 
   getPlanetWithLocation(location: Location): Planet {
@@ -315,7 +319,7 @@ class GameManager extends EventEmitter {
       locationId: location.hash,
       destroyed: false,
       population: 0,
-      coordinatesRevealed: false
+      coordinatesRevealed: false,
     };
   }
 
@@ -326,15 +330,15 @@ class GameManager extends EventEmitter {
     return balance;
   }
   getTotalCapacity(): number {
-    let totalCap: number = 0;
+    let totalCap = 0;
 
-    for (let key in this.planets) {
+    for (const key in this.planets) {
       totalCap += this.planets[key].capacity;
     }
 
     return totalCap;
   }
-  getHomeChunk(): ChunkCoordinates | null {
+  getHomeChunk(): ChunkCoordinates {
     if (this.homeChunk) {
       return this.homeChunk;
     }
@@ -401,7 +405,7 @@ class GameManager extends EventEmitter {
           }, arrival.arrivalTime * 1000 - Date.now());
           const arrivalWithTimer = {
             arrivalData: arrival,
-            timer: applyFutureArrival
+            timer: applyFutureArrival,
           };
           arrivalsWithTimers.push(arrivalWithTimer);
         }
@@ -415,18 +419,18 @@ class GameManager extends EventEmitter {
   }
 
   joinGame(): GameManager {
-    this.getRandomHomePlanetCoords().then(coords => {
+    this.getRandomHomePlanetCoords().then(async coords => {
       const { x, y } = coords;
       const chunkX = Math.floor(x / CHUNK_SIZE);
       const chunkY = Math.floor(y / CHUNK_SIZE);
-      this.localStorageManager.setHomeChunk({ chunkX, chunkY }); // set this before getting the call result, in case user exits before tx confirmed
+      await this.localStorageManager.setHomeChunk({ chunkX, chunkY }); // set this before getting the call result, in case user exits before tx confirmed
       this.snarkHelper
         .getInitArgs(x, y)
         .then(callArgs => {
           return this.ethereumAPI.initializePlayer(callArgs);
         })
-        .then(() => {
-          this.initMiningManager();
+        .then(async () => {
+          this.initMiningManager(await this.localStorageManager.getHomeChunk());
           this.emit('initializedPlayer');
         })
         .catch(() => {

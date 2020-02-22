@@ -104,7 +104,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
 		super(props);
 
 		const gameManager = GameManager.getInstance();
-		this.state.miningPatternChunk = gameManager.getLocalStorageManager().getHomeChunk();
+		this.state.miningPatternChunk = gameManager.getHomeChunk(); //gameManager.getLocalStorageManager().getHomeChunk();
 	}
 
   componentDidMount() {
@@ -208,7 +208,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
   };
 
   /* BEGIN mining handlers */
-  doPatternChange() {
+  async doPatternChange() {
     let myPattern: MiningPattern;
     if (this.state.patternType == MiningPatternType.Target) {
       myPattern = new SpiralPattern(this.state.miningPatternChunk);
@@ -226,7 +226,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
       );
     } /*(this.state.patternType == MiningPatternType.Home)*/ else {
       myPattern = new SpiralPattern(
-        this.gameManager.getLocalStorageManager().getHomeChunk()
+        await this.gameManager.getHomeChunk()
       );
     }
     this.gameManager.setMiningPattern(myPattern);
