@@ -9,134 +9,147 @@ import GameUIManager from './board/GameUIManager';
 import TabbedWindow from './windows/TabbedWindow';
 import CoordsWindow from './windows/CoordsWindow';
 
-interface SceneProps{};
+interface SceneProps {}
 interface SceneState {
   exploring: boolean;
   showLeaderboard: boolean;
-};
+}
 
 class GameScene extends React.Component<SceneProps, SceneState> {
   state = {
-    exploring:true,
-    showLeaderboard:false,
-  }
-  
+    exploring: true,
+    showLeaderboard: false
+  };
 
-  render (){
+  render() {
     const gameManager = GameManager.getInstance();
     const uiManager = GameUIManager.getInstance();
     return (
-    <React.Fragment>
-    <div className={"absolute top-0 left-0 w-full h-full "+(this.state.showLeaderboard ? 'block' : 'hidden')} 
-    style={{
-      background: 'rgba(0, 0, 0, 0.6)',
-      zIndex: 999,
-    }}>
-      <div className="bg-gray-900 border border-white rounded-sem p-2"
-      style={{
-        margin: "0 auto",
-        marginTop: "2em",
-        width:"600px",
-      }}>
-      <p
-        onClick={()=>{
-          this.setState({showLeaderboard: false});
-        }}
-      ><u>Close Leaderboard</u></p>
-      <h3>Leaderboard</h3>
-        <div className="flex flex-col">
-          {
-          Object.keys(gameManager.players)
-          .sort((player1: string, player2: string)=>{
-            return gameManager.getAssetsOfPlayer(player1)
-              -gameManager.getAssetsOfPlayer(player2);
-          })
-          .map((playerId)=>{
-            return (
-              <div className="flex flex-row justify-between">
-                <p>{playerId}</p>
-                <p className="align-right">{gameManager.getAssetsOfPlayer(playerId)}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-    </div>
-      <div className="absolute top-0 left-0 flex flex-col">
-        <div className="flex flex-row items-center">
-        <Button
-          className="bg-gray-900 border border-white rounded-sm p-2 m-2"
-          onClick={() => {
-            this.state.exploring ? gameManager.stopExplore() : gameManager.startExplore();
-            this.setState({exploring: !this.state.exploring});
+      <React.Fragment>
+        <div
+          className={
+            'absolute top-0 left-0 w-full h-full ' +
+            (this.state.showLeaderboard ? 'block' : 'hidden')
+          }
+          style={{
+            background: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 999
           }}
         >
-          {this.state.exploring ? 'Stop' : 'Start'} exploring
-        </Button>
-        {this.state.exploring && (
-          <div className="ml-6 mt-2">
-            <Spinner name="ball-clip-rotate-multiple" fadeIn="none" />
-          </div>
-        )}
-        </div>
-
-        <div className="flex flex-row items-center">
-          <Button
-            className="bg-gray-900 border border-white rounded-sm p-2 mx-2 my-0"
-            onClick={
-              ()=>{
-                this.setState({showLeaderboard: true});
-              }
-            }
+          <div
+            className="bg-gray-900 border border-white rounded-sem p-2"
+            style={{
+              margin: '0 auto',
+              marginTop: '2em',
+              width: '600px'
+            }}
           >
-            Leaderboard
-          </Button>
+            <p
+              onClick={() => {
+                this.setState({ showLeaderboard: false });
+              }}
+            >
+              <u>Close Leaderboard</u>
+            </p>
+            <h3>Leaderboard</h3>
+            <div className="flex flex-col">
+              {Object.keys(gameManager.players)
+                .sort((player1: string, player2: string) => {
+                  return (
+                    gameManager.getAssetsOfPlayer(player1) -
+                    gameManager.getAssetsOfPlayer(player2)
+                  );
+                })
+                .map(playerId => {
+                  return (
+                    <div className="flex flex-row justify-between">
+                      <p>{playerId}</p>
+                      <p className="align-right">
+                        {gameManager.getAssetsOfPlayer(playerId)}
+                      </p>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
         </div>
+        <div className="absolute top-0 left-0 flex flex-col">
+          <div className="flex flex-row items-center">
+            <Button
+              className="bg-gray-900 border border-white rounded-sm p-2 m-2"
+              onClick={() => {
+                this.state.exploring
+                  ? gameManager.stopExplore()
+                  : gameManager.startExplore();
+                this.setState({ exploring: !this.state.exploring });
+              }}
+            >
+              {this.state.exploring ? 'Stop' : 'Start'} exploring
+            </Button>
+            {this.state.exploring && (
+              <div className="ml-6 mt-2">
+                <Spinner name="ball-clip-rotate-multiple" fadeIn="none" />
+              </div>
+            )}
+          </div>
 
-        <div className="flex flex-row items-center">
-          <Button
-            className="bg-gray-900 border border-white rounded-sm p-2 m-2"
-            onClick={() => {
-              const selectedPlanet = uiManager.selectedPlanet;
-              if (
-                selectedPlanet &&
-                selectedPlanet.owner === gameManager.account
-              ) {
+          <div className="flex flex-row items-center">
+            <Button
+              className="bg-gray-900 border border-white rounded-sm p-2 mx-2 my-0"
+              onClick={() => {
+                this.setState({ showLeaderboard: true });
+              }}
+            >
+              Leaderboard
+            </Button>
+          </div>
+
+          <div className="flex flex-row items-center">
+            <Button
+              className="bg-gray-900 border border-white rounded-sm p-2 m-2"
+              onClick={() => {
+                const selectedPlanet = uiManager.selectedPlanet;
+                if (
+                  selectedPlanet &&
+                  selectedPlanet.owner === gameManager.account
+                ) {
+                  /*
                 gameManager.cashOut({
                   coords: uiManager.selectedCoords,
                   hash: selectedPlanet.locationId
-                });
-              }
-            }}
-          >
-            Cash out
-          </Button>
+                });*/
+                  window.alert('This feature is not available on Ropsten!');
+                }
+              }}
+            >
+              Cash out
+            </Button>
+          </div>
         </div>
 
-      </div>
-
-      <div className="absolute top-0 right-0">
-        <Button
+        <div className="absolute top-0 right-0">
+          <Button
             className="bg-gray-900 border border-white rounded-sm p-2 m-2"
             onClick={() => {
-              window.location.href = "https://alan-luo.github.io/darkforest-tutorial/";
+              window.location.href =
+                'https://alan-luo.github.io/darkforest-tutorial/';
             }}
           >
             Tutorial
           </Button>
-      </div>
+        </div>
 
-      <div className="absolute bottom-0 left-0">
-        <CoordsWindow />
-      </div>
+        <div className="absolute bottom-0 left-0">
+          <CoordsWindow />
+        </div>
 
-      {/* Wrapper */}
-      <TabbedWindow />
-      
-      <ControllableCanvas />
-    </React.Fragment>
-  )};
-};
+        {/* Wrapper */}
+        <TabbedWindow />
+
+        <ControllableCanvas />
+      </React.Fragment>
+    );
+  }
+}
 
 export default GameScene;

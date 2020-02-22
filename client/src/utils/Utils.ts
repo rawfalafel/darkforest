@@ -45,7 +45,7 @@ export const witnessObjToBuffer: (
 
   const h: DataViewWithOffset = {
     dataView: new DataView(buff),
-    offset: 0,
+    offset: 0
   };
 
   for (let i = 0; i < witness.length; i++) {
@@ -73,30 +73,36 @@ export const getPopulationAtTime: (
   return planet.capacity / denominator;
 };
 
-export const hslStr: (h:number, s:number, l:number) => string = (h, s, l) => {
-    return `hsl(${h % 360},${s}%,${l}%)`;
-}
-export const getPlanetColors: (planet: Planet) => any = (planet) => {
+export const hslStr: (h: number, s: number, l: number) => string = (
+  h,
+  s,
+  l
+) => {
+  return `hsl(${h % 360},${s}%,${l}%)`;
+};
+export const getPlanetColors: (planet: Planet) => any = planet => {
   let colors: any = {};
-  let seed = bigInt(planet.locationId, 16).and(0xffffff).toString(16);
-  seed = '0x'+'0'.repeat(6 - seed.length) + seed;
+  let seed = bigInt(planet.locationId, 16)
+    .and(0xffffff)
+    .toString(16);
+  seed = '0x' + '0'.repeat(6 - seed.length) + seed;
 
   let baseHue = parseInt(seed) % 360;
-  colors.baseColor  = hslStr(baseHue % 360, 70, 60);
+  colors.baseColor = hslStr(baseHue % 360, 70, 60);
   colors.baseColor2 = hslStr(baseHue % 360, 70, 70);
   colors.baseColor3 = hslStr(baseHue % 360, 70, 80);
 
-  colors.secondaryColor  = hslStr(baseHue % 360, 60, 30);
+  colors.secondaryColor = hslStr(baseHue % 360, 60, 30);
   colors.secondaryColor2 = hslStr(baseHue % 360, 60, 40);
   colors.secondaryColor3 = hslStr(baseHue % 360, 60, 50);
 
-  colors.backgroundColor = hslStr((baseHue+180) % 360, 70, 60);
-    
-  if(planet && planet.destroyed) {
-    colors.previewColor = "#000000";
+  colors.backgroundColor = hslStr((baseHue + 180) % 360, 70, 60);
+
+  if (planet && planet.destroyed) {
+    colors.previewColor = '#000000';
   } else {
     colors.previewColor = colors.baseColor;
-  } 
+  }
 
   return colors;
 };
@@ -202,3 +208,36 @@ export const arrive: (
     }
   }
 };
+
+function genFakePlanet() {
+  let hash = '';
+  for (let i = 0; i < 54; i += 1) {
+    const str = '0123456789abcdef';
+    hash += str[Math.floor(Math.random() * 16)];
+  }
+  return {
+    coords: {
+      x: Math.floor(Math.random() * 8192),
+      y: Math.floor(Math.random() * 8192)
+    },
+    hash
+  };
+}
+
+function genFakeBoard() {
+  let board = [];
+  const nPlanets = 8192;
+  for (let i = 0; i < 8192 / 16; i += 1) {
+    board.push([]);
+    for (let j = 0; j < 8192 / 16; j += 1) {
+      board[i].push({
+        id: {
+          chunkX: i,
+          chunkY: j
+        },
+        planetLocations: Math.random() * 32 < 1 ? [genFakePlanet()] : [],
+        patternId: Math.floor(Math.random() * 1582366653828)
+      });
+    }
+  }
+}

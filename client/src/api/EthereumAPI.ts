@@ -139,8 +139,7 @@ class EthereumAPI extends EventEmitter {
     args: InitializePlayerArgs
   ): Promise<providers.TransactionReceipt> {
     const overrides: TransactionRequest = {
-      gasLimit: 2000000,
-      value: utils.parseEther('0.05')
+      gasLimit: 2000000
     };
     const tx: providers.TransactionResponse = await this.contract.initializePlayer(
       ...args,
@@ -160,6 +159,7 @@ class EthereumAPI extends EventEmitter {
     return tx.wait();
   }
 
+  /*
   async cashOut(locationString: string): Promise<providers.TransactionReceipt> {
     const overrides: TransactionRequest = {
       gasLimit: 2000000
@@ -170,6 +170,7 @@ class EthereumAPI extends EventEmitter {
     );
     return tx.wait();
   }
+  */
 
   async getConstants(): Promise<ContractConstants> {
     const contract = this.contract;

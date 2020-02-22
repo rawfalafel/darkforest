@@ -10,7 +10,6 @@ contract DarkForestV1 is Verifier {
     bool gamePaused = false;
     bool gameEnded = false;
 
-    uint buyin = 1 ether / 20;
     uint public xSize = 8192;
     uint public ySize = 8192;
     uint public planetRarity = 8192;
@@ -94,6 +93,7 @@ contract DarkForestV1 is Verifier {
     address[] public playerIds;
     mapping (address => bool) public playerInitialized;
     // TODO: how to query all planets owned by player?
+    mapping (address => uint) public nPlayerTransactions;
 
     function toBytes(uint256 x) private pure returns (bytes memory b) {
         b = new bytes(32);
@@ -248,10 +248,9 @@ contract DarkForestV1 is Verifier {
         uint[2][2] memory _b,
         uint[2] memory _c,
         uint[1] memory _input
-    ) public payable {
+    ) public {
         require (!gamePaused && !gameEnded);
         require(verifyInitProof(_a, _b, _c, _input));
-        require(msg.value >= buyin);
         address player = msg.sender;
         uint loc = _input[0];
         require(!playerInitialized[player]); // player doesn't have account
@@ -260,6 +259,7 @@ contract DarkForestV1 is Verifier {
         playerIds.push(player);
         playerInitialized[player] = true;
         initializePlanet(loc, player, 25000);
+        nPlayerTransactions[player] = 1;
 
         emit PlayerInitialized(player, loc);
     }
@@ -298,6 +298,8 @@ contract DarkForestV1 is Verifier {
 
         executeReadyArrivals(planetMetadatas[arrival.newLoc]);
         enqueueArrivalOnPlanet(planetMetadatas[arrival.newLoc], arrival);
+
+        nPlayerTransactions[player] += 1;
     }
 
     function executeReadyArrivals(PlanetMetadata storage _p) internal {
@@ -416,6 +418,7 @@ contract DarkForestV1 is Verifier {
         emit ArrivalQueued(arrival);
     }
 
+/*
     function cashOut(uint loc) external {
         require(msg.sender == planets[loc].owner);
         require(!planetMetadatas[loc].destroyed);
@@ -429,6 +432,7 @@ contract DarkForestV1 is Verifier {
 
         emit PlanetDestroyed(loc);
     }
+    */
 
     // admin functions
     function setOwner(address newOwner) external onlyOwner {
