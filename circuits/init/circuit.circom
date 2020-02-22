@@ -39,7 +39,7 @@ template Main() {
         220 = 2 * ceil(log_5 p), as specified by mimc paper, where
         p = 21888242871839275222246405745257275088548364400416034343698204186575808495617
     */
-    component mimc = MiMCSponge(2, 220, 1);
+    component mimc = MiMCSponge(2, 5, 1);
 
     mimc.ins[0] <== x;
     mimc.ins[1] <== y;

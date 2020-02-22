@@ -44,15 +44,15 @@ template GetFinal(m) {
 }
 
 template CheckPerlin() {
+    signal input c;
     signal private input x;
     signal private input y;
     signal private input x0;
     signal private input y0;
-    signal input c;
-    signal output out;
     signal output addr;
+    signal output out;
 
-    component mimc_addr = MiMCSponge(2, 220, 1);
+    component mimc_addr = MiMCSponge(2, 5, 1);
 
     mimc_addr.ins[0] <-- x;
     mimc_addr.ins[1] <-- y;
@@ -158,7 +158,7 @@ template CheckPerlin() {
     signal final;
     final <-- final1 + final2;
 
-    out <== final;
+    out <-- final;
 }
 
 component main = CheckPerlin();
