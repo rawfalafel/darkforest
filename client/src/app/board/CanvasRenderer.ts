@@ -240,8 +240,6 @@ class CanvasRenderer {
           1
         );
         let shipsMoved = (uiManager.forces/100)*getCurrentPopulation(uiManager.mouseDownOverPlanet);
-        console.log(shipsMoved);
-        
         let dist = Math.abs(from.x-to.x)+Math.abs(from.y-to.y);
 
         let myAtk: number = getAttackFromShipsPlanetDist(shipsMoved, uiManager.mouseDownOverPlanet, dist);
