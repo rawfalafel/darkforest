@@ -17,7 +17,7 @@ contract DarkForestV1 is Verifier {
     uint public totalCap = 0;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
     uint[12] public defaultGrowth = [0, 20000, 26670, 33330, 40000, 46670, 53330, 60000, 70000, 80000, 90000, 100000]; // max growth rate, achieved at 50% population, in milliPop per second
-    uint[12] public defaultHardiness = [0, 150, 200, 300, 400, 500, 600, 750, 900, 1200, 1500, 1800];
+    uint[12] public defaultHardiness = [0, 100, 150, 200, 300, 400, 500, 600, 750, 1000, 1250, 1500];
     uint[12] public defaultStalwartness = [0, 400, 350, 300, 250, 200, 175, 150, 125, 110, 100, 100];
     address payable owner = 0xe8170282c5Bc6E7c5b2d984Cd5D897a05E0AFAFb;
 
