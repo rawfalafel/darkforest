@@ -57,7 +57,7 @@ class GameScene extends React.Component<SceneProps, SceneState> {
                 return (
                   <div className="flex flex-row justify-between">
                     <p>{playerIdAndAssets[0]}</p>
-                    <p className="align-right">{playerIdAndAssets[1] / 100}</p>
+                    <p className="align-right">{Math.round(playerIdAndAssets[1] / 100)}</p>
                   </div>
                 );
               })}
