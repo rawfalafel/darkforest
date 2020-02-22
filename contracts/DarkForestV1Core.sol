@@ -266,7 +266,7 @@ contract DarkForestV1 is Verifier {
 
     function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private pure returns (uint) {
         if (dist < hardiness) {
-            return 1;
+            return shipsMoved;
         }
         int128 decayRatio = ABDKMath64x64.divu(hardiness, dist);
         return ABDKMath64x64.mulu(decayRatio, shipsMoved);
