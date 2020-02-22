@@ -10,7 +10,7 @@ import {
 } from '../../@types/global/global';
 import { CHUNK_SIZE } from '../../utils/constants';
 import bigInt from 'big-integer';
-import { getCurrentPopulation, hasOwner, getPlanetColors } from '../../utils/Utils';
+import { getCurrentPopulation, hasOwner, getPlanetColors, getPlayerColor } from '../../utils/Utils';
 
 class CanvasRenderer {
   static instance: CanvasRenderer;
@@ -129,7 +129,7 @@ class CanvasRenderer {
       if (planet.owner === gameManager.account) {
         this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'blue');
       } else {
-        this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'red');
+        this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, getPlayerColor(planet.owner));
       }
     }
 

@@ -85,14 +85,23 @@ export const hslStr: (h: number, s: number, l: number) => string = (
 ) => {
   return `hsl(${h % 360},${s}%,${l}%)`;
 };
-export const getPlanetColors: (planet: Planet) => any = planet => {
-  let colors: any = {};
-  let seed = bigInt(planet.locationId, 16)
+function hashToHue(hash: string): number {
+  let seed = bigInt(hash, 16)
     .and(0xffffff)
     .toString(16);
   seed = '0x' + '0'.repeat(6 - seed.length) + seed;
 
   let baseHue = parseInt(seed) % 360;
+  return baseHue;
+}
+export const getPlayerColor: (player: string) => string = player => {
+  return hslStr(hashToHue(player), 100, 70);
+};
+
+export const getPlanetColors: (planet: Planet) => any = planet => {
+  let colors: any = {};
+  let baseHue = hashToHue(planet.locationId);
+
   colors.baseColor = hslStr(baseHue % 360, 70, 60);
   colors.baseColor2 = hslStr(baseHue % 360, 70, 70);
   colors.baseColor3 = hslStr(baseHue % 360, 70, 80);
