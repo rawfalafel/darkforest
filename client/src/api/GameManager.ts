@@ -322,7 +322,7 @@ class GameManager extends EventEmitter {
         ret.push([playerId, playerAssetMap[playerId]]);
       }
     }
-    ret.sort((player1, player2) => player1[1] - player2[1]);
+    ret.sort((player1, player2) => player2[1] - player1[1]);
     return ret;
   }
 
