@@ -57,7 +57,9 @@ class GameScene extends React.Component<SceneProps, SceneState> {
                 return (
                   <div className="flex flex-row justify-between">
                     <p>{playerIdAndAssets[0]}</p>
-                    <p className="align-right">{Math.round(playerIdAndAssets[1] / 100)}</p>
+                    <p className="align-right">
+                      {Math.round(playerIdAndAssets[1] / 100)}
+                    </p>
                   </div>
                 );
               })}
@@ -124,8 +126,7 @@ class GameScene extends React.Component<SceneProps, SceneState> {
           <Button
             className="bg-gray-900 border border-white rounded-sm p-2 m-2"
             onClick={() => {
-              window.location.href =
-                'https://alan-luo.github.io/darkforest-tutorial/';
+              window.location.href = 'https://briangu33.github.io/darkforest/';
             }}
           >
             Tutorial
