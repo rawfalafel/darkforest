@@ -305,7 +305,7 @@ class GameManager extends EventEmitter {
   // TODO: type this and make it nice
   getAssetsOfPlayers(): [EthAddress, number][] {
     const playerAssetMap = {};
-    for (let planetId in this.planets) {
+    for (const planetId in this.planets) {
       if (this.planets.hasOwnProperty(planetId)) {
         const planet = this.planets[planetId];
         if (planet.owner) {
@@ -317,7 +317,7 @@ class GameManager extends EventEmitter {
       }
     }
     const ret = [];
-    for (let playerId in playerAssetMap) {
+    for (const playerId in playerAssetMap) {
       if (playerAssetMap.hasOwnProperty(playerId)) {
         ret.push([playerId, playerAssetMap[playerId]]);
       }
