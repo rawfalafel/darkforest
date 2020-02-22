@@ -4,20 +4,18 @@ import {
   ChunkCoordinates,
   EthAddress,
 } from '../@types/global/global';
-import LZ from 'lz-string';
+//import LZ from 'lz-string';
 import { openDB } from 'idb';
 
 class LocalStorageManager {
   static instance: LocalStorageManager;
 
-  private cache;
   private homeChunk: ChunkCoordinates | null;
   private db;
   private readonly account: EthAddress;
 
   constructor(account: EthAddress) {
     this.account = account;
-    this.cache = {};
   }
 
   static getInstance(): LocalStorageManager {
@@ -39,11 +37,13 @@ class LocalStorageManager {
       throw new Error('LocalStorageManager has already been initialized');
     }
 
+    //console.log('called initialize with', account);
+
     const localStorageManager = new LocalStorageManager(account);
 
     localStorageManager.db = await openDB('darkforest', 1, {
       upgrade(db) {
-        db.createObjectStore(account);
+        db.createObjectStore('df');
       },
     });
 
@@ -67,7 +67,7 @@ class LocalStorageManager {
   }
 
   private async getKey(key: string): Promise<string | null | undefined> {
-    const out = await this.db.get(this.account, key);
+    const out = await this.db.get('df', this.account.concat(key));
     //if (out) {
     //  return LZ.decompressFromUTF16(out);
     //}
@@ -78,7 +78,7 @@ class LocalStorageManager {
     //if (value) {
     //  await this.db.put(this.account, LZ.compressToUTF16(value), key);
     //} else {
-    await this.db.put(this.account, value, key);
+    await this.db.put('df', value, this.account.concat(key));
     //}
   }
 
