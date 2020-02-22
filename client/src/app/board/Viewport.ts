@@ -125,22 +125,18 @@ class Viewport {
 
   onScroll(deltaY: number) {
     if (this.mouseLastCoords !== null) {
-      if (this.widthInWorldUnits * 1.001 ** deltaY > 4000) {
-        // clip
-        return;
-      }
       const mouseWorldCoords = this.canvasToWorldCoords(this.mouseLastCoords);
       const centersDiff = {
         x: this.centerWorldCoords.x - mouseWorldCoords.x,
-        y: this.centerWorldCoords.y - mouseWorldCoords.y,
+        y: this.centerWorldCoords.y - mouseWorldCoords.y
       };
       const newCentersDiff = {
         x: centersDiff.x * 1.001 ** deltaY,
-        y: centersDiff.y * 1.001 ** deltaY,
+        y: centersDiff.y * 1.001 ** deltaY
       };
       const newCenter = {
         x: mouseWorldCoords.x + newCentersDiff.x,
-        y: mouseWorldCoords.y + newCentersDiff.y,
+        y: mouseWorldCoords.y + newCentersDiff.y
       };
       this.centerWorldCoords.x = newCenter.x;
       this.centerWorldCoords.y = newCenter.y;
