@@ -10,12 +10,12 @@ import {
 } from '../../@types/global/global';
 import { CHUNK_SIZE } from '../../utils/constants';
 import bigInt from 'big-integer';
-import { 
-  getCurrentPopulation, 
-  hasOwner, 
-  getPlanetColors, 
+import {
+  getCurrentPopulation,
+  hasOwner,
+  getPlanetColors,
   getPlayerColor,
-  getAttackFromShipsPlanetDist,
+  getAttackFromShipsPlanetDist
 } from '../../utils/Utils';
 
 class CanvasRenderer {
@@ -135,7 +135,12 @@ class CanvasRenderer {
       if (planet.owner === gameManager.account) {
         this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, 'blue');
       } else {
-        this.drawRingWithCenter(center, radius * 1.2, radius * 0.1, getPlayerColor(planet.owner));
+        this.drawRingWithCenter(
+          center,
+          radius * 1.2,
+          radius * 0.1,
+          getPlayerColor(planet.owner)
+        );
       }
     }
 
@@ -149,7 +154,9 @@ class CanvasRenderer {
           center.x,
           center.y - 1.1 * radius - (planet.owner ? 0.75 : 0.25)
         ),
-        (planet.owner === gameManager.account) ? 'white' : getPlayerColor(planet.owner)
+        planet.owner === gameManager.account
+          ? 'white'
+          : getPlayerColor(planet.owner)
       );
     }
   }
@@ -230,20 +237,22 @@ class CanvasRenderer {
     const to = uiManager.mouseHoveringOverCoords;
 
     if (from && to) {
-      if (
-        uiManager.isOverOwnPlanet(from) &&
-        to !== from
-      ) {
-        this.drawLine(
-          from,
-          to,
-          1
-        );
-        let shipsMoved = (uiManager.forces/100)*getCurrentPopulation(uiManager.mouseDownOverPlanet);
-        let dist = Math.abs(from.x-to.x)+Math.abs(from.y-to.y);
+      if (uiManager.isOverOwnPlanet(from) && to !== from) {
+        this.drawLine(from, to, 1);
+        let shipsMoved =
+          (uiManager.forces / 100) *
+          getCurrentPopulation(uiManager.mouseDownOverPlanet);
 
-        let myAtk: number = getAttackFromShipsPlanetDist(shipsMoved, uiManager.mouseDownOverPlanet, dist);
-        this.drawText(`Attack: ${Math.round(myAtk/100)}`, 15, 
+        let dist = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+
+        let myAtk: number = getAttackFromShipsPlanetDist(
+          shipsMoved,
+          uiManager.mouseDownOverPlanet,
+          dist
+        );
+        this.drawText(
+          `Attack: ${Math.round(myAtk / 100)}`,
+          15,
           new WorldCoords(to.x, to.y),
           'red'
         );

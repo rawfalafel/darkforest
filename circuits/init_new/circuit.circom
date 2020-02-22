@@ -17,13 +17,13 @@ template GetFinal(m) {
    signal val2;
    signal dot;
 
-   component mimc_addr = MiMCSponge(2, 10, 1);
+   component mimc_addr = MiMCSponge(2, 50, 1);
    mimc_addr.ins[0] <-- xi;
    mimc_addr.ins[1] <-- yi;
    mimc_addr.k <-- 0;
    hashx <-- mimc_addr.outs[0] & (m - 1);
 
-   component mimc_addr2 = MiMCSponge(2, 10, 1);
+   component mimc_addr2 = MiMCSponge(2, 50, 1);
    mimc_addr2.ins[0] <-- hashx;
    mimc_addr2.ins[1] <-- 50;
    mimc_addr2.k <-- 0;
@@ -52,7 +52,7 @@ template CheckPerlin() {
     signal output addr;
     signal output out;
 
-    component mimc_addr = MiMCSponge(2, 5, 1);
+    component mimc_addr = MiMCSponge(2, 50, 1);
 
     mimc_addr.ins[0] <-- x;
     mimc_addr.ins[1] <-- y;

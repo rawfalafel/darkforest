@@ -10,16 +10,16 @@ contract DarkForestV1 is Verifier {
     bool gamePaused = false;
     bool gameEnded = false;
 
-    uint public xSize = 2048;
-    uint public ySize = 2048;
+    uint public xSize = 8192;
+    uint public ySize = 8192;
     uint public planetRarity = 8192;
     uint public nPlanetTypes = 12;
     uint public totalCap = 0;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
-    uint[12] public defaultGrowth = [0, 20000, 26670, 33330, 40000, 46670, 53330, 60000, 70000, 80000, 90000, 100000]; // max growth rate, achieved at 50% population, in milliPop per second
-    uint[12] public defaultHardiness = [0, 100, 150, 200, 300, 400, 500, 600, 750, 1000, 1250, 1500];
+    uint[12] public defaultGrowth = [0, 500, 667, 833, 1000, 1167, 1333, 1500, 1750, 2000, 2250, 2500]; // max growth rate, achieved at 50% population, in milliPop per second
+    uint[12] public defaultHardiness = [0, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300];
     uint[12] public defaultStalwartness = [0, 400, 350, 300, 250, 200, 175, 150, 125, 110, 100, 100];
-    address payable owner = 0xe8170282c5Bc6E7c5b2d984Cd5D897a05E0AFAFb;
+    address payable owner = 0x1aA18F5b595d87CC2C66d7b93367d8beabE203bB;
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
@@ -357,7 +357,7 @@ contract DarkForestV1 is Verifier {
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
 
         arrival.departureTime = now;
-        arrival.arrivalTime = now + (_input[2] / 5);
+        arrival.arrivalTime = now + (_input[2] / 3);
         arrival.player = msg.sender;
         arrival.oldLoc = _input[0];
         arrival.newLoc = _input[1];

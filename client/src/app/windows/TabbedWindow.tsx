@@ -314,12 +314,6 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
                   <tr>
                     <td colSpan={2}>Attack:</td>
                     <td colSpan={2} className="text-right">
-                      {this.renderPlanetProp('hardiness')}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2}>Defense:</td>
-                    <td colSpan={2} className="text-right">
                       {this.renderPlanetProp('stalwartness')}
                     </td>
                   </tr>

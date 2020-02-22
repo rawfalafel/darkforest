@@ -2,7 +2,7 @@ import * as bigInt from 'big-integer';
 import { LOCATION_ID_UB } from '../utils/constants';
 import { BigInteger } from 'big-integer';
 
-const ROUNDS = 5;
+const ROUNDS = 220;
 const p = LOCATION_ID_UB;
 
 const c = [
