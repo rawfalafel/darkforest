@@ -10,7 +10,13 @@ import {
 } from '../../@types/global/global';
 import { CHUNK_SIZE } from '../../utils/constants';
 import bigInt from 'big-integer';
-import { getCurrentPopulation, hasOwner, getPlanetColors, getPlayerColor } from '../../utils/Utils';
+import { 
+  getCurrentPopulation, 
+  hasOwner, 
+  getPlanetColors, 
+  getPlayerColor,
+  getAttackFromShipsPlanetDist,
+} from '../../utils/Utils';
 
 class CanvasRenderer {
   static instance: CanvasRenderer;
@@ -220,16 +226,28 @@ class CanvasRenderer {
 
   private drawMousePath() {
     const uiManager = GameUIManager.getInstance();
+    const from = uiManager.mouseDownOverCoords;
+    const to = uiManager.mouseHoveringOverCoords;
 
-    if (uiManager.mouseDownOverCoords && uiManager.mouseHoveringOverCoords) {
+    if (from && to) {
       if (
-        uiManager.isOverOwnPlanet(uiManager.mouseDownOverCoords) &&
-        uiManager.mouseHoveringOverCoords !== uiManager.mouseDownOverCoords
+        uiManager.isOverOwnPlanet(from) &&
+        to !== from
       ) {
         this.drawLine(
-          uiManager.mouseDownOverCoords,
-          uiManager.mouseHoveringOverCoords,
+          from,
+          to,
           1
+        );
+        let shipsMoved = (uiManager.forces/100)*getCurrentPopulation(uiManager.mouseDownOverPlanet);
+        console.log(shipsMoved);
+        
+        let dist = Math.abs(from.x-to.x)+Math.abs(from.y-to.y);
+
+        let myAtk: number = getAttackFromShipsPlanetDist(shipsMoved, uiManager.mouseDownOverPlanet, dist);
+        this.drawText(`Attack: ${Math.round(myAtk/100)}`, 15, 
+          new WorldCoords(to.x, to.y),
+          'red'
         );
       }
     }

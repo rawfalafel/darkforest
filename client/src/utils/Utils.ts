@@ -9,6 +9,7 @@ import {
 } from '../@types/global/global';
 import { PlanetType } from '../@types/global/enums';
 import { address } from './CheckedTypeUtils';
+import { WorldCoords } from './Coordinates';
 
 // largely taken from websnark/tools/buildwitness.js, and typed by us (see src/@types/snarkjs)
 
@@ -77,6 +78,14 @@ export const getPopulationAtTime: (
     1;
   return planet.capacity / denominator;
 };
+
+export const getAttackFromShipsPlanetDist: (
+  shipsMoved: number,
+  planet: Planet,
+  dist: number
+) => number = (shipsMoved, planet, dist) => {
+  return (planet.stalwartness/100)*moveShipsDecay(shipsMoved, planet.hardiness, dist)
+}
 
 export const hslStr: (h: number, s: number, l: number) => string = (
   h,
@@ -166,7 +175,11 @@ export const moveShipsDecay: (
   hardiness: number,
   dist: number
 ) => number = (shipsMoved, hardiness, dist) => {
-  const decayRatio = hardiness / (hardiness + dist);
+  let decayRatio = 1;
+  if(dist < hardiness) decayRatio = 1;
+  else decayRatio = hardiness/dist;
+
+  // const decayRatio = hardiness / (hardiness + dist);
   return decayRatio * shipsMoved;
 };
 
