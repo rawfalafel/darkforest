@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dark Forest Tutorial</title>
+    <style>
+      body {
+        font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+          monospace;
+        font-size: 12pt;
+        line-height: 1.5em;
+        background: #4a5568;
+        color: white;
+      }
+      .container {
+        margin: 2em auto;
+        width: 60%;
+        background: #1a202c;
+        padding: 1em 2em;
+        border: 1px solid white;
+        border-radius: 3px;
+      }
+      a {
+        color: white;
+        text-decoration: underline;
+      }
+      li.indent {
+        margin-left: 1.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Welcome to the Dark Forest tutorial!</h2>
+      <p>
+        Dark Forest is a space conquest game built on Ethereum using
+        <a href="https://z.cash/technology/zksnarks/">zkSNARKs</a>.
+      </p>
+
+      <h2>Getting Started</h2>
+
+      <p>
+        Connect to Ropsten on MetaMask and load up
+        <a href="http://zkga.me">http://zkga.me</a>. If you are participating in
+        the contest, please also fill out
+        <a href="https://forms.gle/dwH1nQaymhSgmfrj8">this Google form</a> to
+        claim your winnings once the game has ended.
+      </p>
+
+      <h2>Contest Rules</h2>
+
+      <p>
+        A pool of e (2.718) ETH will be distributed at the end of 48 hours based
+        on the following calculations:
+      </p>
+
+      <ul>
+        <li>Reward for playing:</li>
+        <li class="indent">
+          reward = (forces_owned / total_forces) * 2.718 ETH
+        </li>
+        <li>Simulated "transaction fees":</li>
+        <li class="indent">cost = number_transactions * 0.25 USD</li>
+        <li>Total prize:</li>
+        <li class="indent">sum = max(reward - cost, 0)</li>
+      </ul>
+
+      <p>
+        We encourage you to be hacky, and to write code to gain an advantage
+        (see "Hints"). However, any hack that is clearly not in the spirit of
+        the game (please use sensible discretion) may be grounds for
+        disqualification. If in doubt, please ask!
+      </p>
+
+      <h2>How to Play</h2>
+
+      <p>
+        You will be spawned at a home planet at a random location in the
+        universe.
+      </p>
+      <ul>
+        <li>
+          <u>Click-and-drag</u> from one planet to another to send forces.
+        </li>
+        <li><u>Click-and-drag</u> on the map to pan around.</li>
+        <li><u>Scroll</u> to zoom in and out.</li>
+      </ul>
+
+      <p>
+        You can move forces from one of your own planets to another, conquer
+        unowned planets, or attack enemy planets. Attacking enemy planets with
+        enough forces will allow you to conquer them.
+      </p>
+
+      <p>
+        You can change how many forces to send from one planet to another in the
+        "Forces" tab.
+      </p>
+
+      <h2>Planet Details</h2>
+
+      <p>
+        Planets you own are denoted with a blue ring. Enemy planets have a red
+        ring.
+      </p>
+
+      <p>Planets have various stats, shown in the "Details" tab:</p>
+
+      <ul>
+        <li>Capacity: total # of forces that can be occupied on this planet</li>
+        <li>Growth: represents maximum growth rate</li>
+        <li>
+          Attack: how much damage per unit of forces attacks from this planet do
+        </li>
+        <li>Defense: how resistant your planet is to enemy attacks</li>
+      </ul>
+
+      <p>
+        Larger planets have higher attack, smaller planets have higher defense.
+      </p>
+
+      <h2>Miners</h2>
+
+      <p>
+        The web client uses a "miner" to uncover the locations of planets and
+        players in the universe.
+      </p>
+
+      <p>
+        Your miner can explore space in different patterns, controllable in the
+        "Miners" tab.
+      </p>
+
+      <h2>Hints</h2>
+
+      <p>
+        The universe is a 8192 x 8192 grid of cells. Each cell (x, y) is
+        uniquely identified by its hash, MiMC(x, y). Rather than publishing the
+        coordinates of planets they own, planets publish the hashes of planets
+        to the blockchain, along with Zero-Knowledge Proofs that the planets are
+        legitimate. In this way, player locations are kept secret, up to brute
+        force computation.
+      </p>
+
+      <p>
+        "Planets" exist at all cells whose coordinates hash to under a
+        difficulty threshold specified in the Dark Forest Ethereum contract.
+      </p>
+
+      <p>
+        The web client miner lifts the "cryptographic fog of war" on the
+        universe by computing hashes. These hashes are stored in browser local
+        storage (IndexedDB). Note that you may compute hashes offline and enter
+        them into local storage yourself as well.
+      </p>
+
+      <p>
+        The repository for this project can be found
+        <a href="https://github.com/briangu33/darkforest">here</a>.
+      </p>
+
+      <p>
+        If you have any questions about the game or the repository, please don't
+        hesitate to ask us!
+      </p>
+    </div>
+  </body>
+</html>
