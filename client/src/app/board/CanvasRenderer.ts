@@ -143,7 +143,7 @@ class CanvasRenderer {
           center.x,
           center.y - 1.1 * radius - (planet.owner ? 0.75 : 0.25)
         ),
-        getPlayerColor(planet.owner)
+        (planet.owner === gameManager.account) ? 'white' : getPlayerColor(planet.owner)
       );
     }
   }
