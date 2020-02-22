@@ -18,7 +18,7 @@ interface SceneState {
 class GameScene extends React.Component<SceneProps, SceneState> {
   state = {
     exploring: true,
-    showLeaderboard: false
+    showLeaderboard: false,
   };
 
   render() {
@@ -33,7 +33,7 @@ class GameScene extends React.Component<SceneProps, SceneState> {
           }
           style={{
             background: 'rgba(0, 0, 0, 0.6)',
-            zIndex: 999
+            zIndex: 999,
           }}
         >
           <div
@@ -41,7 +41,7 @@ class GameScene extends React.Component<SceneProps, SceneState> {
             style={{
               margin: '0 auto',
               marginTop: '2em',
-              width: '600px'
+              width: '600px',
             }}
           >
             <p
@@ -53,23 +53,14 @@ class GameScene extends React.Component<SceneProps, SceneState> {
             </p>
             <h3>Leaderboard</h3>
             <div className="flex flex-col">
-              {Object.keys(gameManager.players)
-                .sort((player1: string, player2: string) => {
-                  return (
-                    gameManager.getAssetsOfPlayer(player1) -
-                    gameManager.getAssetsOfPlayer(player2)
-                  );
-                })
-                .map(playerId => {
-                  return (
-                    <div className="flex flex-row justify-between">
-                      <p>{playerId}</p>
-                      <p className="align-right">
-                        {gameManager.getAssetsOfPlayer(playerId)}
-                      </p>
-                    </div>
-                  );
-                })}
+              {gameManager.getAssetsOfPlayers().map(playerIdAndAssets => {
+                return (
+                  <div className="flex flex-row justify-between">
+                    <p>{playerIdAndAssets[0]}</p>
+                    <p className="align-right">{playerIdAndAssets[1] / 100}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -108,18 +99,20 @@ class GameScene extends React.Component<SceneProps, SceneState> {
             <Button
               className="bg-gray-900 border border-white rounded-sm p-2 m-2"
               onClick={() => {
+                window.alert(
+                  'This feature will be available in a future mainnet release!'
+                );
+                /*
                 const selectedPlanet = uiManager.selectedPlanet;
                 if (
                   selectedPlanet &&
                   selectedPlanet.owner === gameManager.account
                 ) {
-                  /*
                 gameManager.cashOut({
                   coords: uiManager.selectedCoords,
                   hash: selectedPlanet.locationId
-                });*/
-                  window.alert('This feature is not available on Ropsten!');
-                }
+                });
+                }*/
               }}
             >
               Cash out

@@ -1,7 +1,12 @@
 import * as bigInt from 'big-integer';
 import { BigInteger } from 'big-integer';
 import { Witness } from 'snarkjs';
-import { Location, Planet, QueuedArrival } from '../@types/global/global';
+import {
+  Location,
+  Planet,
+  QueuedArrival,
+  BoardData
+} from '../@types/global/global';
 import { PlanetType } from '../@types/global/enums';
 import { address } from './CheckedTypeUtils';
 
@@ -224,9 +229,8 @@ function genFakePlanet() {
   };
 }
 
-function genFakeBoard() {
+export const genFakeBoard: () => BoardData = () => {
   let board = [];
-  const nPlanets = 8192;
   for (let i = 0; i < 8192 / 16; i += 1) {
     board.push([]);
     for (let j = 0; j < 8192 / 16; j += 1) {
@@ -240,4 +244,5 @@ function genFakeBoard() {
       });
     }
   }
-}
+  return board;
+};
