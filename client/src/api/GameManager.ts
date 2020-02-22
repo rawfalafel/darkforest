@@ -3,7 +3,7 @@ import LocalStorageManager from './LocalStorageManager';
 import {
   getCurrentPopulation,
   getPlanetTypeForLocation,
-  arrive
+  arrive,
 } from '../utils/Utils';
 import { CHUNK_SIZE, LOCATION_ID_UB } from '../utils/constants';
 import mimcHash from '../miner/mimc';
@@ -20,7 +20,7 @@ import {
   PlanetArrivalMap,
   ArrivalWithTimer,
   LocationId,
-  PlanetLocationMap
+  PlanetLocationMap,
 } from '../@types/global/global';
 import EthereumAPI from './EthereumAPI';
 import MinerManager from './MinerManager';
@@ -139,7 +139,7 @@ class GameManager extends EventEmitter {
       defaultGrowth,
       defaultCapacity,
       defaultHardiness,
-      defaultStalwartness
+      defaultStalwartness,
     } = await ethereumAPI.getConstants();
     const xChunks = xSize / CHUNK_SIZE;
     const yChunks = ySize / CHUNK_SIZE;
@@ -237,7 +237,7 @@ class GameManager extends EventEmitter {
   getMaxChunks(): ChunkCoordinates {
     return <ChunkCoordinates>{
       chunkX: this.xChunks,
-      chunkY: this.yChunks
+      chunkY: this.yChunks,
     };
   }
 
@@ -302,6 +302,30 @@ class GameManager extends EventEmitter {
     return parseInt('0x' + playerId.substring(0, 6));
   }
 
+  // TODO: type this and make it nice
+  getAssetsOfPlayers(): [EthAddress, number][] {
+    const playerAssetMap = {};
+    for (let planetId in this.planets) {
+      if (this.planets.hasOwnProperty(planetId)) {
+        const planet = this.planets[planetId];
+        if (planet.owner) {
+          if (!playerAssetMap[planet.owner]) {
+            playerAssetMap[planet.owner] = 0;
+          }
+          playerAssetMap[planet.owner] += getCurrentPopulation(planet);
+        }
+      }
+    }
+    const ret = [];
+    for (let playerId in playerAssetMap) {
+      if (playerAssetMap.hasOwnProperty(playerId)) {
+        ret.push([playerId, playerAssetMap[playerId]]);
+      }
+    }
+    ret.sort((player1, player2) => player1[1] - player2[1]);
+    return ret;
+  }
+
   getPlanetWithLocation(location: Location): Planet {
     if (!!this.planets[location.hash]) {
       return this.planets[location.hash];
@@ -319,7 +343,7 @@ class GameManager extends EventEmitter {
       locationId: location.hash,
       destroyed: false,
       population: 0,
-      coordinatesRevealed: false
+      coordinatesRevealed: false,
     };
   }
 
@@ -405,7 +429,7 @@ class GameManager extends EventEmitter {
           }, arrival.arrivalTime * 1000 - Date.now());
           const arrivalWithTimer = {
             arrivalData: arrival,
-            timer: applyFutureArrival
+            timer: applyFutureArrival,
           };
           arrivalsWithTimers.push(arrivalWithTimer);
         }
