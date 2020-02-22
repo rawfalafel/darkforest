@@ -299,7 +299,7 @@ contract DarkForestV1 is Verifier {
         executeReadyArrivals(planetMetadatas[arrival.newLoc]);
         enqueueArrivalOnPlanet(planetMetadatas[arrival.newLoc], arrival);
 
-        nPlayerTransactions[player] += 1;
+        nPlayerTransactions[msg.sender] += 1;
     }
 
     function executeReadyArrivals(PlanetMetadata storage _p) internal {
