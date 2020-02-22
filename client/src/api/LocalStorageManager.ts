@@ -68,18 +68,18 @@ class LocalStorageManager {
 
   private async getKey(key: string): Promise<string | null | undefined> {
     const out = await this.db.get(this.account, key);
-    if (out) {
-      return LZ.decompressFromUTF16(out);
-    }
+    //if (out) {
+    //  return LZ.decompressFromUTF16(out);
+    //}
     return out;
   }
 
   private async setKey(key: string, value: string): Promise<void> {
-    if (value) {
-      await this.db.put(this.account, LZ.compressToUTF16(value), key);
-    } else {
-      await this.db.put(this.account, value, key);
-    }
+    //if (value) {
+    //  await this.db.put(this.account, LZ.compressToUTF16(value), key);
+    //} else {
+    await this.db.put(this.account, value, key);
+    //}
   }
 
   async getKnownBoard(): Promise<BoardData> {
