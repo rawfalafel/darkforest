@@ -17,8 +17,8 @@ contract DarkForestV1 is Verifier {
     uint public totalCap = 0;
     uint[12] public defaultCapacity = [0, 100000, 150000, 500000, 1500000, 5000000, 15000000, 40000000, 100000000, 200000000, 350000000, 500000000];
     uint[12] public defaultGrowth = [0, 20000, 26670, 33330, 40000, 46670, 53330, 60000, 70000, 80000, 90000, 100000]; // max growth rate, achieved at 50% population, in milliPop per second
-    uint[12] public defaultHardiness = [0, 300, 500, 750, 1000, 1300, 1600, 2000, 2500, 2750, 3000, 3250];
-    uint[12] public defaultStalwartness = [0, 900, 800, 700, 600, 500, 400, 300, 200, 100, 75, 50];
+    uint[12] public defaultHardiness = [0, 150, 200, 300, 400, 500, 600, 750, 900, 1200, 1500, 1800];
+    uint[12] public defaultStalwartness = [0, 400, 350, 300, 250, 200, 175, 150, 125, 110, 100, 100];
     address payable owner = 0xe8170282c5Bc6E7c5b2d984Cd5D897a05E0AFAFb;
 
     uint256 constant LOCATION_ID_UB = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
@@ -265,7 +265,10 @@ contract DarkForestV1 is Verifier {
     }
 
     function moveShipsDecay(uint shipsMoved, uint hardiness, uint dist) private pure returns (uint) {
-        int128 decayRatio = ABDKMath64x64.divu(hardiness, hardiness + dist);
+        if (dist < hardiness) {
+            return shipsMoved;
+        }
+        int128 decayRatio = ABDKMath64x64.divu(hardiness, dist);
         return ABDKMath64x64.mulu(decayRatio, shipsMoved);
     }
 
@@ -354,7 +357,7 @@ contract DarkForestV1 is Verifier {
         moveCheckproof(_a, _b, _c, moveCheckproofInput);
 
         arrival.departureTime = now;
-        arrival.arrivalTime = now + 15 seconds;
+        arrival.arrivalTime = now + (_input[2] / 5);
         arrival.player = msg.sender;
         arrival.oldLoc = _input[0];
         arrival.newLoc = _input[1];
@@ -380,7 +383,7 @@ contract DarkForestV1 is Verifier {
             initializePlanet(arrival.newLoc, arrival.player, 0);
         }
 
-        uint shipsLanded = moveShipsDecay(arrival.shipsMoved, planets[arrival.oldLoc].hardiness, arrival.maxDist);
+        uint shipsLanded = moveShipsDecay(arrival.shipsMoved, planets[arrival.oldLoc].hardiness, arrival.maxDist) * planets[arrival.oldLoc].stalwartness / 100;
 
         if (!planetIsOccupied(arrival.newLoc)) {
             // colonizing an uninhabited planet
@@ -391,16 +394,17 @@ contract DarkForestV1 is Verifier {
             }
         } else if (ownerIfOccupiedElseZero(arrival.newLoc) == arrival.player) {
             // moving forces between my planets
-            planets[arrival.newLoc].population += shipsLanded;
+            // stalwartness bonus is NOT APPLIED
+            planets[arrival.newLoc].population += shipsLanded * 100 / planets[arrival.oldLoc].stalwartness;
         } else {
             // attacking enemy
-            if (planets[arrival.newLoc].population > (shipsLanded * 100 / planets[arrival.newLoc].stalwartness)) {
+            if (planets[arrival.newLoc].population > shipsLanded) {
                 // attack reduces target planet's garrison but doesn't conquer it
-                planets[arrival.newLoc].population -= (shipsLanded * 100 / planets[arrival.newLoc].stalwartness);
+                planets[arrival.newLoc].population -= shipsLanded;
             } else {
                 // conquers planet
                 planets[arrival.newLoc].owner = arrival.player;
-                planets[arrival.newLoc].population = shipsLanded - (planets[arrival.newLoc].population * planets[arrival.newLoc].stalwartness / 100);
+                planets[arrival.newLoc].population = shipsLanded - planets[arrival.newLoc].population;
             }
         }
     }
@@ -433,6 +437,9 @@ contract DarkForestV1 is Verifier {
         emit PlanetDestroyed(loc);
     }
     */
+
+    // we can deposit eth
+    function() payable external onlyOwner {}
 
     // admin functions
     function setOwner(address newOwner) external onlyOwner {

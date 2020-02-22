@@ -209,11 +209,10 @@ export const arrive: (
 
   // perform arrival
 
-  const shipsLanded = moveShipsDecay(
-    arrival.shipsMoved,
-    fromPlanet.hardiness,
-    arrival.maxDist
-  );
+  const shipsLanded =
+    (moveShipsDecay(arrival.shipsMoved, fromPlanet.hardiness, arrival.maxDist) *
+      fromPlanet.stalwartness) /
+    100;
 
   if (!hasOwner(toPlanet)) {
     // colonizing new planet
@@ -221,17 +220,17 @@ export const arrive: (
     toPlanet.population += Math.min(shipsLanded, toPlanet.capacity);
   } else if (toPlanet.owner === fromPlanet.owner) {
     // moving between my own planets
-    toPlanet.population += shipsLanded;
+    // ATK bonus is NOT APPLIED
+    toPlanet.population += (shipsLanded * 100) / fromPlanet.stalwartness;
   } else {
     // attacking enemy
-    if (toPlanet.population > (shipsLanded * 100) / toPlanet.stalwartness) {
+    if (toPlanet.population > shipsLanded) {
       // attack reduces target planet's garrison but doesn't conquer it
-      toPlanet.population -= (shipsLanded * 100) / toPlanet.stalwartness;
+      toPlanet.population -= shipsLanded;
     } else {
       // conquers planet
       toPlanet.owner = fromPlanet.owner;
-      toPlanet.population =
-        shipsLanded - (toPlanet.population * toPlanet.stalwartness) / 100;
+      toPlanet.population = shipsLanded - toPlanet.population;
     }
   }
 };
