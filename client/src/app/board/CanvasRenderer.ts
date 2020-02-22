@@ -143,7 +143,7 @@ class CanvasRenderer {
           center.x,
           center.y - 1.1 * radius - (planet.owner ? 0.75 : 0.25)
         ),
-        'white'
+        getPlayerColor(planet.owner)
       );
     }
   }
@@ -321,7 +321,8 @@ class CanvasRenderer {
     const radiusCanvasCoords = viewport.worldToCanvasDist(radius);
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0)';
     this.ctx.strokeStyle = color;
-    this.ctx.lineWidth = viewport.worldToCanvasDist(width);
+    // this.ctx.lineWidth = viewport.worldToCanvasDist(width);
+    this.ctx.lineWidth = 2;
     this.ctx.beginPath();
     this.ctx.arc(
       centerCanvasCoords.x,
