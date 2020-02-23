@@ -191,8 +191,8 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
   renderPlanetProp(prop: string): string {
     if (prop == 'owner') {
       return this.state.planet
-      ? this.state.planet.owner.substring(0, 10)+"..."+this.state.planet.owner.slice(0, -3)
-      : "0000000000...000";
+      ? this.state.planet.owner.substring(0, 8)+"..."+this.state.planet.owner.slice(-3)
+      : "00000000...000";
     } else if (prop == 'population') {
       return this.state.planet
         ? Math.round(getCurrentPopulation(this.state.planet) / 100.0).toString()
