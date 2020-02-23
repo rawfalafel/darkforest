@@ -189,7 +189,11 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
     window.requestAnimationFrame(this.animate.bind(this));
   }
   renderPlanetProp(prop: string): string {
-    if (prop == 'population') {
+    if (prop == 'owner') {
+      return this.state.planet
+      ? this.state.planet.owner.substring(0, 10)+"..."+this.state.planet.owner.slice(0, -3)
+      : "0000000000...000";
+    } else if (prop == 'population') {
       return this.state.planet
         ? Math.round(getCurrentPopulation(this.state.planet) / 100.0).toString()
         : '0';
@@ -293,6 +297,12 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
             >
               <table className="width-full" style={{ width: '100%' }}>
                 <tbody className="width-full" style={{ width: '100%' }}>
+                   <tr>
+                    <td colSpan={2}>Owner:</td>
+                    <td colSpan={2} className="text-right">
+                      {this.renderPlanetProp('owner')}
+                    </td>
+                  </tr>
                   <tr>
                     <td colSpan={2}>Population:</td>
                     <td colSpan={2} className="text-right">
@@ -383,8 +393,8 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
                         let myChunk = this.gameManager
                           .getLocalStorageManager()
                           .getHomeChunk();
-                        return `<${myChunk ? myChunk.chunkX : 'none'}, ${
-                          myChunk ? myChunk.chunkY : 'none'
+                        return `<${myChunk ? (myChunk.chunkX || 0) : 'none'}, ${
+                          myChunk ? (myChunk.chunkY || 0) : 'none'
                         }>`;
                       })()}
                     </p>
@@ -406,7 +416,7 @@ class TabbedWindow extends React.Component<WindowProps, WindowState> {
                   <div>
                     <p>Targeting chunk: </p>
                     <p>
-                      {(c => `<${c.chunkX}, ${c.chunkY}>`)(
+                      {(c => `<${(c.chunkX || 0)}, ${(c.chunkY || 0)}>`)(
                         this.state.miningPatternChunk
                       )}
                     </p>
