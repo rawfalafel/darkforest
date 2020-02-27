@@ -1,0 +1,27 @@
+{
+  "name": "darkforest",
+  "version": "1.0.0",
+  "description": "Dark Forest Game on Blockchain. Follow these steps in order to make things work:",
+  "main": "truffle-config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "big-integer": "^1.6.48",
+    "websnark": "^0.0.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/briangu33/darkforest.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/briangu33/darkforest/issues"
+  },
+  "homepage": "https://github.com/briangu33/darkforest#readme"
+}
